@@ -1,0 +1,4 @@
+- file structure
+- git for version control
+- setup.py to get appropriate packages
+- branching with development / features etc?
