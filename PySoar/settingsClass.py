@@ -1,9 +1,11 @@
 class Settings(object):
 
-    def __init__(self, version, stand_alone_build):
+    def __init__(self):
         import platform
 
-        self.version = version
+        stand_alone_build = False
+
+        self.version = 0.68
         self.file_name = 'Analysis_PySoar.xls'
         if platform.system() == 'Darwin' and stand_alone_build:
             self.file_name = '../../../Analysis_PySoar.xls'

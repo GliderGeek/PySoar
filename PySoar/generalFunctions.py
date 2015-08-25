@@ -1,13 +1,9 @@
+from settingsClass import Settings
+settings = Settings()
+
+
 def det_local_time(b_record, utc_to_local):
     return hhmmss2ss(b_record[1:3] + ':' + b_record[3:5] + ':' + b_record[5:7], utc_to_local)
-
-    time = 0
-    time += int(utc_to_local) * 3600
-    time += int(b_record[1:3]) * 3600
-    time += int(b_record[3:5]) * 60
-    time += int(b_record[5:7])
-
-    return time
 
 
 def dms2dd(dms):
@@ -24,10 +20,10 @@ def dms2dd(dms):
 def det_lat_long(location_record, record_type):
     from math import radians
 
-    pnt_lat = 6
-    pnt_long = 14
-    tsk_lat = 0
-    tsk_long = 8
+    pnt_lat = 7
+    pnt_long = 15
+    tsk_lat = 6
+    tsk_long = 14
 
     if record_type == 'pnt':
         latitude_dms = location_record[pnt_lat:pnt_lat+8]
@@ -39,7 +35,7 @@ def det_lat_long(location_record, record_type):
     return radians(dms2dd(latitude_dms)), radians(dms2dd(longitude_dms))
 
 
-def determine_distance(location_record1, location_record2, type1, type2, earth_radius):
+def determine_distance(location_record1, location_record2, type1, type2):
     from math import sin, cos, asin, sqrt
 
     latitude1, longitude1 = det_lat_long(location_record1, type1)
@@ -49,7 +45,7 @@ def determine_distance(location_record1, location_record2, type1, type2, earth_r
         sqrt((sin((latitude1 - latitude2) / 2)) ** 2
              + cos(latitude1) * cos(latitude2) * (sin((longitude1 - longitude2) / 2)) ** 2
              )
-    ) * earth_radius * 1000
+    ) * settings.earth_radius * 1000
 
     return dist
 
@@ -72,25 +68,18 @@ def det_bearing(location_record1, location_record2, type1, type2):
 
 
 def det_bearing_change(bearing1, bearing2):
-
-    if abs(bearing1 - bearing2) > 180:  # going over 360degrees
-        if bearing1 == min(bearing1, bearing2):
-            bearing_change = -(bearing1 + (360 - bearing2))
-        else:
-            bearing_change = (bearing2 + (360 - bearing1))
-
-    else:
-        bearing_change = (bearing2 - bearing1)
-
-    return bearing_change
+    # always return difference between -180 and +180 degrees
+    difference = bearing2 - bearing1
+    if -180 < difference < 180:
+        return difference
+    elif difference <= -180:
+        return difference + 360
+    elif difference >= 180:
+        return difference - 60
 
 
-def det_height(b_record):
-    return int(b_record[25:30])
-
-
-def det_height_gps(b_record):
-    return int(b_record[30:35])
+def det_height(b_record, gps_altitude):
+    return int(b_record[30:35]) if gps_altitude else int(b_record[25:30])
 
 
 def hhmmss2ss(time_string, utc_to_local):
@@ -138,6 +127,40 @@ def correct_format(st_time_string):
         print 'minutes and seconds should be between 0 and 60'
 
     return correct
+
+
+def line_crossed(b_record1, b_record2, type_string, competition_day):
+    if type_string == 'start':
+        midpoint = competition_day.task[2]
+        task_bearing = det_bearing(midpoint, competition_day.task[3], 'tsk', 'tsk')
+        distance_to_midpoint = determine_distance(midpoint, b_record2, 'tsk', 'pnt')
+        line_radius = competition_day.tp_radius[0]
+    elif type_string == 'finish':
+        midpoint = competition_day.task[-2]
+        task_bearing = det_bearing(competition_day.task[-3], midpoint, 'tsk', 'tsk')
+        distance_to_midpoint = determine_distance(midpoint, b_record2, 'tsk', 'pnt')
+        line_radius = competition_day.tp_radius[-1]
+
+    if distance_to_midpoint > line_radius:
+        return False
+
+    bearing_midpoint_record1 = det_bearing(midpoint, b_record1, 'tsk', 'pnt')
+    bearing_midpoint_record2 = det_bearing(midpoint, b_record2, 'tsk', 'pnt')
+
+    bearing_difference1 = abs(det_bearing_change(bearing_midpoint_record1, task_bearing))
+    bearing_difference2 = abs(det_bearing_change(bearing_midpoint_record2, task_bearing))
+
+    if bearing_difference1 > 90 > bearing_difference2:
+        return True
+    else:
+        return False
+
+
+def turnpoint_rounded(b_record, leg, competition_day):
+    if determine_distance(b_record, competition_day.task[leg+2], 'pnt', 'tsk') < competition_day.tp_radius[leg]:
+        return True
+    else:
+        return False
 
 
 if __name__ == '__main__':

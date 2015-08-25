@@ -13,24 +13,25 @@ class CompetitionDay(object):
     def ask_start_opening(self):
         no_input = True
         while no_input:
-            st_time_string=easygui.enterbox(
-                msg='Start gate opening not found in igc files. Enter startime (hh:mm:ss): ',
+            st_time_string = easygui.enterbox(
+                msg='Start gate opening not found in igc files. Enter startime local time (hh:mm:ss): ',
                 title=' ',
                 default='',
                 strip=True)
             if correct_format(st_time_string):
                 print "you entered ", st_time_string,'. Programm is running...'
                 no_input = False
-                self.start_opening = hhmmss2ss(st_time_string, self.utc_to_local)
+                self.start_opening = hhmmss2ss(st_time_string, 0)
 
     def obtain_task_info(self):
 
-        self.no_tps=int(self.task[0][22:24])
-        self.tp_line=[]
-        self.tp_radius=[]
+        self.no_tps = int(self.task[0][-4::])
+        self.no_legs = self.no_tps + 1
+        self.tp_line = []
+        self.tp_radius = []
 
         for turnpoint in self.task_rules:
-            self.tp_line.append(True) if 'Line=1' in turnpoint.split(',') else  self.tp_line.append(False)
+            self.tp_line.append(True) if 'Line=1' in turnpoint.split(',') else self.tp_line.append(False)
             for item in turnpoint.split(','):
                 if item.startswith('R1'):
                     self.tp_radius.append(int(item[3:-1]))

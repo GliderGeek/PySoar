@@ -2,14 +2,11 @@ from settingsClass import Settings
 from competitionDay import CompetitionDay
 from flightClass import Flight
 from phasesClass import FlightPhases
-from performanceClass import Performance
+# from performanceClass import Performance
 
 
 def run():
-    version = 0.68
-    stand_alone_build = False
-
-    settings = Settings(version, stand_alone_build)
+    settings = Settings()
     competition_day = CompetitionDay()
 
     file_paths = ["../46L_GO4.igc", "../46L_HS.igc", "../46L_SW.igc"]
@@ -25,9 +22,17 @@ def run():
     competition_day.obtain_task_info()
 
     for flight in competition_day.flights.itervalues():
-        flight.phases = FlightPhases(flight, settings)
-        flight.performance = Performance(competition_day, flight)
 
+        flight.determine_tsk_times(competition_day)
+
+        flight.phases = FlightPhases(competition_day)
+        flight.phases.determine_phases(settings, competition_day, flight)
+        flight.phases.determine_point_statistics(flight, competition_day)
+
+        flight.phases.print_phases()
+
+        # flight.performance = Performance(competition_day)
+        # flight.performance.determine_performance(flight)
 
 if __name__ == '__main__':
     from main import run
