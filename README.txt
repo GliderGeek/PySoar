@@ -1,5 +1,5 @@
 assumptions:
-- turnpoints are always sectors
+- turnpoints are always circles
 - no AAT
 - no ENL logging
 - no restart after 1st turnpoint

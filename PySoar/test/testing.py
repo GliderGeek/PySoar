@@ -1,3 +1,16 @@
+def call_other():
+    print 'other method called'
+
+def func_test(url=""):
+    if url == "":
+        call_other()
+    else:
+        print url
+
+func_test("http")
+func_test()
+
+
 # a = ['cruise', 'bla', 'cruise', 'cruise', 'thermal']
 # print a.index('cruise', 0, 100)
 # for index, item in enumerate(a):

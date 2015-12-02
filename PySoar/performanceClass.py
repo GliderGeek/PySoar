@@ -1,128 +1,215 @@
-class Performance(object):
-    def __init__(self, competition_day):
-        self.perf_dict = {}
-        self.perf_dict_names = {}
-        self.perf_dict_format = {}
-        self.perf_dict_good = {}
-        self.determine_performance_dictionary()
+from generalFunctions import det_height, ss2hhmmss, determine_distance
 
-        self.all = {}
+
+class Performance(object):
+    def __init__(self, competition_day, flight):
+
+        self.tsk_distance_all = sum(competition_day.task_dists)
+        self.tsk_distance_leg = competition_day.task_dists
+
+        self.no_cruises = flight.phases.cruises_all
+        self.no_cruises_leg = flight.phases.cruises_leg
+
+        self.no_thermals = flight.phases.thermals_all
+        self.no_thermals_leg = flight.phases.thermals_leg
+
+        startheight = det_height(flight.b_records[flight.tsk_i[0]], flight.gps_altitude)
+
+        if flight.outlanded:
+            s_flown_task_all = 0
+            for leg in range(flight.outlanding_leg):
+                s_flown_task_all += competition_day.task_dists[leg]
+            s_flown_task_all += flight.outlanding_distance
+            s_flown_task_all /= 1000
+        else:
+            s_flown_task_all = sum(competition_day.task_dists) / 1000
+
+        self.all = {"ranking": flight.ranking,
+                    "airplane": flight.airplane,
+                    "compID": flight.competition_id,
+                    "t_start": ss2hhmmss(flight.tsk_t[0]),
+                    "t_finish": ss2hhmmss(flight.tsk_t[-1]),
+                    "h_start": startheight,
+                    "s_flown_task": s_flown_task_all}
+
         self.leg = []
 
+        # in case of outlanding: only performance is stored from completed legs
         for leg in range(competition_day.no_legs):
-            self.leg[str(leg+1)] = {}
+            if flight.outlanded and leg == flight.outlanding_leg:
+                t_start = flight.tsk_t[leg]
+                t_finish = 0
+                s_flown_task_leg = flight.outlanding_distance / 1000
+            elif flight.outlanded and leg > flight.outlanding_leg:
+                t_start = 0
+                t_finish = 0
+                s_flown_task_leg = 0
+            else:
+                t_start = flight.tsk_t[leg]
+                t_finish = flight.tsk_t[leg+1]
+                s_flown_task_leg = competition_day.task_dists[leg] / 1000
+            self.leg.append({"ranking": self.all["ranking"],
+                             "airplane": self.all["airplane"],
+                             "compID": self.all["compID"],
+                             "t_start": ss2hhmmss(t_start),
+                             "t_finish": ss2hhmmss(t_finish),
+                             "s_flown_task": s_flown_task_leg})
 
-    def determine_performance(self, flight):
+    def store_perf(self, leg, key, value):
+        if leg == -1:
+            self.all[key] = value
+        else:
+            self.leg[leg][key] = value
 
-        phase = 0
-        cruise = True if flight.phases.all[0]["phase"] == 'cruise' else False
+    def det_vario_gem(self, leg, thermal_time, thermal_altitude_loss, thermal_altitude_gain):
+        if thermal_time == 0:
+            vario_gem = 0
+        else:
+            vario_gem = float(thermal_altitude_loss + thermal_altitude_gain) / thermal_time
+        self.store_perf(leg, "vario_gem", vario_gem)
 
-        thermal_altitude_gain = 0
-        thermal_altitude_loss = 0
-        thermal_time = 0
-        cruise_time = 0
-        cruise_distance = 0
-        leg = 1
+    def det_v_glide_avg(self, leg, cruise_distance, cruise_time):
+        # returns the average speed during cruise in kmh
+        if cruise_time == 0:
+            v_glide_avg = 42
+        else:
+            v_glide_avg = float(cruise_distance) / cruise_time
+        self.store_perf(leg, "v_glide_avg", v_glide_avg * 3.6)
 
-        for i in range(flight.b_records.__len__()):
+    def det_v_turn_avg(self, leg, thermal_distance, thermal_time):
+        # returns the average speed during thermal in kmh
+        if thermal_time == 0:
+            v_turn_avg = 0
+        else:
+            v_turn_avg = float(thermal_distance) / thermal_time
+        self.store_perf(leg, "v_turn_avg", v_turn_avg * 3.6)
 
-            distance = 0
-            height_difference = 0
+    def det_LD_avg(self, leg, cruise_distance, cruise_height_diff):
+        if cruise_height_diff == 0:
+            LD_avg = 42
+        else:
+            LD_avg = float(cruise_distance) / -cruise_height_diff
+        self.store_perf(leg, "LD_avg", LD_avg)
 
-            if flight.tsk_i[0] < i <= flight.tsk_i[-1]:
+    def det_turn_percentage(self, leg, thermal_time, cruise_time):
+        if (thermal_time + cruise_time) == 0:
+            turn_percentage = 0
+        else:
+            turn_percentage = float(thermal_time) / (thermal_time + cruise_time)
+        self.store_perf(leg, "turn_percentage", turn_percentage)
 
-                if i == flight.phases.all[phase]['i_begin']:
-                    phase += 1
-                    cruise = True if flight.phases.all[phase]['phase'] == 'cruise' else False
+    def det_h_loss_turn(self, leg, thermal_altitude_loss, thermal_altitude_gain):
+        if (abs(thermal_altitude_loss) + abs(thermal_altitude_gain)) == 0:
+            h_loss_turn = 42
+        else:
+            h_loss_turn = float(abs(thermal_altitude_loss)) / (abs(thermal_altitude_loss) + abs(thermal_altitude_gain))
+        self.store_perf(leg, "h_loss_turn", h_loss_turn)
 
-                if i == flight.tsk_i[leg]:
-                    if height_difference > 0:
-                        self.all['thermal_altitude_gain'] += thermal_altitude_gain
-                    else:
-                        self.all['thermal_altitude_loss'] += thermal_altitude_loss
+    def det_s_glide_avg(self, leg, cruise_distance, no_cruises):
+        # return the average cruise distance in kms
+        if no_cruises == 0:
+            s_glide_avg = 42
+        else:
+            s_glide_avg = float(cruise_distance) / no_cruises
+        self.store_perf(leg, "s_glide_avg", s_glide_avg / 1000)
 
-                    self.leg[]
-                    leg += 1
+    def det_s_extra(self, leg, cruise_distance, task_distance, thermal_drift):
+        s_extra = float(cruise_distance + thermal_drift - task_distance) / task_distance
+        self.store_perf(leg, "s_extra", s_extra)
+
+    def det_xc_v(self, leg, task_distance, thermal_time, cruise_time):
+        # return the cross country speed in kmh
+        if (thermal_time + cruise_time) == 0:
+            xc_v = 42
+        else:
+            xc_v = float(task_distance) / (thermal_time + cruise_time)
+        self.store_perf(leg, "xc_v", xc_v * 3.6)
+
+    def write_perfs(self, leg,
+                    thermal_altitude_gain, thermal_altitude_loss, thermal_time, thermal_distance, thermal_drift,
+                    cruise_time, cruise_distance, cruise_height_diff):
+
+        if leg == -1:
+            no_cruises = self.no_cruises
+            no_thermals = self.no_thermals
+            task_distance = self.tsk_distance_all
+        else:
+            no_cruises = self.no_cruises_leg[leg]
+            no_thermals = self.no_thermals_leg[leg]
+            task_distance = self.tsk_distance_leg[leg]
+
+        # implement performance column with number of thermals?
+        self.det_vario_gem(leg, thermal_time, thermal_altitude_loss, thermal_altitude_gain)
+        self.det_v_turn_avg(leg, thermal_distance, thermal_time)
+        self.det_turn_percentage(leg, thermal_time, cruise_time)
+        self.det_LD_avg(leg, cruise_distance, cruise_height_diff)
+        self.det_s_extra(leg, cruise_distance, task_distance, thermal_drift)
+        self.det_h_loss_turn(leg, thermal_altitude_loss, thermal_altitude_gain)
+        self.det_s_glide_avg(leg, cruise_distance, no_cruises)
+        self.det_v_glide_avg(leg, cruise_distance, cruise_time)
+        self.det_xc_v(leg, task_distance, thermal_time, cruise_time)
+
+    def determine_performance(self, flight, competitionday):
+
+        thermal_altitude_gain_tot = 0
+        thermal_altitude_loss_tot = 0
+        thermal_time_tot = 0
+        thermal_distance_tot = 0
+        thermal_drift_tot = 0
+        cruise_time_tot = 0
+        cruise_distance_tot = 0
+        cruise_height_diff_tot = 0
+
+        for leg in range(competitionday.no_legs):
+
+            thermal_altitude_gain = 0
+            thermal_altitude_loss = 0
+            thermal_time = 0
+            thermal_distance = 0
+            thermal_drift = 0
+            cruise_time = 0
+            cruise_distance = 0
+            cruise_height_diff = 0
+
+            for point in range(len(flight.phases.pointwise_leg[leg]['phase'])):
+
+                leg_pointwise = flight.phases.pointwise_leg[leg]
+                cruise = True if leg_pointwise["phase"][point] == 'cruise' else False
 
                 if cruise:
-                    pass
-                else:  # thermal
-                    pass
+                    cruise_time += leg_pointwise["time_difference"][point]
+                    cruise_distance += leg_pointwise["distance"][point]
+                    cruise_height_diff += leg_pointwise["height_difference"][point]
+                else:
+                    thermal_time += leg_pointwise["time_difference"][point]
+                    thermal_distance += leg_pointwise["distance"][point]
+                    if leg_pointwise["height_difference"][point] > 0:
+                        thermal_altitude_gain += leg_pointwise["height_difference"][point]
+                    else:
+                        thermal_altitude_loss += leg_pointwise["height_difference"][point]
 
+            for entry in flight.phases.leg[leg]:
+                if entry["phase"] == "thermal":
+                    i_st = entry["i_start"]
+                    i_end = entry["i_end"]
+                    thermal_drift += determine_distance(flight.b_records[i_st], flight.b_records[i_end], 'pnt', 'pnt')
 
-    def determine_point_stats(self):
-        pass
+            # write to total performance values
+            thermal_altitude_gain_tot += thermal_altitude_gain
+            thermal_altitude_loss_tot += thermal_altitude_loss
+            thermal_time_tot += thermal_time
+            thermal_distance_tot += thermal_distance
+            thermal_drift_tot += thermal_drift
+            cruise_time_tot += cruise_time
+            cruise_distance_tot += cruise_distance
+            cruise_height_diff_tot += cruise_height_diff
 
-    def determine_performance_dictionary(self):
-
-        self.perf_dict['compID'] = '-'
-        self.perf_dict['t_start'] = '-'
-        self.perf_dict['t_finish'] = '-'
-        self.perf_dict['h_start'] = '-'
-        self.perf_dict['vario_gem'] = '-'
-        self.perf_dict['v_glide_avg'] = '-'
-        self.perf_dict['v_turn_avg'] = '-'
-        self.perf_dict['s_glide_avg'] = '-'
-        self.perf_dict['LD_avg'] = '-'
-        self.perf_dict['s_extra'] = '-'
-        self.perf_dict['xc_v'] = '-'
-        self.perf_dict['airplane'] = '-'
-        self.perf_dict['ranking'] = '-'
-        self.perf_dict['turn_percentage'] = '-'
-        self.perf_dict['s_flown_task'] = '-'
-        self.perf_dict['h_loss_turn'] = '-'
-
-        self.perf_dict_names['t_start'] = 'Start time:'
-        self.perf_dict_names['ranking'] = 'Ranking'
-        self.perf_dict_names['airplane'] = 'Airplane:'
-        self.perf_dict_names['comp_ID'] = 'Callsign:'
-        self.perf_dict_names['t_finish'] = 'Finish time:'
-        self.perf_dict_names['h_start'] = 'Start height[m]:'
-        self.perf_dict_names['vario_gem'] = 'Average rate of climb[m/s]:'
-        self.perf_dict_names['v_glide_avg'] = 'Average cruise speed (GS)[km/h]:'
-        self.perf_dict_names['v_turn_avg'] = 'Speed during turning (GS)[km/h]'
-        self.perf_dict_names['s_glide_avg'] = 'Average cruise distance[km]:'
-        self.perf_dict_names['LD_avg'] = 'Average L/D:'
-        self.perf_dict_names['s_extra'] = 'Excess distance covered[%]:'
-        self.perf_dict_names['xc_v'] = 'XC speed[km/h]:'
-        self.perf_dict_names['turn_percentage'] = 'Percentage turning[%]:'
-        self.perf_dict_names['s_flown_task'] = 'Distance covered from task[km]:'
-        self.perf_dict_names['h_loss_turn'] = 'Height lost during circling[%]'
-
-        self.perf_dict_format['t_start'] = 'text'
-        self.perf_dict_format['ranking'] = 'int'
-        self.perf_dict_format['airplane'] = 'text'
-        self.perf_dict_format['comp_ID'] = 'text'
-        self.perf_dict_format['t_finish'] = 'text'
-        self.perf_dict_format['h_start'] = 'number'
-        self.perf_dict_format['vario_gem'] = 'number'
-        self.perf_dict_format['v_glide_avg'] = 'number'
-        self.perf_dict_format['v_turn_avg'] = 'number'
-        self.perf_dict_format['s_glide_avg'] = 'number'
-        self.perf_dict_format['LD_avg'] = 'number'
-        self.perf_dict_format['s_extra'] = 'number'
-        self.perf_dict_format['xc_v'] = 'number'
-        self.perf_dict_format['turn_percentage'] = 'number'
-        self.perf_dict_format['s_flown_task'] = 'number'
-        self.perf_dict_format['h_loss_turn'] = 'number'
-
-        self.perf_dict_good['ranking'] = 'neutral'
-        self.perf_dict_good['t_start'] = 'neutral'
-        self.perf_dict_good['t_finish'] = 'neutral'
-        self.perf_dict_good['airplane'] = 'neutral'
-        self.perf_dict_good['comp_ID'] = 'neutral'
-        self.perf_dict_good['h_start'] = 'high'
-        self.perf_dict_good['vario_gem'] = 'high'
-        self.perf_dict_good['v_glide_avg'] = 'high'
-        self.perf_dict_good['v_turn_avg'] = 'low'
-        self.perf_dict_good['s_glide_avg'] = 'high'
-        self.perf_dict_good['LD_avg'] = 'high'
-        self.perf_dict_good['s_extra'] = 'low'
-        self.perf_dict_good['xc_v'] = 'high'
-        self.perf_dict_good['turn_percentage'] = 'low'
-        self.perf_dict_good['s_flown_task'] = 'high'
-        self.perf_dict_good['h_loss_turn'] = 'low'
-
+            self.write_perfs(leg,
+                             thermal_altitude_gain, thermal_altitude_loss, thermal_time, thermal_distance, thermal_drift,
+                             cruise_time, cruise_distance, cruise_height_diff)
+        self.write_perfs(-1,
+                         thermal_altitude_gain_tot, thermal_altitude_loss_tot, thermal_time_tot, thermal_distance_tot, thermal_drift_tot,
+                         cruise_time_tot, cruise_distance_tot, cruise_height_diff_tot)
 
 if __name__ == '__main__':
     from main import run

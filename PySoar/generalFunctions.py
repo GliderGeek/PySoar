@@ -75,10 +75,10 @@ def det_bearing_change(bearing1, bearing2):
     elif difference <= -180:
         return difference + 360
     elif difference >= 180:
-        return difference - 60
+        return difference - 360
 
 
-def det_height(b_record, gps_altitude):
+def det_height(b_record, gps_altitude): #return gps altitude if boolean true is send
     return int(b_record[30:35]) if gps_altitude else int(b_record[25:30])
 
 
@@ -107,6 +107,16 @@ def ss2hhmmss(time_ss):
     hrs_str = str(int(hours))
 
     return hrs_str + ':' + min_str + ':' + seconds_str
+
+
+def url_format_correct(url_string):
+    correct = 1
+
+    if url_string[0:7] != "http://":
+        correct=0
+        print "URL does not start with http://"
+
+    return correct
 
 
 def correct_format(st_time_string):
@@ -157,10 +167,17 @@ def line_crossed(b_record1, b_record2, type_string, competition_day):
 
 
 def turnpoint_rounded(b_record, leg, competition_day):
-    if determine_distance(b_record, competition_day.task[leg+2], 'pnt', 'tsk') < competition_day.tp_radius[leg]:
+    if determine_distance(b_record, competition_day.task[leg+3], 'pnt', 'tsk') < competition_day.tp_radius[leg]:
         return True
     else:
         return False
+
+
+def print_array_debug(text_file, array_name, array):
+    text_file.write(array_name + " \n")
+    for ii in range(len(array)):
+        text_file.write(str(array[ii])+"\n")
+    text_file.write("\n")
 
 
 if __name__ == '__main__':
