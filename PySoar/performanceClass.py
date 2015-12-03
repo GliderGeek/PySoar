@@ -212,6 +212,6 @@ class Performance(object):
                          cruise_time_tot, cruise_distance_tot, cruise_height_diff_tot)
 
 if __name__ == '__main__':
-    from main import run
+    from main_pysoar import run
 
     run()

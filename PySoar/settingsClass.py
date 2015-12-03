@@ -24,9 +24,9 @@ class Settings(object):
     def __init__(self):
         import platform
 
-        stand_alone_build = False
+        stand_alone_build = True
 
-        self.version = 0.68
+        self.version = 0.70
         self.file_name = 'Analysis_PySoar.xls'
         if platform.system() == 'Darwin' and stand_alone_build:
             self.file_name = '../../../Analysis_PySoar.xls'
@@ -53,5 +53,5 @@ class Settings(object):
     earth_radius = 6371
 
 if __name__ == '__main__':
-    from main import run
+    from main_pysoar import run
     run()

@@ -90,5 +90,5 @@ class SoaringSpotImport(object):
         text_file.close()
 
 if __name__ == '__main__':
-    from main import run
+    from main_pysoar import run
     run()

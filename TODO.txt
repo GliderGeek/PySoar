@@ -1,7 +1,0 @@
-- setup.py to get appropriate packages
-- branching with development / features etc?
-- self.b=[] -> b=[], self.b = b , for speed reasons
-- earth radius inside get_distance? only place where used?
-- eliminate det_ vs determine_ in general functions
-- always settings object at top of file?
-- eliminate defaults in top of determine_phases (only for first run)

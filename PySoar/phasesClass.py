@@ -256,5 +256,5 @@ class FlightPhases(object):
 
 
 if __name__ == '__main__':
-    from main import run
+    from main_pysoar import run
     run()

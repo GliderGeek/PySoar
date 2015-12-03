@@ -15,8 +15,8 @@ def run():
     debugging = True
 
     # either load from soaring spot or prompt input box
-    soaring_spot_info.load("http://www.soaringspot.com/en_gb/nationale-junioren-wedstrijd-2015-venlose-zweefvliegclub-2015/results/open/task-5-on-2015-08-05/daily")
-    # soaring_spot_info.load("http://www.soaringspot.com/en/sallandse-tweedaagse-2014/results/club/task-1-on-2014-06-21/daily")
+    # soaring_spot_info.load()
+    soaring_spot_info.load("http://www.soaringspot.com/en/sallandse-tweedaagse-2014/results/club/task-1-on-2014-06-21/daily")
     if debugging:
         soaring_spot_info.save(settings)
 
@@ -55,5 +55,5 @@ def run():
     excel_sheet.write_file(competition_day, settings)
 
 if __name__ == '__main__':
-    from main import run
+    from main_pysoar import run
     run()
