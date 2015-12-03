@@ -18,6 +18,7 @@ class SoaringSpotImport(object):
 
         self.competition_day_exists = False
 
+        self.baseUrl = "http://www.soaringspot.com"
         self.file_urls = []
         self.file_names = []
         self.rankings = []
@@ -63,8 +64,13 @@ class SoaringSpotImport(object):
                 row.findAll('td')[0].text != "HC":
                 self.rankings.append(int(row.findAll('td')[0].text[0:-1]))
                 for link in row.findAll('a'):
-                    self.file_urls.append(link.get('href'))
+                    if link.get('href').startswith("http://"):
+                        self.file_urls.append(link.get('href'))
+                    elif link.get('href').split('/')[2] == "download-contest-flight":
+                        self.file_urls.append(self.baseUrl + link.get('href'))
                     self.file_names.append(link.text + '.igc')
+
+        print "Analyzing " + self.competition + ", " + self.plane_class + " class " + self.date
 
         self.igc_directory = 'bin/' + self.competition + '/' + self.plane_class + '/' + self.date + '/'
         self.competition_day_exists = os.path.exists(self.igc_directory)
@@ -73,6 +79,7 @@ class SoaringSpotImport(object):
 
             # download files and put in correct directory
             for j in range(len(self.file_urls)):
+                print "Downloading IGC files, this may take a while ..."
                 url_location = self.file_urls[j]
                 save_location = self.igc_directory + self.file_names[j]
                 urllib.URLopener().retrieve(url_location, save_location)

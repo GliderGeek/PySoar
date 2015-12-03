@@ -24,7 +24,7 @@ class Settings(object):
     def __init__(self):
         import platform
 
-        stand_alone_build = True
+        stand_alone_build = False
 
         self.version = 0.70
         self.file_name = 'Analysis_PySoar.xls'
