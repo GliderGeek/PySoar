@@ -50,7 +50,10 @@ class Settings(object):
 
     thermal_indicators = ["vario_gem", "v_turn_avg", "h_loss_turn"]  # perf_indicators which should be disabled when only cruise
 
-    earth_radius = 6371
+    WGS84_mayor_axis = 6378137
+    WGS84_minor_axis = 6356752.3142
+    FAI_sphere_radius = 6371
+    distance_method = "WGS84 elipse"  # choose between 'FAI sphere' and 'WGS84 elipse'
 
 if __name__ == '__main__':
     from main_pysoar import run

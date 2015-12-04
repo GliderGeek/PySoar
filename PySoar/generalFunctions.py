@@ -35,17 +35,69 @@ def det_lat_long(location_record, record_type):
     return radians(dms2dd(latitude_dms)), radians(dms2dd(longitude_dms))
 
 
-def determine_distance(location_record1, location_record2, type1, type2):
-    from math import sin, cos, asin, sqrt
+def determine_distance(location_record1, location_record2, record_type1, record_type2):
+    from math import sin, cos, asin, sqrt, atan2, pi, copysign, atan, tan, isnan
 
-    latitude1, longitude1 = det_lat_long(location_record1, type1)
-    latitude2, longitude2 = det_lat_long(location_record2, type2)
+    # in radians
+    phi1, labda1 = det_lat_long(location_record1, record_type1)
+    phi2, labda2 = det_lat_long(location_record2, record_type2)
 
-    dist = 2 * asin(
-        sqrt((sin((latitude1 - latitude2) / 2)) ** 2
-             + cos(latitude1) * cos(latitude2) * (sin((longitude1 - longitude2) / 2)) ** 2
-             )
-    ) * settings.earth_radius * 1000
+    if settings.distance_method == "FAI sphere":
+        dist = 2 * asin(
+            sqrt((sin((phi1 - phi2) / 2)) ** 2
+                 + cos(phi1) * cos(phi2) * (sin((labda1 - labda2) / 2)) ** 2
+                 )
+        ) * settings.FAI_sphere_radius * 1000
+
+    elif settings.distance_method == "WGS84 elipse":
+    # adapted from http://www.movable-type.co.uk/scripts/latlong-vincenty.html
+
+        a = settings.WGS84_mayor_axis
+        b = settings.WGS84_minor_axis
+
+        f = (a-b) / a
+
+        L = labda2 - labda1
+        tanU1 = (1-f) * tan(phi1)
+        cosU1 = 1 / sqrt((1 + tanU1*tanU1))
+        sinU1 = tanU1 * cosU1
+        tanU2 = (1-f) * tan(phi2)
+        cosU2 = 1 / sqrt((1 + tanU2*tanU2))
+        sinU2 = tanU2 * cosU2
+
+        labda = L
+        labda_new = 0.  # initialization
+        iterationLimit = 100
+        while True:
+            sin_lab = sin(labda)
+            cos_lab = cos(labda)
+            sinSq_sigma = (cosU2*sin_lab) * (cosU2*sin_lab) + (cosU1*sinU2-sinU1*cosU2*cos_lab) * (cosU1*sinU2-sinU1*cosU2*cos_lab)
+            sin_sigma = sqrt(sinSq_sigma)
+            if (sin_sigma == 0):
+                return 0
+            cos_sig = sinU1*sinU2 + cosU1*cosU2*cos_lab
+            sigma = atan2(sin_sigma, cos_sig)
+            sin_alfa = cosU1 * cosU2 * sin_lab / sin_sigma
+            cosSq_alfa = 1 - sin_alfa*sin_alfa
+            cos2_sigmaM = cos_sig - 2*sinU1*sinU2/cosSq_alfa
+            if (isnan(cos2_sigmaM)):
+                cos2_sigmaM = 0  # equatorial line: cosSqsig=0 (paragraph6)
+            C = f/16*cosSq_alfa*(4+f*(4-3*cosSq_alfa))
+            labda_new = labda
+            labda = L + (1-C) * f * sin_alfa * (sigma + C*sin_sigma*(cos2_sigmaM+C*cos_sig*(-1+2*cos2_sigmaM*cos2_sigmaM)))
+            iterationLimit -= 1
+            if iterationLimit <= 0 or abs(labda-labda_new) < 1e-12:
+                break
+
+        if (iterationLimit==0):
+            print 'Formula failed to converge'
+
+        uSq = cosSq_alfa * (a*a - b*b) / (b*b)
+        A = 1 + uSq/16384*(4096+uSq*(-768+uSq*(320-175*uSq)))
+        B = uSq/1024 * (256+uSq*(-128+uSq*(74-47*uSq)))
+        delta_sigma = B*sin_sigma*(cos2_sigmaM+B/4*(cos_sig*(-1+2*cos2_sigmaM*cos2_sigmaM) - B/6*cos2_sigmaM*(-3+4*sin_sigma*sin_sigma)*(-3+4*cos2_sigmaM*cos2_sigmaM)))
+
+        dist = b*A*(sigma-delta_sigma)
 
     return dist
 
