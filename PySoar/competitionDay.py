@@ -71,7 +71,7 @@ class CompetitionDay(object):
         self.task_date = date_raw[0:2] + "-" + date_raw[2:4] + "-" + date_raw[4::]
 
     def save(self):
-        file_name = settings.debug_base_dir + "/competitionDayDebug.txt"
+        file_name = settings.current_dir + "/debug_logs/competitionDayDebug.txt"
         text_file = open(file_name, "w")
 
         print_array_debug(text_file, "task_rules", self.task_rules)

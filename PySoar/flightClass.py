@@ -138,7 +138,7 @@ class Flight(object):
             self.determine_outlanding_location(competition_day)
 
     def save(self, soaring_spot_info):
-        file_name = settings.debug_base_dir + "/flightClassDebug.txt"
+        file_name = settings.current_dir + "/debug_logs/flightClassDebug.txt"
         if self.file_name == soaring_spot_info.file_names[0]:
             text_file = open(file_name, "w")  # overwriting if exist
         else:

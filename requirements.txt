@@ -3,3 +3,5 @@ xlwt
 numpy
 mechanize
 BeautifulSoup
+PyInstaller
+Tkinter

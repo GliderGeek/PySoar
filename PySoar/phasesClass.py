@@ -204,7 +204,7 @@ class FlightPhases(object):
                 self.append_differences(difference_indicators, leg)
 
     def save_phases(self, soaring_spot_info, flight):
-        file_name = settings.debug_base_dir + "/phasesClassPhaseDebug.txt"
+        file_name = settings.current_dir + "/debug_logs/phasesClassPhaseDebug.txt"
         if flight.file_name == soaring_spot_info.file_names[0]:
             text_file = open(file_name, "w")  # overwriting if exist
         else:
@@ -229,7 +229,7 @@ class FlightPhases(object):
         text_file.close()
 
     def save_point_stats(self, soaring_spot_info, flight):
-        file_name = settings.debug_base_dir + "/phasesClassPointStatsDebug.txt"
+        file_name = settings.current_dir + "/debug_logs/phasesClassPointStatsDebug.txt"
         if flight.file_name == soaring_spot_info.file_names[0]:
             text_file = open(file_name, "w")  # overwriting if exist
         else:
