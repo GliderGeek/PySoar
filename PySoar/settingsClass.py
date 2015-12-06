@@ -24,12 +24,18 @@ class Settings(object):
     def __init__(self):
         import platform
 
-        stand_alone_build = False
+        stand_alone_build = True
+        self.debugging = True
 
         self.version = 0.70
-        self.file_name = 'Analysis_PySoar.xls'
         if platform.system() == 'Darwin' and stand_alone_build:
             self.file_name = '../../../Analysis_PySoar.xls'
+            self.debug_base_dir = '../../../debug_logs'
+            self.bin_base_dir = '../../../bin'
+        else:
+            self.file_name = 'Analysis_PySoar.xls'
+            self.debug_base_dir = 'debug_logs'
+            self.bin_base_dir = 'bin'
 
         self.perf_dict = {}
         self.determine_performance_dictionary()

@@ -1,6 +1,8 @@
 import easygui
 from generalFunctions import correct_format, hhmmss2ss, determine_distance, print_array_debug, ss2hhmmss
+from settingsClass import Settings
 
+settings = Settings()
 
 class CompetitionDay(object):
 
@@ -69,7 +71,7 @@ class CompetitionDay(object):
         self.task_date = date_raw[0:2] + "-" + date_raw[2:4] + "-" + date_raw[4::]
 
     def save(self):
-        file_name = "debug_logs/competitionDayDebug.txt"
+        file_name = settings.debug_base_dir + "/competitionDayDebug.txt"
         text_file = open(file_name, "w")
 
         print_array_debug(text_file, "task_rules", self.task_rules)

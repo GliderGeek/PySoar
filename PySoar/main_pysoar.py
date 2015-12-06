@@ -12,12 +12,10 @@ def run():
     soaring_spot_info = SoaringSpotImport()
     competition_day = CompetitionDay()
 
-    debugging = True
-
-    # either load from soaring spot or prompt input box
-    # soaring_spot_info.load()
-    soaring_spot_info.load("http://www.soaringspot.com/en/sallandse-tweedaagse-2014/results/club/task-1-on-2014-06-21/daily")
-    if debugging:
+    # either load directly from soaring spot or prompt input box
+    soaring_spot_info.load()
+#     soaring_spot_info.load("http://www.soaringspot.com/en/sallandse-tweedaagse-2014/results/club/task-1-on-2014-06-21/daily")
+    if settings.debugging:
         soaring_spot_info.save(settings)
 
     for ii in range(len(soaring_spot_info.file_names)):
@@ -32,7 +30,7 @@ def run():
 
     competition_day.obtain_task_info()
 
-    if debugging:
+    if settings.debugging:
         competition_day.save()
 
     for flight in competition_day.flights:
@@ -44,7 +42,7 @@ def run():
 
         flight.phases = FlightPhases(competition_day)
         flight.phases.determine_phases(settings, competition_day, flight)
-        if debugging:
+        if settings.debugging:
             flight.phases.save(soaring_spot_info, flight)
         flight.phases.determine_point_statistics(flight, competition_day)
 

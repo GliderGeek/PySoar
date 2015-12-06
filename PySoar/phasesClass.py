@@ -1,4 +1,7 @@
 from generalFunctions import det_local_time, determine_distance, det_bearing, det_bearing_change, ss2hhmmss, det_height
+from settingsClass import Settings
+
+settings = Settings()
 
 
 class FlightPhases(object):
@@ -201,7 +204,7 @@ class FlightPhases(object):
                 self.append_differences(difference_indicators, leg)
 
     def save_phases(self, soaring_spot_info, flight):
-        file_name = "debug_logs/phasesClassPhaseDebug.txt"
+        file_name = settings.debug_base_dir + "/phasesClassPhaseDebug.txt"
         if flight.file_name == soaring_spot_info.file_names[0]:
             text_file = open(file_name, "w")  # overwriting if exist
         else:
@@ -226,7 +229,7 @@ class FlightPhases(object):
         text_file.close()
 
     def save_point_stats(self, soaring_spot_info, flight):
-        file_name = "debug_logs/phasesClassPointStatsDebug.txt"
+        file_name = settings.debug_base_dir + "/phasesClassPointStatsDebug.txt"
         if flight.file_name == soaring_spot_info.file_names[0]:
             text_file = open(file_name, "w")  # overwriting if exist
         else:

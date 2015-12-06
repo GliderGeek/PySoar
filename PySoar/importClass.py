@@ -4,6 +4,9 @@ from generalFunctions import url_format_correct
 from mechanize import Browser
 from BeautifulSoup import BeautifulSoup
 import urllib
+from settingsClass import Settings
+
+settings = Settings()
 
 
 class SoaringSpotImport(object):
@@ -72,7 +75,7 @@ class SoaringSpotImport(object):
 
         print "Analyzing " + self.competition + ", " + self.plane_class + " class " + self.date
 
-        self.igc_directory = 'bin/' + self.competition + '/' + self.plane_class + '/' + self.date + '/'
+        self.igc_directory = settings.bin_base_dir + '/' + self.competition + '/' + self.plane_class + '/' + self.date + '/'
         self.competition_day_exists = os.path.exists(self.igc_directory)
         if not self.competition_day_exists:
             os.makedirs(self.igc_directory)
@@ -84,8 +87,11 @@ class SoaringSpotImport(object):
                 save_location = self.igc_directory + self.file_names[j]
                 urllib.URLopener().retrieve(url_location, save_location)
 
+        if not os.path.exists(settings.debug_base_dir):
+            os.makedirs(settings.debug_base_dir)
+
     def save(self, settings):
-        file_name = "debug_logs/importClassDebug.txt"
+        file_name = settings.debug_base_dir + "/importClassDebug.txt"
         text_file = open(file_name, "w")
 
         text_file.write("rankings\t file_names\t file_urls\t \n")
