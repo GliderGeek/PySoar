@@ -191,6 +191,27 @@ def correct_format(st_time_string):
     return correct
 
 
+def start_refinement(competition_day, b_record1, b_record2):
+
+    task_bearing = det_bearing(competition_day.task[2], competition_day.task[3], 'tsk', 'tsk')
+
+    bearing_b_record1 = det_bearing(competition_day.task[2], b_record1, 'tsk', 'pnt')
+    bearing_b_record2 = det_bearing(competition_day.task[2], b_record2, 'tsk', 'pnt')
+
+    bearing_difference1 = abs(det_bearing_change(bearing_b_record1, task_bearing))
+    bearing_difference2 = abs(det_bearing_change(bearing_b_record2, task_bearing))
+
+    time_difference = det_local_time(b_record2, 0) - det_local_time(b_record1, 0)
+
+    dbearing = (bearing_difference2-bearing_difference1)/time_difference
+    for i in range(time_difference-1):
+        bearing_difference = bearing_difference1 + (i+1)*dbearing
+        if bearing_difference < 90:
+            return - time_difference + i + 1
+
+    return 0
+
+
 def line_crossed(b_record1, b_record2, type_string, competition_day):
     if type_string == 'start':
         midpoint = competition_day.task[2]

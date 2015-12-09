@@ -1,5 +1,5 @@
 from generalFunctions import hhmmss2ss, det_local_time, line_crossed, turnpoint_rounded, det_height,\
-    print_array_debug, ss2hhmmss, determine_distance, det_bearing, det_bearing_change
+    print_array_debug, ss2hhmmss, determine_distance, det_bearing, det_bearing_change, start_refinement
 from settingsClass import Settings
 
 settings = Settings()
@@ -131,6 +131,11 @@ class Flight(object):
                     self.tsk_t.append(t)
                     self.tsk_i.append(i)
                     leg += 1
+
+        b_record1 = self.b_records[self.tsk_i[0]-1]
+        b_record2 = self.b_records[self.tsk_i[0]]
+        self.tsk_t[0] += start_refinement(competition_day, b_record1, b_record2)
+        self.tsk_t[0] -= 1  # Soaring spot takes point before start line!
 
         if self.tsk_t.__len__() != competition_day.no_legs + 1:
             self.outlanded = True
