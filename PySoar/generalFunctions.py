@@ -1,3 +1,5 @@
+from mechanize import Browser
+from BeautifulSoup import BeautifulSoup
 from settingsClass import Settings
 settings = Settings()
 
@@ -161,14 +163,30 @@ def ss2hhmmss(time_ss):
     return hrs_str + ':' + min_str + ':' + seconds_str
 
 
+def url_is_aat(url):
+    mech = Browser()
+    mech.set_handle_robots(False)
+    page = mech.open(url)
+    html = page.read()
+    soup = BeautifulSoup(html)
+    spans = soup.findAll("span")
+
+    for span in spans:
+        if span.text == 'Task duration:':
+            return True
+    return False
+
+
 def url_format_correct(url_string):
-    correct = 1
-
-    if url_string[0:7] != "http://":
-        correct=0
-        print "URL does not start with http://"
-
-    return correct
+    print url_string[-5::]
+    if url_string[0:26] != "http://www.soaringspot.com":
+        return 'URL should start with http://www.soaringspot.com'
+    elif url_string[-5::] != 'daily':
+        return 'Give url of daily results'
+    elif url_is_aat(url_string):
+        return 'AAT not yet implemented'
+    else:
+        return 'URL correct'
 
 
 def correct_format(st_time_string):

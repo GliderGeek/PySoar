@@ -19,6 +19,9 @@ class SoaringSpotImport(object):
         self.date = ""
         self.igc_directory = ""
 
+        self.flights_downloaded = 0
+        self.flights_analyzed = 0
+
         self.competition_day_exists = False
 
         self.baseUrl = "http://www.soaringspot.com"
@@ -26,26 +29,14 @@ class SoaringSpotImport(object):
         self.file_names = []
         self.rankings = []
 
-    def input_url(self):
-        no_input = True
-        while no_input:
-            url_string = easygui.enterbox(
-                msg='Please enter full url of Soaring Spot competition day: ',
-                title=' ',
-                default='',
-                strip=True)
-            if url_format_correct(url_string):
-                print "You entered: ", url_string, '. Programm is running...'
-                no_input = False
-                self.url_page = url_string
+    def download_flight(self, index):
+        url_location = self.file_urls[index]
+        save_location = self.igc_directory + self.file_names[index]
+        urllib.URLopener().retrieve(url_location, save_location)
 
-    def load(self, url_input=""):  # can be called empty and with url as input
-        if url_input == "":
-            self.input_url()
-        elif url_format_correct(url_input):
-            self.url_page = url_input
-        else:
-            self.input_url()
+    def load(self, url_input):
+
+        self.url_page = url_input
 
         self.competition = self.url_page.split('/')[4]
         self.plane_class = self.url_page.split('/')[6]
@@ -77,15 +68,6 @@ class SoaringSpotImport(object):
 
         self.igc_directory = settings.current_dir + '/bin/' + self.competition + '/' + self.plane_class + '/' + self.date + '/'
         self.competition_day_exists = os.path.exists(self.igc_directory)
-        if not self.competition_day_exists:
-            os.makedirs(self.igc_directory)
-
-            # download files and put in correct directory
-            for j in range(len(self.file_urls)):
-                print "Downloading IGC files, this may take a while ..."
-                url_location = self.file_urls[j]
-                save_location = self.igc_directory + self.file_names[j]
-                urllib.URLopener().retrieve(url_location, save_location)
 
         if not os.path.exists(settings.current_dir + '/debug_logs'):
             os.makedirs(settings.current_dir + '/debug_logs')
