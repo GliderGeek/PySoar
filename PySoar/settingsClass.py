@@ -1,4 +1,5 @@
 import os
+import sys
 
 
 class Settings(object):
@@ -31,8 +32,19 @@ class Settings(object):
 
         self.version = 0.70
 
-        self.current_dir = os.getcwd()
-        self.file_name = 'Analysis_PySoar.xls'
+        # determine if application is a script file or frozen exe
+        if getattr(sys, 'frozen', False):
+            self.current_dir = os.path.dirname(sys.executable)
+            if platform.system() == "Darwin":
+                self.current_dir += "/../../.."
+        elif __file__:
+            self.current_dir = os.path.dirname(__file__)
+
+        print self.current_dir
+
+        self.file_name = self.current_dir + '/Analysis_PySoar.xls'
+
+        print self.file_name
 
         self.perf_dict = {}
         self.determine_performance_dictionary()
