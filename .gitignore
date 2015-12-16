@@ -3,3 +3,4 @@ PySoar/standalone/build
 PySoar/standalone/linux
 PySoar/standalone/mac
 PySoar/test
+PySoar/standalone/windows64
