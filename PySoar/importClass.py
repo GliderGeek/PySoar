@@ -1,6 +1,4 @@
 import os
-import easygui
-from generalFunctions import url_format_correct
 from mechanize import Browser
 from BeautifulSoup import BeautifulSoup
 import urllib

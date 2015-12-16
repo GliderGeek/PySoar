@@ -1,7 +1,5 @@
-easygui
 xlwt
 numpy
 mechanize
-BeautifulSoup
-PyInstaller
-Tkinter
+beautifulsoup
+pyinstaller
