@@ -271,6 +271,21 @@ def print_array_debug(text_file, array_name, array):
     text_file.write("\n")
 
 
+def open_analysis_file():
+    import platform
+    import os
+    import subprocess
+
+    print "platform.system() =" + platform.system()
+
+    if platform.system() == "Darwin":
+        subprocess.call(["open", settings.file_name])
+    elif platform.system() == "Linux":
+        subprocess.call(["xdg-open", settings.file_name])
+    elif platform.system() == "windows":
+        os.startfile(settings.file_name)
+
+
 if __name__ == '__main__':
     from main_pysoar import run
 

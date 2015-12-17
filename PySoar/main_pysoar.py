@@ -7,6 +7,7 @@ from importClass import SoaringSpotImport
 from exportClass import ExcelExport
 from Tkinter import Label, Tk, Button, Entry, W
 from generalFunctions import url_format_correct
+from generalFunctions import open_analysis_file
 import os
 
 
@@ -84,16 +85,17 @@ def run():
         excel_sheet = ExcelExport(settings, competition_day)
         excel_sheet.write_file(competition_day, settings)
 
-        analysis_done.configure(text='Excel produced!')
+        analysis_done = Button(root, text='Excel produced', command=open_analysis_file)
+        analysis_done.grid(row=6, column=0, pady=5)
+        # analysis_done.configure(text='Excel produced!')
 
     title = Label(root, text=' PySoar', font=("Helvetica", 30))
     url_accompanying_text = Label(root, text='Give Soaringspot URL:')
     url_entry = Entry(root, width=60)
-    url_confirmation = Button(root, text='ok', command = url_check)
+    url_confirmation = Button(root, text='ok', command=url_check)
     url_status = Label(root, text='', foreground='red')
     download_progress = Label(root, text='Downloaded: ')
     analysis_progress = Label(root, text='Analyzed: ')
-    analysis_done = Label(root, text='')
 
     title.grid(row=0, column=0)
     url_accompanying_text.grid(row=1, column=0, sticky=W)
@@ -101,8 +103,7 @@ def run():
     url_confirmation.grid(row=2, column=1)
     url_status.grid(row=3, column=0)
     download_progress.grid(row=4, column=0, pady=5)
-    analysis_progress.grid(row=5, column=0)
-    analysis_done.grid(row=6, column=0, pady=5)
+    analysis_progress.grid(row=5, column=0, pady=5)
 
     root.mainloop()
 
