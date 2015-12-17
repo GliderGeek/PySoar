@@ -1,4 +1,3 @@
-import easygui
 from generalFunctions import correct_format, hhmmss2ss, determine_distance, print_array_debug, ss2hhmmss
 from settingsClass import Settings
 
