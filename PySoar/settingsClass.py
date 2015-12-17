@@ -40,11 +40,7 @@ class Settings(object):
         elif __file__:
             self.current_dir = os.path.dirname(__file__)
 
-        print self.current_dir
-
         self.file_name = self.current_dir + '/Analysis_PySoar.xls'
-
-        print self.file_name
 
         self.perf_dict = {}
         self.determine_performance_dictionary()
