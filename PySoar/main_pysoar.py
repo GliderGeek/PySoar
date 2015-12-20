@@ -15,7 +15,7 @@ def run():
     root = Tk()
     root.resizable(0, 0)
 
-    def url_check():
+    def url_check(event):
         checked_url = url_format_correct(url_entry.get())
         if checked_url == 'URL correct':
             url_status.configure(text=checked_url, foreground='green')
@@ -92,10 +92,12 @@ def run():
     title = Label(root, text=' PySoar', font=("Helvetica", 30))
     url_accompanying_text = Label(root, text='Give Soaringspot URL:')
     url_entry = Entry(root, width=60)
-    url_confirmation = Button(root, text='ok', command=url_check)
+    url_confirmation = Button(root, text='ok')
+    url_confirmation.bind('<Button-1>', url_check)
     url_status = Label(root, text='', foreground='red')
     download_progress = Label(root, text='Downloaded: ')
     analysis_progress = Label(root, text='Analyzed: ')
+    root.bind('<Return>', url_check)
 
     title.grid(row=0, column=0)
     url_accompanying_text.grid(row=1, column=0, sticky=W)
