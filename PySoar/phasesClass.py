@@ -213,15 +213,15 @@ class FlightPhases(object):
         text_file.write(flight.file_name + "\n\n")
         text_file.write("phases.all:\n")
         for entry in self.all:
-            text_file.write('phase:' + entry['phase'] + ', t_start=' + ss2hhmmss(entry['t_start']) + ', t_end='
-                            + ss2hhmmss(entry['t_end']) + ', i=' + str(entry['i_start']) + ' till i=' + str(entry['i_end']) + "\n")
+            text_file.write(entry['phase'] + '\t' + ss2hhmmss(entry['t_start']) + '\t'
+                            + ss2hhmmss(entry['t_end']) + '\t' + str(entry['i_start']) + '\t' + str(entry['i_end']) + "\n")
         text_file.write("\n")
 
         for leg in range(len(self.leg)):
             text_file.write('leg' + str(leg) + "\n")
             for entry in self.leg[leg]:
-                text_file.write('phase:' + entry['phase'] + ', t_start=' + ss2hhmmss(entry['t_start'])
-                                + ', t_end=' + ss2hhmmss(entry['t_end']) + ', i=' + str(entry['i_start']) + ' till i=' + str(entry['i_end']) + "\n")
+                text_file.write(entry['phase'] + '\t' + ss2hhmmss(entry['t_start'])
+                                + '\t' + ss2hhmmss(entry['t_end']) + '\t' + str(entry['i_start']) + '\t' + str(entry['i_end']) + "\n")
             text_file.write("\n")
 
         text_file.write("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n")
