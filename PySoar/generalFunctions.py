@@ -258,11 +258,10 @@ def line_crossed(b_record1, b_record2, type_string, competition_day):
 
 
 def turnpoint_rounded(b_record, leg, competition_day):
-    if determine_distance(b_record, competition_day.task[leg+3], 'pnt', 'tsk') < competition_day.tp_radius[leg]:
-        return True
-    else:
-        return False
-
+	if determine_distance(b_record, competition_day.task[leg+3], 'pnt', 'tsk') < competition_day.tp_radius[leg+1]:
+		return True
+	else:
+		return False
 
 def print_array_debug(text_file, array_name, array):
     text_file.write(array_name + " \n")
