@@ -1,0 +1,33 @@
+\chapter{Cruise and thermal algorithm}
+Distinguishing between thermal and cruise forms a crucial part of the performance analysis. This chapter deals with the algorithm that takes care of this task.
+
+\section{Description of the method} \label{descr_turn_cruise}
+The method consists of two parts:
+\begin{enumerate}
+\item Switch from cruise to thermal
+\item Switch from thermal to cruise
+\end{enumerate}
+Separate methods for both tasks make it possible to tune the outcome and optimize the accuracy.
+
+\subsection{From cruise to thermal}
+When a thermal has been entered, the pilot makes a large continuous deviation in its bearing within a limited amount of time. This fact is exploited in this method, which collects the accumulated bearing change during cruise. When this value exceeds the threshold (200 degrees), the current mode is switched from 'cruise' to 'thermal'. When a clockwise bearing change is followed by a counter clockwise bearing change (or the other way around), the value is set to zero.\\
+\ \\
+Most other methods use a threshold based on the bearing change rate and a minimum time that this threshold is exceeded (e.g. 8 degrees per second for 20 seconds). This bearing change is clearly high when the pilot sharply turns to enter the thermal and will often remain large during the first circle. A big disadvantage of this method is that the appropriate threshold is very dependent on the flight style and it has been observed that it works poorly for those pilots which fly large turn radii. A big advantage of this method is that it sharply detects the point when the thermal is entered, opposed to the accumulated bearing change which locates this point too early.\\
+\ \\
+To overcome this problem, the accumulated bearing change has been expanded with a second threshold based on the bearing change rate. It looks for the last occurrence of a bearing change rate above 5 degrees per second. When no such point is found, the first fix of the accumulated bearing change is used.\\
+\ \\
+Summarizing the thresholds:
+\begin{itemize}
+\item Minimum accumulated bearing change of 200 degrees
+\item Thermal starting point: bearing change rate above 5 degrees per second
+\end{itemize}
+
+\subsection{From turning to cruise}
+After exiting a thermal, the bearing change rate will be low. This motivates for a maximum bearing change rate, set at 6 degrees per second. The value is pretty high to accurately capture the exit point and allow for changes in direction after turning. This bearing change rate is combined with a minimum distance of 400m (approximately 2 thermal diameters) to make sure that relocating the thermal is not mistaken for a new cruise phase. The high maximum bearing change rate is compensated by the third threshold, being an average bearing change rate with a maximum of 2 degrees per second.\\
+\ \\
+To summarize:
+\begin{itemize}
+\item Bearing change rate below 6 degrees per second
+\item Minimum distance traveled of 400m
+\item An average bearing change rate below 2 degrees per second
+\end{itemize}

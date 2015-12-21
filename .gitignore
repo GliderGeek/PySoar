@@ -4,3 +4,11 @@ PySoar/standalone/linux
 PySoar/standalone/mac
 PySoar/test
 PySoar/standalone/windows64
+ch0_introduction.aux
+ch1_cruise_thermal_algorithm.aux
+ch2_performance_indicators.aux
+PySoar-manual.aux
+PySoar-manual.log
+PySoar-manual.pdf
+PySoar-manual.synctex.gz
+PySoar-manual.toc

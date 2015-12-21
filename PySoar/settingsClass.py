@@ -16,7 +16,7 @@ class Settings(object):
         self.set_performance_entry("h_start",           "Start height",                 "number",   "high")
         self.set_performance_entry("vario_gem",         "Average rate of climb",        "number",   "high")
         self.set_performance_entry("v_glide_avg",       "Average cruise speed (GS)",    "number",   "high")
-        self.set_performance_entry("v_turn_avg",        "Speed during turning (GS)",    "number",   "low")
+        self.set_performance_entry("v_turn_avg",        "Average thermal speed (GS)",   "number",   "low")
         self.set_performance_entry("s_glide_avg",       "Average cruise distance",      "number",   "high")
         self.set_performance_entry("LD_avg",            "Average L/D",                  "number",   "high")
         self.set_performance_entry("s_extra",           "Excess distance covered",      "number",   "low")

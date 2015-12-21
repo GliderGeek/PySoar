@@ -1,0 +1,77 @@
+\chapter{Performance indicators}
+A proper understanding of the performance indicators prevents misinterpretation and might explain differences with other software. Therefore this chapter shortly elaborates on the methods of calculation.
+
+\section{Distance covered from task [km]}
+When this value is not equal to the task distance an outlanding has occurred.
+
+\section{Start time [hh:mm:ss]}
+Start time is given in local time.
+
+\section{Finish time [hh:mm:ss]}
+Finish time is in local time. Finish times are not shown for outlandings. For those flights only the finish times of completed legs are shown.
+
+\section{Start height [m]}
+The height is taken from the gps fix when the startline is crossed. This altitude can be stored from two sources: barometric altitude, gps altitude. 
+\begin{itemize}
+\item barometric start height:ICAO ISA above the 1013.25 HPa sea level datum
+\item gps start height: above the WGS84 ellipsoid
+\end{itemize}
+If both are present, the barometric altitude is used.
+
+\section{Average rate of climb [$\frac{m}{s}$]}
+The average rate of climb is simply calculated using:
+\begin{equation}
+R{C_{avg}} = \frac{{\Delta {h_{thermal - loss}} + \Delta {h_{thermal - gain}}}}{{{t_{thermal}}}}
+\end{equation}
+
+\section{Average cruise speed [$\frac{km}{h}$]}
+The average cruise speed is calculated using:
+\begin{equation}
+{v_{avg - cruise}} = \frac{{{s_{cruise}}}}{{{t_{cruise}}}}
+\end{equation}
+This velocity is thus the ground speed.
+
+\section{Average thermal speed [$\frac{km}{h}$]}
+The average thermal speed is calculated using:
+\begin{equation}
+{v_{avg - thermal}} = \frac{{{s_{thermal}}}}{{{t_{thermal}}}}
+\end{equation}
+This velocity is thus the ground speed.
+
+\section{Average cruise distance [km]}
+The average cruise distance is calculated using:
+\begin{equation}
+{s_{avg - cruise}} = \frac{{{s_{cruise}}}}{{{n_{cruises}}}}
+\end{equation}
+
+\section{Average L/D [-]}
+The average glide ratio is calculated using:
+\begin{equation}
+L/{D_{avg}} = \frac{{{s_{cruise}}}}{{\Delta {h_{cruise}}}}
+\end{equation}
+
+\section{Excess distance covered [\%]}
+The Excess distance covered is calculated as:
+\begin{equation}
+ED = \frac{{{s_{cruise}} + {s_{thermal{\kern 1pt} drift}}}}{{{s_{task}}}} \cdot 100\% 
+\end{equation}
+Wherein the thermal drift is the linear distance between the entrance point and the exit point of the thermal.
+
+\section{XC speed [$\frac{km}{h}$]}
+The XC speed is calculated using:
+\begin{equation}
+{v_{xc}} = \frac{{{s_{task}}}}{{{t_{task - flown}}}}
+\end{equation}
+
+\section{Percentage turning [\%]}
+This parameter is based on thermal time ${{t_{thermal}}}$ and cruise time ${{t_{cruise}}} $, leading to:
+\begin{equation}
+{T_{thermal}} = \frac{{{t_{thermal}}}}{{{t_{thermal}} + {t_{cruise}}}} \cdot 100\% 
+\end{equation}
+
+\section{Height lost during circling [\%]}
+When in thermal mode, two consecutive gps fixed can have either a positive or a negative altitude difference. Positive altitude gains are stored in $\Delta {h_{thermal-gain}}$ while negative altitude gains are stored in ${\Delta {h_{thermal-loss}}}$. The height lost during circling is calculated as:
+\begin{equation}
+{H_{loss - thermal}} = \frac{{\Delta {h_{thermal - loss}}}}{{\Delta {h_{thermal - loss}} + \Delta {h_{thermal - gain}}}} \cdot 100\%
+\end{equation}
+This parameter can be interpreted as a measure for how well the thermal has been centered.
