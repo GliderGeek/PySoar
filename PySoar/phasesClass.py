@@ -77,7 +77,6 @@ class FlightPhases(object):
         for i in range(flight.b_records.__len__()):
             if flight.tsk_i[0] < i < flight.tsk_i[-1]:
 
-
                 time_m2 = time_m1
 
                 time_m1 = time
@@ -122,10 +121,10 @@ class FlightPhases(object):
 
                     if abs(bearing_change_tot) > settings.turn_threshold_bearingTot:
                         cruise = False
-                        self.close_entry(start_circle, time, 'all')
-                        self.close_entry(start_circle, time, 'leg' + str(leg))
-                        self.create_entry(start_circle, time, 'thermal', 'all')
-                        self.create_entry(start_circle, time, 'thermal', 'leg'+str(leg))
+                        self.close_entry(possible_thermal_start, time, 'all')
+                        self.close_entry(possible_thermal_start, time, 'leg' + str(leg))
+                        self.create_entry(possible_thermal_start, time, 'thermal', 'all')
+                        self.create_entry(possible_thermal_start, time, 'thermal', 'leg'+str(leg))
                         possible_thermal_start = 0
                         start_circle = 0
                         bearing_change_tot = 0
