@@ -87,8 +87,8 @@ class FlightPhases(object):
                 time = det_local_time(b_record, competitionday.utc_to_local)
 
                 bearing = det_bearing(b_record_m1, b_record, 'pnt', 'pnt')
-
-                bearing_change_rate = det_bearing_change(bearing_m1, bearing) / (time - 0.5*time_m1 - 0.5*time_m2)
+                bearing_change = det_bearing_change(bearing_m1, bearing)
+                bearing_change_rate = bearing_change / (time - 0.5*time_m1 - 0.5*time_m2)
 
                 if i == flight.tsk_i[leg+1]:
                     phase = 'cruise' if cruise else 'thermal'
@@ -105,7 +105,7 @@ class FlightPhases(object):
 
                         if possible_thermal_start == 0:
                             possible_thermal_start = i
-                        elif not sharp_thermal_entry_found and abs(bearing_change_rate) > settings.glide_threshold_bearingRate:
+                        elif (not sharp_thermal_entry_found) and abs(bearing_change_rate) > settings.cruise_threshold_bearingRate:
                             sharp_thermal_entry_found = True
                             possible_thermal_start = i
 
@@ -119,18 +119,19 @@ class FlightPhases(object):
 
                         possible_thermal_start = i
 
-                    if abs(bearing_change_tot) > settings.turn_threshold_bearingTot:
+                    if abs(bearing_change_tot) > settings.cruise_threshold_bearingTot:
                         cruise = False
-                        self.close_entry(possible_thermal_start, time, 'all')
-                        self.close_entry(possible_thermal_start, time, 'leg' + str(leg))
-                        self.create_entry(possible_thermal_start, time, 'thermal', 'all')
-                        self.create_entry(possible_thermal_start, time, 'thermal', 'leg'+str(leg))
+                        thermal_start_time = det_local_time(flight.b_records[possible_thermal_start], competitionday.utc_to_local)
+                        self.close_entry(possible_thermal_start, thermal_start_time, 'all')
+                        self.close_entry(possible_thermal_start, thermal_start_time, 'leg' + str(leg))
+                        self.create_entry(possible_thermal_start, thermal_start_time, 'thermal', 'all')
+                        self.create_entry(possible_thermal_start, thermal_start_time, 'thermal', 'leg'+str(leg))
                         possible_thermal_start = 0
                         sharp_thermal_entry_found = False
                         bearing_change_tot = 0
 
                 else:  # thermal
-                    if abs(bearing_change_rate) > settings.turn_threshold_bearingRate:
+                    if abs(bearing_change_rate) > settings.thermal_threshold_bearingRate:
                         if possible_cruise_start != 0:
                             cruise_distance = 0
                             temp_bearing_change = 0
@@ -138,17 +139,17 @@ class FlightPhases(object):
                         if cruise_distance == 0:
                             possible_cruise_start = i
                             possible_cruise_t = time
-                            temp_bearing_change += bearing_change_rate
-                            temp_bearing_avg = 0
+                            temp_bearing_change += bearing_change
+                            temp_bearing_rate_avg = 0
                         else:
-                            temp_bearing_change += bearing_change_rate
-                            temp_bearing_avg = temp_bearing_change / (time-possible_cruise_t)
+                            temp_bearing_change += bearing_change
+                            temp_bearing_rate_avg = temp_bearing_change / (time-possible_cruise_t)
 
                         cruise_distance = determine_distance(flight.b_records[possible_cruise_start-1], b_record,
                                                              'pnt', 'pnt')
 
-                        if cruise_distance > settings.glide_threshold_dist and \
-                                        abs(temp_bearing_avg) < settings.glide_threshold_bearingRateAvg:
+                        if cruise_distance > settings.thermal_threshold_distance and \
+                                        abs(temp_bearing_rate_avg) < settings.thermal_threshold_bearingRateAvg:
 
                             cruise = True
                             self.close_entry(possible_cruise_start, possible_cruise_t, 'all')

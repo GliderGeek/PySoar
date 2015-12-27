@@ -45,12 +45,15 @@ class Settings(object):
         self.perf_dict = {}
         self.determine_performance_dictionary()
 
-    turn_threshold_bearingRate = 6
-    turn_threshold_bearingTot = 200
+    # thresholds while in cruise
+    cruise_threshold_bearingRate = 6
+    cruise_threshold_bearingTot = 200
 
-    glide_threshold_dist = 400
-    glide_threshold_bearingRateAvg = 2
-    glide_threshold_bearingRate = 6
+    # thresholds while in thermal
+    thermal_threshold_distance = 400
+    thermal_threshold_bearingRateAvg = 2
+    thermal_threshold_bearingRate = 6
+
 
     perf_indic_all = ["ranking", "airplane", "compID", "s_flown_task", "t_start", "t_finish", "h_start", "vario_gem",
                       "v_glide_avg", "v_turn_avg", "s_glide_avg", "LD_avg", "s_extra", "xc_v",
