@@ -8,6 +8,7 @@ from exportClass import ExcelExport
 from Tkinter import Label, Tk, Button, Entry, W
 from generalFunctions import url_format_correct
 from generalFunctions import open_analysis_file
+import time
 import os
 
 
@@ -33,8 +34,9 @@ def run():
         soaring_spot_info.load(url_entry.get())
 
         for index in range(len(soaring_spot_info.file_urls)):
-            if not os.path.exists(soaring_spot_info.igc_directory + "/" + soaring_spot_info.file_names[index]):
+            while not os.path.exists(soaring_spot_info.igc_directory + "/" + soaring_spot_info.file_names[index]):
                 soaring_spot_info.download_flight(index)
+                time.sleep(0.1)
             soaring_spot_info.flights_downloaded += 1
             download_progress.configure(text='Downloaded: ' + str(soaring_spot_info.flights_downloaded) + '/' + str(len(soaring_spot_info.file_names)))
             download_progress.update()
