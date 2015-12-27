@@ -32,15 +32,10 @@ def run():
 
         soaring_spot_info.load(url_entry.get())
 
-        if not soaring_spot_info.competition_day_exists:
-            os.makedirs(soaring_spot_info.igc_directory)
-            for index in range(len(soaring_spot_info.file_urls)):
+        for index in range(len(soaring_spot_info.file_urls)):
+            if not os.path.exists(soaring_spot_info.igc_directory + "/" + soaring_spot_info.file_names[index]):
                 soaring_spot_info.download_flight(index)
-                soaring_spot_info.flights_downloaded += 1
-                download_progress.configure(text='Downloaded: ' + str(soaring_spot_info.flights_downloaded) + '/' + str(len(soaring_spot_info.file_names)))
-                download_progress.update()
-        else:
-            soaring_spot_info.flights_downloaded = len(soaring_spot_info.file_names)
+            soaring_spot_info.flights_downloaded += 1
             download_progress.configure(text='Downloaded: ' + str(soaring_spot_info.flights_downloaded) + '/' + str(len(soaring_spot_info.file_names)))
             download_progress.update()
 

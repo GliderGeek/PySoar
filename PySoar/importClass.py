@@ -20,8 +20,6 @@ class SoaringSpotImport(object):
         self.flights_downloaded = 0
         self.flights_analyzed = 0
 
-        self.competition_day_exists = False
-
         self.baseUrl = "http://www.soaringspot.com"
         self.file_urls = []
         self.file_names = []
@@ -65,7 +63,9 @@ class SoaringSpotImport(object):
         print "Analyzing " + self.competition + ", " + self.plane_class + " class " + self.date
 
         self.igc_directory = settings.current_dir + '/bin/' + self.competition + '/' + self.plane_class + '/' + self.date + '/'
-        self.competition_day_exists = os.path.exists(self.igc_directory)
+
+        if not os.path.exists(self.igc_directory):
+            os.makedirs(self.igc_directory)
 
         if not os.path.exists(settings.current_dir + '/debug_logs'):
             os.makedirs(settings.current_dir + '/debug_logs')
