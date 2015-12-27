@@ -67,7 +67,7 @@ class FlightPhases(object):
         cruise_distance = 0
         temp_bearing_change = 0
         possible_turn_dir = 'left'
-        start_circle = 0
+        sharp_thermal_entry_found = False
         bearing_change_tot = 0
         leg = 0
 
@@ -105,8 +105,8 @@ class FlightPhases(object):
 
                         if possible_thermal_start == 0:
                             possible_thermal_start = i
-                        elif start_circle == 0 and abs(bearing_change_rate) > settings.glide_threshold_bearingRate:
-                            start_circle = i
+                        elif not sharp_thermal_entry_found and abs(bearing_change_rate) > settings.glide_threshold_bearingRate:
+                            sharp_thermal_entry_found = True
                             possible_thermal_start = i
 
                     else:  # sign change
@@ -126,7 +126,7 @@ class FlightPhases(object):
                         self.create_entry(possible_thermal_start, time, 'thermal', 'all')
                         self.create_entry(possible_thermal_start, time, 'thermal', 'leg'+str(leg))
                         possible_thermal_start = 0
-                        start_circle = 0
+                        sharp_thermal_entry_found = False
                         bearing_change_tot = 0
 
                 else:  # thermal
