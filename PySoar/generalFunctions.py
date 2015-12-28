@@ -281,7 +281,7 @@ def open_analysis_file():
         subprocess.call(["open", settings.file_name])
     elif platform.system() == "Linux":
         subprocess.call(["xdg-open", settings.file_name])
-    elif platform.system() == "windows":
+    elif platform.system() == "Windows":
         os.startfile(settings.file_name)
 
 
