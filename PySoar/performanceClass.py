@@ -96,6 +96,7 @@ class Performance(object):
             turn_percentage = 0
         else:
             turn_percentage = float(thermal_time) / (thermal_time + cruise_time)
+            turn_percentage *= 100
         self.store_perf(leg, "turn_percentage", turn_percentage)
 
     def det_h_loss_turn(self, leg, thermal_altitude_loss, thermal_altitude_gain):
@@ -103,6 +104,7 @@ class Performance(object):
             h_loss_turn = 42
         else:
             h_loss_turn = float(abs(thermal_altitude_loss)) / (abs(thermal_altitude_loss) + abs(thermal_altitude_gain))
+            h_loss_turn *= 100
         self.store_perf(leg, "h_loss_turn", h_loss_turn)
 
     def det_s_glide_avg(self, leg, cruise_distance, no_cruises):
@@ -115,6 +117,7 @@ class Performance(object):
 
     def det_s_extra(self, leg, cruise_distance, task_distance, thermal_drift):
         s_extra = float(cruise_distance + thermal_drift - task_distance) / task_distance
+        s_extra *= 100
         self.store_perf(leg, "s_extra", s_extra)
 
     def det_xc_v(self, leg, task_distance, thermal_time, cruise_time):

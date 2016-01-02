@@ -17,7 +17,9 @@ class ExcelExport(object):
         self.style_dict['int_worst'] = xlwt.easyxf('font: name Times New Roman, bold on; pattern: pattern solid, fore_colour rose', num_format_str='#,##0.')
 
         self.style_dict['style_phase'] = xlwt.easyxf('font: name Arial, bold on; pattern: pattern solid, fore_colour yellow; align: horiz center')
-        self.style_dict['performance_names'] = xlwt.easyxf('font: name Arial, bold on; align: rotation 90')
+        self.style_dict['performance_names'] = xlwt.easyxf('font: name Arial, bold on; align: rotation 90, horiz center')
+        self.style_dict['units'] = xlwt.easyxf('font: name Arial, bold on; align: horiz center')
+
 
     def initiate_labels(self, settings, ):
         for perf_ind in settings.perf_indic_all:
@@ -190,6 +192,14 @@ class ExcelExport(object):
             style = self.style_dict['performance_names']
             perf_format = settings.perf_dict[perf_ind]['format']
             self.write_cell(leg, row, col, content, style)
+
+            row += 1
+            content = settings.perf_dict[perf_ind]['unit']
+            style = self.style_dict['units']
+            perf_format = settings.perf_dict[perf_ind]['format']
+            self.write_cell(leg, row, col, content, style)
+
+            row += 1  # empty line
 
             for flight in competition_day.flights:
                 row += 1

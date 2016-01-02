@@ -69,9 +69,9 @@ This parameter is based on thermal time ${{t_{thermal}}}$ and cruise time ${{t_{
 {T_{thermal}} = \frac{{{t_{thermal}}}}{{{t_{thermal}} + {t_{cruise}}}} \cdot 100\% 
 \end{equation}
 
-\section{Height lost during circling [\%]}
-When in thermal mode, two consecutive gps fixed can have either a positive or a negative altitude difference. Positive altitude gains are stored in $\Delta {h_{thermal-gain}}$ while negative altitude gains are stored in ${\Delta {h_{thermal-loss}}}$. The height lost during circling is calculated as:
+\section{Height loss during circling [\%]}
+When in thermal mode, two consecutive gps fixed can have either a positive or a negative altitude difference. Positive altitude gains are stored in $\Delta {h_{thermal-gain}}$ while negative altitude gains are stored in ${\Delta {h_{thermal-loss}}}$. The height loss during circling is calculated as:
 \begin{equation}
-{H_{loss - thermal}} = \frac{{\Delta {h_{thermal - loss}}}}{{\Delta {h_{thermal - loss}} + \Delta {h_{thermal - gain}}}} \cdot 100\%
+{H_{loss - thermal}} = \frac{{\Delta {h_{thermal - loss}}}}{{\left| {\Delta {h_{thermal - loss}}} \right| + \Delta {h_{thermal - gain}}}} \cdot 100\% 
 \end{equation}
 This parameter can be interpreted as a measure for how well the thermal has been centered.
