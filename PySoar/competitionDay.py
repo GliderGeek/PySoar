@@ -46,7 +46,7 @@ class CompetitionDay(object):
 
     def obtain_task_info(self):
 
-        self.no_tps = int(self.task[0][-4::])
+        self.no_tps = int(self.task[0][-2::])
         self.no_legs = self.no_tps + 1
 
         for turnpoint in self.task_rules:

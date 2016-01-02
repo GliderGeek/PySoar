@@ -25,7 +25,7 @@ class Flight(object):
         self.outlanding_distance = 0
 
     def read_igc(self, competition_day, soaring_spot_info):
-        f = open(soaring_spot_info.igc_directory + self.file_name)
+        f = open(soaring_spot_info.igc_directory + self.file_name, "U")  # U extension is a necessity for cross compatibility!
         full_file = f.readlines()
         f.close()
 
