@@ -27,28 +27,26 @@ class FlightPhases(object):
             self.cruises_leg.append(0)
             self.thermals_leg.append(0)
 
-    def create_entry(self, i_start, t_start, phase, all_leg):
+    def create_entry(self, i_start, t_start, phase, leg):
         content = {'i_start': i_start, 'i_end': i_start, 't_start': t_start, 't_end': t_start, 'phase': phase}
-        if all_leg == 'all':
+        if leg == -2:  # whole flight, -1 reserved for phase before start-line has been crossed
             self.all.append(content)
             if phase == 'cruise':
                 self.cruises_all += 1
             else:
                 self.thermals_all += 1
-        if all_leg.startswith('leg'):
-            leg = int(all_leg[-1])
+        elif leg >= 0:
             self.leg[leg].append(content)
             if phase == 'cruise':
                 self.cruises_leg[leg] += 1
             else:
                 self.thermals_leg[leg] += 1
 
-    def close_entry(self, i_end, t_end, all_leg):
-        if all_leg == 'all':
+    def close_entry(self, i_end, t_end, leg):
+        if leg == -2:  # whole flight, -1 reserved for phase before start-line has been crossed
             self.all[-1]['i_end'] = i_end
             self.all[-1]['t_end'] = t_end
-        if all_leg.startswith('leg'):
-            leg = int(all_leg[-1])
+        elif leg >= 0:
             self.leg[leg][-1]['i_end'] = i_end
             self.leg[leg][-1]['t_end'] = t_end
 
@@ -71,8 +69,8 @@ class FlightPhases(object):
         bearing_change_tot = 0
         leg = 0
 
-        self.create_entry(flight.tsk_i[0], time_m1, 'cruise', 'all')
-        self.create_entry(flight.tsk_i[0], time_m1, 'cruise', 'leg'+str(leg))
+        self.create_entry(flight.tsk_i[0], time_m1, 'cruise', -2)
+        self.create_entry(flight.tsk_i[0], time_m1, 'cruise', leg)
 
         for i in range(flight.b_records.__len__()):
             if flight.tsk_i[0] < i < flight.tsk_i[-1]:
@@ -93,8 +91,8 @@ class FlightPhases(object):
                 if i == flight.tsk_i[leg+1]:
                     phase = 'cruise' if cruise else 'thermal'
                     leg += 1
-                    self.close_entry(i, time, 'leg'+str(leg-1))
-                    self.create_entry(i, time, phase, 'leg'+str(leg))
+                    self.close_entry(i, time, leg-1)
+                    self.create_entry(i, time, phase, leg)
 
                 if cruise:
 
@@ -122,10 +120,10 @@ class FlightPhases(object):
                     if abs(bearing_change_tot) > settings.cruise_threshold_bearingTot:
                         cruise = False
                         thermal_start_time = det_local_time(flight.b_records[possible_thermal_start], competitionday.utc_to_local)
-                        self.close_entry(possible_thermal_start, thermal_start_time, 'all')
-                        self.close_entry(possible_thermal_start, thermal_start_time, 'leg' + str(leg))
-                        self.create_entry(possible_thermal_start, thermal_start_time, 'thermal', 'all')
-                        self.create_entry(possible_thermal_start, thermal_start_time, 'thermal', 'leg'+str(leg))
+                        self.close_entry(possible_thermal_start, thermal_start_time, -2)
+                        self.close_entry(possible_thermal_start, thermal_start_time, leg)
+                        self.create_entry(possible_thermal_start, thermal_start_time, 'thermal', -2)
+                        self.create_entry(possible_thermal_start, thermal_start_time, 'thermal', leg)
                         possible_thermal_start = 0
                         sharp_thermal_entry_found = False
                         bearing_change_tot = 0
@@ -152,18 +150,18 @@ class FlightPhases(object):
                                         abs(temp_bearing_rate_avg) < settings.thermal_threshold_bearingRateAvg:
 
                             cruise = True
-                            self.close_entry(possible_cruise_start, possible_cruise_t, 'all')
-                            self.close_entry(possible_cruise_start, possible_cruise_t, 'leg'+str(leg))
-                            self.create_entry(possible_cruise_start, possible_cruise_t, 'cruise', 'all')
-                            self.create_entry(possible_cruise_start, possible_cruise_t, 'cruise', 'leg'+str(leg))
+                            self.close_entry(possible_cruise_start, possible_cruise_t, -2)
+                            self.close_entry(possible_cruise_start, possible_cruise_t, leg)
+                            self.create_entry(possible_cruise_start, possible_cruise_t, 'cruise', -2)
+                            self.create_entry(possible_cruise_start, possible_cruise_t, 'cruise', leg)
                             possible_cruise_start = 0
                             cruise_distance = 0
                             temp_bearing_change = 0
                             bearing_change_tot = 0
 
         time = det_local_time(flight.b_records[flight.tsk_i[-1]], competitionday.utc_to_local)
-        self.close_entry(flight.tsk_i[-1], time, 'all')
-        self.close_entry(flight.tsk_i[-1], time, 'leg'+str(leg))
+        self.close_entry(flight.tsk_i[-1], time, -2)
+        self.close_entry(flight.tsk_i[-1], time, leg)
 
     def append_differences(self, difference_indicators, leg):
         for key, value in difference_indicators.iteritems():
@@ -192,13 +190,20 @@ class FlightPhases(object):
 
                 height_difference = det_height(flight.b_records[i+1], flight.gps_altitude) -\
                                     det_height(flight.b_records[i], flight.gps_altitude)
+                height = det_height(flight.b_records[i], flight.gps_altitude)
                 distance = determine_distance(flight.b_records[i], flight.b_records[i+1], 'pnt', 'pnt')
                 time_difference = det_local_time(flight.b_records[i+1], competition_day.utc_to_local) -\
                                   det_local_time(flight.b_records[i], competition_day.utc_to_local)
+                time_secs = det_local_time(flight.b_records[i], competition_day.utc_to_local)
+                date_obj = datetime.datetime(2014, 6, 21) + datetime.timedelta(seconds=time_secs)
+                distance_task = determine_flown_task_distance(leg, flight.b_records[i], competition_day)
 
                 difference_indicators = {'height_difference': height_difference,
+                                         'height': height,
                                          'distance': distance,
+                                         'distance_task': distance_task,
                                          'time_difference': time_difference,
+                                         'time': date_obj,
                                          'phase': phase}
 
                 self.append_differences(difference_indicators, leg)
