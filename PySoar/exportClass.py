@@ -20,17 +20,16 @@ class ExcelExport(object):
         self.style_dict['performance_names'] = xlwt.easyxf('font: name Arial, bold on; align: rotation 90, horiz center')
         self.style_dict['units'] = xlwt.easyxf('font: name Arial, bold on; align: horiz center')
 
-
-    def initiate_labels(self, settings, ):
+    def initiate_labels(self, settings):
         for perf_ind in settings.perf_indic_all:
             self.labels_all.append(settings.perf_dict[perf_ind]["name"])
-            if perf_ind not in settings.exclude_perf_indic_leg:
+            if settings.perf_dict[perf_ind]["visible_on_leg"]:
                 self.labels_leg.append(settings.perf_dict[perf_ind]["name"])
 
     def fill_best_worst_bib(self, leg, settings):
         for perf_ind in settings.perf_indic_all:
 
-            if leg != -1 and perf_ind in settings.exclude_perf_indic_leg:
+            if leg != -1 and not settings.perf_dict[perf_ind]["visible_on_leg"]:
                 continue
 
             if leg == -1:
@@ -84,7 +83,7 @@ class ExcelExport(object):
                 if flight.outlanded:
                     continue
 
-                if flight.performance.no_thermals == 0 and perf_ind in settings.thermal_indicators:
+                if flight.performance.no_thermals == 0 and not settings.perf_dict[perf_ind]["visible_only_cruise"]:
                     continue
 
                 value = flight.performance.all[perf_ind]
@@ -113,7 +112,7 @@ class ExcelExport(object):
                     temp_worst = value
                     self.worst_parameters_all[perf_ind] = filename
 
-            if perf_ind in settings.exclude_perf_indic_leg:  # continue to next performance indicator
+            if not settings.perf_dict[perf_ind]["visible_on_leg"]:  # continue to next performance indicator
                 continue
 
             for leg in range(competition_day.no_legs):
@@ -123,10 +122,10 @@ class ExcelExport(object):
 
                 for flight in competition_day.flights:
 
-                    if flight.outlanded and flight.outlanding_leg <= leg and perf_ind not in settings.perf_indic_outland:
+                    if flight.outlanded and flight.outlanding_leg <= leg and not settings.perf_dict[perf_ind]["visible_on_outlanding"]:
                         continue
 
-                    if flight.performance.no_thermals_leg[leg] == 0 and perf_ind in settings.thermal_indicators:
+                    if flight.performance.no_thermals_leg[leg] == 0 and not settings.perf_dict[perf_ind]["visible_only_cruise"]:
                         continue
 
                     value = flight.performance.leg[leg][perf_ind]
@@ -184,7 +183,7 @@ class ExcelExport(object):
         col = 0
         for perf_ind in settings.perf_indic_all:
 
-            if leg != -1 and perf_ind in settings.exclude_perf_indic_leg:
+            if leg != -1 and not settings.perf_dict[perf_ind]["visible_on_leg"]:
                 continue
 
             row = 1
@@ -205,15 +204,15 @@ class ExcelExport(object):
                 row += 1
 
                 if leg == -1:
-                    if flight.outlanded and perf_ind not in settings.perf_indic_outland or\
-                            flight.performance.no_thermals == 0 and perf_ind in settings.thermal_indicators:
+                    if flight.outlanded and not settings.perf_dict[perf_ind]["visible_on_outlanding"] or\
+                                            flight.performance.no_thermals == 0 and not settings.perf_dict[perf_ind]["visible_only_cruise"]:
                         continue
                     else:
                         content = flight.performance.all[perf_ind]
                 else:
                     if flight.outlanded and flight.outlanding_leg < leg or\
-                        flight.outlanded and flight.outlanding_leg <= leg and perf_ind not in settings.perf_indic_outland or\
-                                            flight.performance.no_thermals_leg[leg] == 0 and perf_ind in settings.thermal_indicators:
+                        flight.outlanded and flight.outlanding_leg <= leg and not settings.perf_dict[perf_ind]["visible_on_outlanding"] or\
+                                            flight.performance.no_thermals_leg[leg] == 0 and not settings.perf_dict[perf_ind]["visible_only_cruise"]:
                         continue
                     else:
                         content = flight.performance.leg[leg][perf_ind]
@@ -227,11 +226,11 @@ class ExcelExport(object):
         col = 1
 
         if leg == -1:
-            no_cols = len(settings.perf_indic_all)
+            no_cols = settings.no_indicators
             title = "Entire flight"
             self.ws_all.write_merge(row, row, col, col+no_cols, title, self.style_dict['style_phase'])
         else:
-            no_cols = len(settings.perf_indic_all) - len(settings.exclude_perf_indic_leg)
+            no_cols = settings.no_leg_indicators
             name1 = competition_day.tp_names[leg]
             name2 = competition_day.tp_names[leg+1]
             title = "Leg " + str(leg+1) + ": " + name1 + " - " + name2
