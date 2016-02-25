@@ -55,13 +55,13 @@ class Settings(object):
                 self.no_leg_indicators += 1
 
     # thresholds while in cruise
-    cruise_threshold_bearingRate = 6
-    cruise_threshold_bearingTot = 200
+    cruise_threshold_bearingRate = 4 #degr/s
+    cruise_threshold_bearingTot = 225 #degr
 
     # thresholds while in thermal
-    thermal_threshold_distance = 400
-    thermal_threshold_bearingRateAvg = 2
-    thermal_threshold_bearingRate = 6
+    thermal_threshold_distance = 1000 #m
+    thermal_threshold_bearingRateAvg = 2 #degr/s
+    thermal_threshold_bearingRate = 4 #degr/s
 
     perf_indic_all = ["ranking", "airplane", "compID", "s_flown_task", "t_start", "t_finish", "h_start",
                       "vario_gem","v_glide_avg", "v_turn_avg", "s_glide_avg", "LD_avg", "s_extra", "xc_v",
