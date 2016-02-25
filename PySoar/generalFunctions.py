@@ -285,6 +285,44 @@ def open_analysis_file():
         os.startfile(settings.file_name)
 
 
+def used_engine(flight, i):
+    if not flight.ENL:
+        return False
+    else:
+        ENL_start_byte = flight.ENL_indices[0]
+        ENL_end_byte = flight.ENL_indices[1]
+
+        ENL_value = int(flight.b_records[i][ENL_start_byte-1:ENL_end_byte])
+        if ENL_value < settings.ENL_value_threshold:
+            return False
+        else:
+            time_now = det_local_time(flight.b_records[i], 0)
+            i -= 1
+            time = det_local_time(flight.b_records[i], 0)
+            while time_now - time < settings.ENL_time_threshold:
+
+                ENL_value = int(flight.b_records[i][ENL_start_byte-1:ENL_end_byte])
+                if ENL_value < settings.ENL_value_threshold:
+                    return False
+
+                i -= 1
+                time = det_local_time(flight.b_records[i], 0)
+
+            return True
+
+
+def determine_engine_start_i(flight, i):
+
+    time_last = det_local_time(flight.b_records[i], 0)
+    i -= 1
+    time = det_local_time(flight.b_records[i], 0)
+    while time_last - time < settings.ENL_time_threshold:
+        i -= 1
+        time = det_local_time(flight.b_records[i], 0)
+
+    return i
+
+
 if __name__ == '__main__':
     from main_pysoar import run
 

@@ -14,11 +14,8 @@ pip install -r requirements.txt
 ```
 
 ## Limitations
-The following assumptions are made
+The following limitations are in place:
 
-- turnpoints are always circles
 - no AAT
-- no ENL logging
+- only circular turnpoints (beercans)
 - no restart after 1st turnpoint
-- start with glide over start line
-- maximum of 9 legs
