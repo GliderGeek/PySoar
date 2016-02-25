@@ -214,6 +214,7 @@ class Performance(object):
                          thermal_altitude_gain_tot, thermal_altitude_loss_tot, thermal_time_tot, thermal_distance_tot, thermal_drift_tot,
                          cruise_time_tot, cruise_distance_tot, cruise_height_diff_tot)
 
+
 if __name__ == '__main__':
     from main_pysoar import run
 

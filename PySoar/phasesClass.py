@@ -1,5 +1,7 @@
-from generalFunctions import det_local_time, determine_distance, det_bearing, det_bearing_change, ss2hhmmss, det_height
+from generalFunctions import det_local_time, determine_distance, det_bearing, det_bearing_change, ss2hhmmss,\
+    det_height, determine_flown_task_distance
 from settingsClass import Settings
+import datetime
 
 settings = Settings()
 
@@ -7,7 +9,7 @@ settings = Settings()
 class FlightPhases(object):
 
     def get_difference_bib(self):
-        return {"height_difference": [], "distance": [], "time_difference": [], "phase": []}
+        return {"height_difference": [], "height":[], "distance": [], "distance_task": [], "time_difference": [], "time": [], "phase": []}
 
     def __init__(self, competition_day):
         self.all = []
@@ -72,7 +74,7 @@ class FlightPhases(object):
         self.create_entry(flight.tsk_i[0], time_m1, 'cruise', -2)
         self.create_entry(flight.tsk_i[0], time_m1, 'cruise', leg)
 
-        for i in range(flight.b_records.__len__()):
+        for i in range(len(flight.b_records)):
             if flight.tsk_i[0] < i < flight.tsk_i[-1]:
 
                 time_m2 = time_m1
@@ -256,7 +258,6 @@ class FlightPhases(object):
         text_file.write("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n")
 
         text_file.close()
-
 
     def save(self, soaring_spot_info, flight):
         self.save_phases(soaring_spot_info, flight)

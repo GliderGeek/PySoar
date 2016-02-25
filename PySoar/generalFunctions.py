@@ -19,6 +19,23 @@ def dms2dd(dms):
     return dd
 
 
+def det_time_difference(location_record1, location_record2, record_type1, record_type2):
+    if record_type1 == 'tsk' or record_type2 == 'tsk':
+        exit('only implemented for pnt record types!')
+
+    return det_local_time(location_record2, 0) - det_local_time(location_record1, 0)
+
+
+def det_velocity(location_record1, location_record2, record_type1, record_type2):
+    if record_type1 == 'tsk' or record_type2 == 'tsk':
+        exit('only implemented for pnt record types!')
+
+    dist = determine_distance(location_record1, location_record2, record_type1, record_type2)
+    delta_t = det_time_difference(location_record1, location_record2, record_type1, record_type2)
+
+    return dist/delta_t
+
+
 def det_lat_long(location_record, record_type):
     from math import radians
 
@@ -132,7 +149,19 @@ def det_bearing_change(bearing1, bearing2):
         return difference - 360
 
 
-def det_height(b_record, gps_altitude): #return gps altitude if boolean true is send
+def det_bearing_change_rad(bearing1, bearing2):
+    from math import pi
+    # always return difference between -pi and +pi radians
+    difference = bearing2 - bearing1
+    if -pi < difference < pi:
+        return difference
+    elif difference <= -pi:
+        return difference + 2*pi
+    elif difference >= pi:
+        return difference - 2*pi
+
+
+def det_height(b_record, gps_altitude):
     return int(b_record[30:35]) if gps_altitude else int(b_record[25:30])
 
 
@@ -258,10 +287,11 @@ def line_crossed(b_record1, b_record2, type_string, competition_day):
 
 
 def turnpoint_rounded(b_record, leg, competition_day):
-	if determine_distance(b_record, competition_day.task[leg+3], 'pnt', 'tsk') < competition_day.tp_radius[leg+1]:
-		return True
-	else:
-		return False
+    if determine_distance(b_record, competition_day.task[leg+3], 'pnt', 'tsk') < competition_day.tp_radius[leg+1]:
+        return True
+    else:
+        return False
+
 
 def print_array_debug(text_file, array_name, array):
     text_file.write(array_name + " \n")
@@ -283,6 +313,24 @@ def open_analysis_file():
         subprocess.call(["xdg-open", settings.file_name])
     elif platform.system() == "Windows":
         os.startfile(settings.file_name)
+
+
+def determine_flown_task_distance(_leg, b_record, competition_day):
+    from math import cos, pi
+
+    task_distance = 0
+    for leg in range(_leg-1):
+        task_distance += competition_day.task_dists[leg]
+
+    previous_tp = competition_day.task[_leg+1]
+    next_tp = competition_day.task[_leg+2]
+
+    bearing1 = det_bearing(previous_tp, next_tp, 'tsk', 'tsk')
+    bearing2 = det_bearing(previous_tp, b_record, 'tsk', 'pnt')
+    angle_task_point = det_bearing_change(bearing1, bearing2) * pi / 180
+
+    temp_distance = determine_distance(previous_tp, b_record, 'tsk', 'pnt')
+    return (task_distance + cos(angle_task_point)*temp_distance) / 1000
 
 
 def used_engine(flight, i):
