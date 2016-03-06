@@ -11,6 +11,8 @@ from generalFunctions import open_analysis_file
 import time
 import os
 
+settings = Settings()
+
 
 def run():
     root = Tk()
@@ -25,6 +27,19 @@ def run():
         else:
             url_status.configure(text=checked_url, foreground='red')
             url_status.update()
+
+    def go_bugform(event):
+        import webbrowser
+
+        form_url = settings.debug_form_url
+        versionID = settings.pysoar_version_formID
+        urlID = settings.competition_url_formID
+        pysoar_version = settings.version
+
+        comp_url = url_entry.get()
+
+        complete_url = '%s?entry.%s=%s&entry.%s=%s' % (form_url, versionID, pysoar_version, urlID, comp_url)
+        webbrowser.open(complete_url)
 
     def start_pysoar():
         settings = Settings()
@@ -94,6 +109,8 @@ def run():
     url_status = Label(root, text='', foreground='red')
     download_progress = Label(root, text='Downloaded: ')
     analysis_progress = Label(root, text='Analyzed: ')
+    report_problem = Button(root, text='Report problem')
+    report_problem.bind('<Button-1>', go_bugform)
     root.bind('<Return>', url_check)
 
     title.grid(row=0, column=0)
@@ -103,6 +120,7 @@ def run():
     url_status.grid(row=3, column=0)
     download_progress.grid(row=4, column=0, pady=5)
     analysis_progress.grid(row=5, column=0, pady=5)
+    report_problem.grid(row=7, column=0, sticky=W)
 
     root.mainloop()
 

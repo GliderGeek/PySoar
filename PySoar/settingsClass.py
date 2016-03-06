@@ -32,8 +32,10 @@ class Settings(object):
         import platform
 
         self.debugging = True
-
-        self.version = 0.70
+        self.debug_form_url = 'https://docs.google.com/forms/d/1uWxTA5Hka6rbXzDOJDX9dRhZ7OwIoqN5Do0e27B0q-M/viewform'
+        self.pysoar_version_formID = 891402426
+        self.competition_url_formID = 174131444
+        self.version = '0.50'
 
         # determine if application is a script file or frozen exe
         if getattr(sys, 'frozen', False):
