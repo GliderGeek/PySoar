@@ -15,10 +15,11 @@ pip install -r requirements.txt
 ```
 
 ## Limitations
-The following limitations are in place:
+The following limitations are (currently) in place:
 
 - no AAT
 - only circular turnpoints (beercans)
 - no restart after 1st turnpoint
 - no penalties for missing turnpoints -> outlanding
+- only start line, no start circle
 
