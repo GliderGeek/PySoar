@@ -75,7 +75,7 @@ class Settings(object):
     distance_method = "WGS84 elipse"  # choose between 'FAI sphere' and 'WGS84 elipse'
 
     ENL_value_threshold = 500  # above which it is seen as engine noise
-    ENL_time_threshold = 10  # seconds
+    ENL_time_threshold = 30  # seconds
 
 if __name__ == '__main__':
     from main_pysoar import run
