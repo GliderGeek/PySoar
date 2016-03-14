@@ -267,6 +267,7 @@ def url_format_correct(url_string):
         return 'URL correct'
 
 
+# todo: is this method still used? if not remove, else refactor with return False and return True
 def correct_format(st_time_string):
     correct = 1
 
@@ -354,8 +355,6 @@ def open_analysis_file():
     import os
     import subprocess
 
-    print "platform.system() =" + platform.system()
-
     if platform.system() == "Darwin":
         subprocess.call(["open", settings.file_name])
     elif platform.system() == "Linux":
@@ -405,6 +404,8 @@ def used_engine(flight, i):
                 i -= 1
                 time = det_local_time(flight.b_records[i], 0)
 
+            print "ENL land out at i=%s, t=%s" % (i, ss2hhmmss(time))
+            print ENL_value
             return True
 
 
