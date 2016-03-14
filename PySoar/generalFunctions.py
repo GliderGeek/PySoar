@@ -206,14 +206,63 @@ def url_is_aat(url):
     return False
 
 
+def task_url_from_daily(daily_url):
+    split_daily = daily_url.split("/")
+    split_daily.remove("daily")
+    for index, item in enumerate(split_daily):
+        if item == "results":
+            split_daily[index] = "tasks"
+
+    task_url = "/".join(split_daily)
+    return task_url
+
+
+def url_is_startline(daily_url):
+    task_url = task_url_from_daily(daily_url)
+
+    mech = Browser()
+    mech.set_handle_robots(False)
+    page = mech.open(task_url)
+    html = page.read()
+    soup = BeautifulSoup(html)
+
+    table_rows = soup.findAll("table")[0].findAll("tr")
+    start_observation = table_rows[1].findAll("td")[3].text
+
+    return start_observation.startswith("Line")
+
+
+def url_is_beercans(daily_url):
+    task_url = task_url_from_daily(daily_url)
+
+    mech = Browser()
+    mech.set_handle_robots(False)
+    page = mech.open(task_url)
+    html = page.read()
+    soup = BeautifulSoup(html)
+
+    table_rows = soup.findAll("table")[0].findAll("tr")
+
+    for row in range(2, len(table_rows)-2):
+        tp_observation = table_rows[row].findAll("td")[3].text
+        if tp_observation != "Cylinder R=0.50&nbsp;km":
+            return False
+
+    return True
+
+
 def url_format_correct(url_string):
     print url_string[-5::]
     if url_string[0:26] != "http://www.soaringspot.com":
         return 'URL should start with http://www.soaringspot.com'
     elif url_string[-5::] != 'daily':
-        return 'Give url of daily results'
+        return 'URL does not give daily results'
     elif url_is_aat(url_string):
         return 'AAT not yet implemented'
+    elif not url_is_startline(url_string):
+        return 'Start circle/sector has not been implemented'
+    elif not url_is_beercans(url_string):
+        return 'This type of turnpoint has not been implemented (only beercans)'
     else:
         return 'URL correct'
 
