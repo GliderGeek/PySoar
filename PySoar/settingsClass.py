@@ -25,7 +25,7 @@ class Settings(object):
         self.set_performance_entry("s_extra",           "Excess distance covered",      "number",   "low", "[%]", True, False, True)
         self.set_performance_entry("xc_v",              "XC speed",                     "number",   "high", "[km/h]", True, False, True)
         self.set_performance_entry("turn_percentage",   "Percentage turning",           "number",   "low", "[%]", True, False, True)
-        self.set_performance_entry("s_flown_task",      "Distance covered from task",   "number",   "neutral", "[km", True, True, True)
+        self.set_performance_entry("s_flown_task",      "Distance covered from task",   "number",   "neutral", "[km]", True, True, True)
         self.set_performance_entry("h_loss_turn",       "Height loss during circling",  "number",   "low", "[%]", False, False, True)
 
     def __init__(self):

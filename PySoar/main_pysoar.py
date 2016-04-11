@@ -15,6 +15,7 @@ settings = Settings()
 
 
 def run():
+
     root = Tk()
     root.resizable(0, 0)
 
@@ -84,6 +85,7 @@ def run():
 
             flight.phases = FlightPhases(competition_day)
             flight.phases.determine_phases(settings, competition_day, flight)
+
             if settings.debugging:
                 flight.phases.save(soaring_spot_info, flight)
             flight.phases.determine_point_statistics(flight, competition_day)
@@ -100,7 +102,7 @@ def run():
 
         analysis_done = Button(root, text='Excel produced', command=open_analysis_file)
         analysis_done.grid(row=6, column=0, pady=5)
-        # analysis_done.configure(text='Excel produced!')
+        print "Analysis complete, excel produced"
 
     title = Label(root, text=' PySoar', font=("Helvetica", 30))
     url_accompanying_text = Label(root, text='Give Soaringspot URL:')
