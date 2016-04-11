@@ -4,8 +4,8 @@ from generalFunctions import det_height, ss2hhmmss, determine_distance
 class Performance(object):
     def __init__(self, competition_day, flight):
 
-        self.tsk_distance_all = sum(competition_day.task_dists)
-        self.tsk_distance_leg = competition_day.task_dists
+        self.tsk_distance_all = sum(competition_day.task_distances)
+        self.tsk_distance_leg = competition_day.task_distances
 
         self.no_cruises = flight.phases.cruises_all
         self.no_cruises_leg = flight.phases.cruises_leg
@@ -18,11 +18,11 @@ class Performance(object):
         if flight.outlanded:
             s_flown_task_all = 0
             for leg in range(flight.outlanding_leg):
-                s_flown_task_all += competition_day.task_dists[leg]
+                s_flown_task_all += competition_day.task_distances[leg]
             s_flown_task_all += flight.outlanding_distance
             s_flown_task_all /= 1000
         else:
-            s_flown_task_all = sum(competition_day.task_dists) / 1000
+            s_flown_task_all = sum(competition_day.task_distances) / 1000
 
         self.all = {"ranking": flight.ranking,
                     "airplane": flight.airplane,
@@ -47,7 +47,7 @@ class Performance(object):
             else:
                 t_start = flight.tsk_t[leg]
                 t_finish = flight.tsk_t[leg+1]
-                s_flown_task_leg = competition_day.task_dists[leg] / 1000
+                s_flown_task_leg = competition_day.task_distances[leg] / 1000
             self.leg.append({"ranking": self.all["ranking"],
                              "airplane": self.all["airplane"],
                              "compID": self.all["compID"],

@@ -66,10 +66,11 @@ def run():
             competition_day.flights.append(Flight(file_name, ranking))
             competition_day.flights[-1].read_igc(competition_day, soaring_spot_info)
 
-        if competition_day.start_opening == 0:
-            competition_day.ask_start_opening()
-
-        competition_day.obtain_task_info()
+        competition_day.write_task()
+        if competition_day.multi_start:
+            url_status.configure(text="Multiple starting points not implemented!", foreground='red')
+            url_status.update()
+            return
 
         if settings.debugging:
             competition_day.save()

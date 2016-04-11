@@ -231,8 +231,8 @@ class ExcelExport(object):
             self.ws_all.write_merge(row, row, col, col+no_cols, title, self.style_dict['style_phase'])
         else:
             no_cols = settings.no_leg_indicators
-            name1 = competition_day.tp_names[leg]
-            name2 = competition_day.tp_names[leg+1]
+            name1 = competition_day.task[leg].name
+            name2 = competition_day.task[leg+1].name
             title = "Leg " + str(leg+1) + ": " + name1 + " - " + name2
             self.ws_legs[leg].write_merge(row, row, col, col+no_cols, title, self.style_dict['style_phase'])
 

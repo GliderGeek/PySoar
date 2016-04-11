@@ -1,7 +1,10 @@
-from generalFunctions import correct_format, hhmmss2ss, determine_distance, print_array_debug, ss2hhmmss
+from generalFunctions import hhmmss2ss, determine_distance, print_array_debug,\
+    ss2hhmmss, det_bearing, det_average_bearing, det_bearing_change
 from settingsClass import Settings
+from taskpoints import Taskpoint
 
 settings = Settings()
+
 
 class CompetitionDay(object):
 
@@ -9,13 +12,10 @@ class CompetitionDay(object):
         self.flights = []
         self.file_paths = []
 
-        self.task_rules = []
-        self.tp_line = []
-        self.tp_radius = []
-
         self.task = []
-        self.task_dists = []
-        self.tp_names = []
+        self.LCU_lines = []
+        self.LSEEYOU_lines = []
+        self.task_distances = []
 
         self.task_date = ""
 
@@ -23,62 +23,134 @@ class CompetitionDay(object):
         self.no_legs = 0
 
         self.aat = False
+        self.multi_start = False
         self.task_found = False
-        self.start_opening = 0
-
-    def ask_start_opening(self):
-        # old implementation with easygui asking for opening time. seems to crash. maybe collapse with other easygui?
-        ############################################################
-        # no_input = True
-        # while no_input:
-        #     st_time_string = easygui.enterbox(
-        #         msg='Start gate opening not found in igc files. Enter startime local time (hh:mm:ss): ',
-        #         title=' ',
-        #         default='',
-        #         strip=True)
-        #     if correct_format(st_time_string):
-        #         print "you entered ", st_time_string, '. Programm is running...'
-        #         no_input = False
-        #         self.start_opening = hhmmss2ss(st_time_string, 0)
-        ############################################################
-        # new default at 09:00:00
         self.start_opening = hhmmss2ss("09:00:00", 0)
 
-    def obtain_task_info(self):
+    def distance_shortened_leg(self, distance, current, currentP1, shortened_point):
+        if shortened_point == "current":
+            distance -= current.r_max if current.r_max is not None else current.r_min
+            return distance
+        elif shortened_point == "currentP1":
+            distance -= currentP1.r_max if currentP1.r_max is not None else currentP1.r_min
+            return distance
+        else:
+            print "Shortened point is not recognized! " + shortened_point
 
-        self.no_tps = int(self.task[0][-2::])
+    def distance_moved_turnpoint(self, distance, current, currentP1, moved_point):
+        from math import sqrt, cos, pi, acos
+
+        if moved_point == "current":
+            moved = current
+            other = currentP1
+            angle_reduction = 0
+        elif moved_point == "currentP1":
+            moved = currentP1
+            other = current
+            angle_reduction = 0
+        elif moved_point == "both_currentP1":
+            moved = currentP1
+            other = current
+            original_distance = determine_distance(current.LCU_line, currentP1.LCU_line, 'tsk', 'tsk')
+            distance_moved_current = current.r_max if current.angle_max == 180 else current.r_min
+            angle_reduction = abs(acos((distance_moved_current ** 2 - distance ** 2 - original_distance ** 2) / (-2 * distance * original_distance))) * 180 / pi
+        else:
+            print "Displaced point is not recognized! " + moved_point
+
+        displacement_dist = moved.r_max if moved.angle_max == 180 else moved.r_min
+        bearing1 = moved.orientation_angle
+        bearing2 = det_bearing(other.LCU_line, moved.LCU_line, 'tsk', 'tsk')
+        angle = abs(det_bearing_change(bearing1, bearing2)) - angle_reduction
+        distance = sqrt(distance**2 + displacement_dist**2 - 2 * distance * displacement_dist * cos(angle * pi / 180))
+
+        return distance
+
+    def write_task(self):
+
+        date_raw = self.LCU_lines[0][6:12]
+        self.task_date = date_raw[0:2] + "-" + date_raw[2:4] + "-" + date_raw[4::]
+
+        for index in range(len(self.LSEEYOU_lines)):
+            taskpoint = Taskpoint(self.LCU_lines[index+2], self.LSEEYOU_lines[index])
+            self.task.append(taskpoint)
+
+        for index in range(len(self.task)):
+            if index == 0:  # necessary for index out of bounds
+                self.task[index].orientation_angle = det_bearing(self.task[index+1].LCU_line, self.task[index].LCU_line, 'tsk', 'tsk')
+            elif index == len(self.task) - 1:  # necessary for index out of bounds
+                self.task[index].orientation_angle = det_bearing(self.task[index-1].LCU_line, self.task[index].LCU_line, 'tsk', 'tsk')
+            else:
+                angle_start = det_bearing(self.task[0].LCU_line, self.task[index].LCU_line, 'tsk', 'tsk')
+                angle_previous = det_bearing(self.task[index-1].LCU_line, self.task[index].LCU_line, 'tsk', 'tsk')
+                angle_next = det_bearing(self.task[index+1].LCU_line, self.task[index].LCU_line, 'tsk', 'tsk')
+
+                if self.task[index].sector_orientation == "fixed":
+                    pass
+                elif self.task[index].sector_orientation == "symmetrical":
+                    self.task[index].orientation_angle = det_average_bearing(angle_previous, angle_next)
+                elif self.task[index].sector_orientation == "next":
+                    self.task[index].orientation_angle = angle_next
+                elif self.task[index].sector_orientation == "previous":
+                    self.task[index].orientation_angle = angle_previous
+                elif self.task[index].sector_orientation == "start":
+                    self.task[index].orientation_angle = angle_start
+                else:
+                    print "Unknown sector orientation! " + str(self.task[index].sector_orientation)
+
+        self.no_tps = len(self.task) - 2  # excluding start and finish
         self.no_legs = self.no_tps + 1
 
-        for turnpoint in self.task_rules:
-            if 'Line=1' in turnpoint.split(',') or 'Line=1\r\n' in turnpoint.split(','):
-                self.tp_line.append(True)
+        for index in range(len(self.task)-1):
+
+            current = self.task[index]
+            currentP1 = self.task[index+1]  # next is built in name
+            distance = determine_distance(current.LCU_line, currentP1.LCU_line, 'tsk', 'tsk')
+
+            if current.distance_correction is "shorten_legs":
+                if currentP1.distance_correction is "shorten_legs":
+                    distance = self.distance_shortened_leg(distance, current, currentP1, "current")
+                    distance = self.distance_shortened_leg(distance, current, currentP1, "currentP1")
+                elif currentP1.distance_correction is "move_tp":
+                    distance = self.distance_moved_turnpoint(distance, current, currentP1, "currentP1")
+                    distance = self.distance_shortened_leg(distance, current, currentP1, "current")
+                elif currentP1.distance_correction is None:
+                    distance = self.distance_shortened_leg(distance, current, currentP1, "current")
+                else:
+                    print "This distance correction does not exist! " + currentP1.distance_correction
+
+            elif current.distance_correction is "move_tp":
+                if currentP1.distance_correction is "shorten_legs":
+                    distance = self.distance_moved_turnpoint(distance, current, currentP1, "current")
+                    distance = self.distance_shortened_leg(distance, current, currentP1, "currentP1")
+                elif currentP1.distance_correction is "move_tp":
+                    distance = self.distance_moved_turnpoint(distance, current, currentP1, "current")
+                    distance = self.distance_moved_turnpoint(distance, current, currentP1, "both_currentP1")
+                elif currentP1.distance_correction is None:
+                    distance = self.distance_moved_turnpoint(distance, current, currentP1, "current")
+                else:
+                    print "This distance correction does not exist! " + currentP1.distance_correction
+
+            elif current.distance_correction is None:
+                if currentP1.distance_correction is "shorten_legs":
+                    distance = self.distance_shortened_leg(distance, current, currentP1, "currentP1")
+                elif currentP1.distance_correction is "move_tp":
+                    distance = self.distance_moved_turnpoint(distance, current, currentP1, "currentP1")
+                elif currentP1.distance_correction is None:
+                    pass
+                else:
+                    print "This distance correction does not exist! " + currentP1.distance_correction
+
             else:
-                self.tp_line.append(False)
-            for item in turnpoint.split(','):
-                if item.startswith('R1'):
-                    self.tp_radius.append(int(item[3:-1]))
+                print "This distance correction does not exist! " + self.task[index].distance_correction
 
-        for tp in range(len(self.task)):
-            if 1 < tp <= self.no_tps + 2:
-                distance = determine_distance(self.task[tp], self.task[tp+1], 'tsk', 'tsk')
-                self.task_dists.append(distance)
-            if 1 < tp <= self.no_tps + 3:
-                name = self.task[tp][23::]
-                self.tp_names.append(name)
-
-        date_raw = self.task[0][6:12]
-        self.task_date = date_raw[0:2] + "-" + date_raw[2:4] + "-" + date_raw[4::]
+            self.task_distances.append(distance)
 
     def save(self):
         file_name = settings.current_dir + "/debug_logs/competitionDayDebug.txt"
         text_file = open(file_name, "w")
 
-        print_array_debug(text_file, "task_rules", self.task_rules)
-        print_array_debug(text_file, "tp_line", self.tp_line)
-        print_array_debug(text_file, "tp_radius", self.tp_radius)
         print_array_debug(text_file, "task", self.task)
-        print_array_debug(text_file, "task_dists", self.task_dists)
-        print_array_debug(text_file, "tp_names", self.tp_names)
+        print_array_debug(text_file, "task_dists", self.task_distances)
 
         text_file.write("task_date: " + self.task_date + "\n\n")
 

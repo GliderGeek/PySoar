@@ -19,6 +19,30 @@ def dms2dd(dms):
     return dd
 
 
+def dd2dm(dd, lat_lon_str):
+    if dd < 0:
+        if lat_lon_str == "lat":
+            cardinal = "S"
+        elif lat_lon_str == "lon":
+            cardinal = "W"
+
+    else:
+        if lat_lon_str == "lat":
+            cardinal = "N"
+        elif lat_lon_str == "lon":
+            cardinal = "E"
+
+    d = int(abs(dd))
+    m = (abs(dd) - d)*60
+    mm = int(m)
+    mm_thousands = int((m - mm) * 1000)
+
+    if lat_lon_str == "lat":
+        return "%02d%02d%03d%s" % (d, mm, mm_thousands, cardinal)
+    elif lat_lon_str == "lon":
+        return "%03d%02d%03d%s" % (d, m, mm_thousands, cardinal)
+
+
 def det_time_difference(location_record1, location_record2, record_type1, record_type2):
     if record_type1 == 'tsk' or record_type2 == 'tsk':
         exit('only implemented for pnt record types!')
@@ -172,7 +196,8 @@ def hhmmss2ss(time_string, utc_to_local):
         int(time_string[6:8])
 
 
-def ss2hhmmss(time_ss):
+def ss2hhmmss(time_ss, colon=True):
+
     seconds = (time_ss % 3600) % 60
     minutes = ((time_ss % 3600) - seconds) / 60
     hours = (time_ss - (time_ss % 3600)) / 3600
@@ -189,7 +214,10 @@ def ss2hhmmss(time_ss):
 
     hrs_str = str(int(hours))
 
-    return hrs_str + ':' + min_str + ':' + seconds_str
+    if colon:
+        return hrs_str + ':' + min_str + ':' + seconds_str
+    else:
+        return hrs_str + min_str + seconds_str
 
 
 def url_is_aat(url):
@@ -217,130 +245,15 @@ def task_url_from_daily(daily_url):
     return task_url
 
 
-def url_is_startline(daily_url):
-    task_url = task_url_from_daily(daily_url)
-
-    mech = Browser()
-    mech.set_handle_robots(False)
-    page = mech.open(task_url)
-    html = page.read()
-    soup = BeautifulSoup(html)
-
-    table_rows = soup.findAll("table")[0].findAll("tr")
-    start_observation = table_rows[1].findAll("td")[3].text
-
-    return start_observation.startswith("Line")
-
-
-def url_is_beercans(daily_url):
-    task_url = task_url_from_daily(daily_url)
-
-    mech = Browser()
-    mech.set_handle_robots(False)
-    page = mech.open(task_url)
-    html = page.read()
-    soup = BeautifulSoup(html)
-
-    table_rows = soup.findAll("table")[0].findAll("tr")
-
-    for row in range(2, len(table_rows)-2):
-        tp_observation = table_rows[row].findAll("td")[3].text
-        if tp_observation != "Cylinder R=0.50&nbsp;km":
-            return False
-
-    return True
-
-
 def url_format_correct(url_string):
-    print url_string[-5::]
     if url_string[0:26] != "http://www.soaringspot.com":
         return 'URL should start with http://www.soaringspot.com'
     elif url_string[-5::] != 'daily':
         return 'URL does not give daily results'
     elif url_is_aat(url_string):
         return 'AAT not yet implemented'
-    elif not url_is_startline(url_string):
-        return 'Start circle/sector has not been implemented'
-    elif not url_is_beercans(url_string):
-        return 'This type of turnpoint has not been implemented (only beercans)'
     else:
         return 'URL correct'
-
-
-# todo: is this method still used? if not remove, else refactor with return False and return True
-def correct_format(st_time_string):
-    correct = 1
-
-    if len(st_time_string) != 8:
-        correct = 0
-        print 'length is not ok'
-    elif st_time_string[2:3] != ':' or st_time_string[2:3] != ':' or st_time_string[2:3] != ':':
-        correct = 0
-        print 'format is not correct'
-    elif int(st_time_string[0:2]) < 0 or int(st_time_string[0:2]) >= 24:
-        correct = 0
-        print 'hours should be between 0 and 24'
-    elif int(st_time_string[3:5]) < 0 or int(st_time_string[3:5]) >= 60 or int(st_time_string[6:8]) < 0 or int(
-            st_time_string[6:8]) >= 60:
-        correct = 0
-        print 'minutes and seconds should be between 0 and 60'
-
-    return correct
-
-
-def start_refinement(competition_day, b_record1, b_record2):
-
-    task_bearing = det_bearing(competition_day.task[2], competition_day.task[3], 'tsk', 'tsk')
-
-    bearing_b_record1 = det_bearing(competition_day.task[2], b_record1, 'tsk', 'pnt')
-    bearing_b_record2 = det_bearing(competition_day.task[2], b_record2, 'tsk', 'pnt')
-
-    bearing_difference1 = abs(det_bearing_change(bearing_b_record1, task_bearing))
-    bearing_difference2 = abs(det_bearing_change(bearing_b_record2, task_bearing))
-
-    time_difference = det_local_time(b_record2, 0) - det_local_time(b_record1, 0)
-
-    dbearing = (bearing_difference2-bearing_difference1)/time_difference
-    for i in range(time_difference-1):
-        bearing_difference = bearing_difference1 + (i+1)*dbearing
-        if bearing_difference < 90:
-            return - time_difference + i + 1
-
-    return 0
-
-
-def line_crossed(b_record1, b_record2, type_string, competition_day):
-    if type_string == 'start':
-        midpoint = competition_day.task[2]
-        task_bearing = det_bearing(midpoint, competition_day.task[3], 'tsk', 'tsk')
-        distance_to_midpoint = determine_distance(midpoint, b_record2, 'tsk', 'pnt')
-        line_radius = competition_day.tp_radius[0]
-    elif type_string == 'finish':
-        midpoint = competition_day.task[-2]
-        task_bearing = det_bearing(competition_day.task[-3], midpoint, 'tsk', 'tsk')
-        distance_to_midpoint = determine_distance(midpoint, b_record2, 'tsk', 'pnt')
-        line_radius = competition_day.tp_radius[-1]
-
-    if distance_to_midpoint > line_radius:
-        return False
-
-    bearing_midpoint_record1 = det_bearing(midpoint, b_record1, 'tsk', 'pnt')
-    bearing_midpoint_record2 = det_bearing(midpoint, b_record2, 'tsk', 'pnt')
-
-    bearing_difference1 = abs(det_bearing_change(bearing_midpoint_record1, task_bearing))
-    bearing_difference2 = abs(det_bearing_change(bearing_midpoint_record2, task_bearing))
-
-    if bearing_difference1 > 90 > bearing_difference2:
-        return True
-    else:
-        return False
-
-
-def turnpoint_rounded(b_record, leg, competition_day):
-    if determine_distance(b_record, competition_day.task[leg+3], 'pnt', 'tsk') < competition_day.tp_radius[leg+1]:
-        return True
-    else:
-        return False
 
 
 def print_array_debug(text_file, array_name, array):
@@ -368,10 +281,10 @@ def determine_flown_task_distance(_leg, b_record, competition_day):
 
     task_distance = 0
     for leg in range(_leg-1):
-        task_distance += competition_day.task_dists[leg]
+        task_distance += competition_day.task_distances[leg]
 
-    previous_tp = competition_day.task[_leg+1]
-    next_tp = competition_day.task[_leg+2]
+    previous_tp = competition_day.task[_leg-1].LCU_line
+    next_tp = competition_day.task[_leg].LCU_line
 
     bearing1 = det_bearing(previous_tp, next_tp, 'tsk', 'tsk')
     bearing2 = det_bearing(previous_tp, b_record, 'tsk', 'pnt')
@@ -419,6 +332,65 @@ def determine_engine_start_i(flight, i):
         time = det_local_time(flight.b_records[i], 0)
 
     return i
+
+
+def det_average_bearing(bearing1, bearing2):
+    from math import atan2, sin, cos, pi
+
+    sin_a = sin(bearing1 * pi / 180)
+    sin_b = sin(bearing2 * pi / 180)
+    cos_a = cos(bearing1 * pi / 180)
+    cos_b = cos(bearing2 * pi / 180)
+
+    avg_bearing = atan2(sin_a + sin_b, cos_a + cos_b) * 180 / pi
+    return (avg_bearing + 360) % 360
+
+
+def create_b_record(time_s, lat_dd, lon_dd, altitude_baro, altitude_gps):
+    b_record = "B"
+    b_record += ss2hhmmss(time_s, colon=False)
+    b_record += dd2dm(lat_dd, "lat")
+    b_record += dd2dm(lon_dd, "lon")
+    b_record += "A"
+    b_record += "%05d" % altitude_baro
+    b_record += "%05d" % altitude_gps
+    return b_record
+
+
+def interpolate_b_records(b_record1, b_record2):
+    from math import pi
+    b_records = [b_record1]
+
+    time1 = det_local_time(b_record1, 0)
+    time2 = det_local_time(b_record2, 0)
+    lat1, lon1 = det_lat_long(b_record1, 'pnt')
+    lat2, lon2 = det_lat_long(b_record2, 'pnt')
+    height1_baro = det_height(b_record1, False)
+    height1_gps = det_height(b_record1, True)
+    height2_baro = det_height(b_record2, False)
+    height2_gps = det_height(b_record2, True)
+
+    dtime = time2-time1
+    d_lat = lat2 - lat1
+    d_lon = lon2 - lon1
+    dheight_baro = height2_baro - height1_baro
+    dheight_gps = height2_gps - height1_gps
+
+    for index in range(dtime-1):
+        fraction = float(index+1) / dtime
+        time_s = time1 + int(fraction*dtime)
+        lat = lat1 + fraction*d_lat
+        lon = lon1 + fraction*d_lon
+        lat_dd = lat * 180 / pi
+        lon_dd = lon * 180 / pi
+        height_baro = height1_baro + fraction*dheight_baro
+        height_gps = height1_gps + fraction*dheight_gps
+
+        b_record = create_b_record(time_s, lat_dd, lon_dd, height_baro, height_gps)
+        b_records.append(b_record)
+
+    b_records.append(b_record2)
+    return b_records
 
 
 if __name__ == '__main__':

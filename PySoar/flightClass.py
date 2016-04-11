@@ -1,5 +1,5 @@
-from generalFunctions import hhmmss2ss, det_local_time, line_crossed, turnpoint_rounded, det_height,\
-    print_array_debug, ss2hhmmss, determine_distance, det_bearing, det_bearing_change, start_refinement, used_engine,\
+from generalFunctions import hhmmss2ss, det_local_time, det_height,\
+    print_array_debug, ss2hhmmss, determine_distance, det_bearing, det_bearing_change, used_engine,\
     determine_engine_start_i
 from settingsClass import Settings
 
@@ -32,7 +32,7 @@ class Flight(object):
         full_file = f.readlines()
         f.close()
 
-        if len(competition_day.task) != 0:
+        if len(competition_day.LCU_lines) != 0:
             competition_day.task_found = True
 
         for line in full_file:
@@ -70,26 +70,29 @@ class Flight(object):
                     if task_element.startswith('TaskTime') and not hasattr(competition_day, 't_min'):
                         competition_day.t_min = hhmmss2ss(task_element[9::], 0)  # asuming no UTC offset
                         competition_day.aat = True  # Default is False
-                    if task_element.startswith('NoStart') and competition_day.start_opening == 0:
+                    if task_element.startswith('NoStart') and competition_day.start_opening == hhmmss2ss("09:00:00", 0):
                         competition_day.start_opening = hhmmss2ss(task_element[8::], 0)  # time in local time, not UTC
+                    if task_element.startswith('MultiStart=True'):
+                        competition_day.multi_start = True
                 continue
 
             if not competition_day.task_found:
                 if line.startswith('LCU::C'):
-                    competition_day.task.append(line)
+                    competition_day.LCU_lines.append(line)
                 if line.startswith('LSEEYOU OZ='):
-                    competition_day.task_rules.append(line)
+                    competition_day.LSEEYOU_lines.append(line)
                 if line.startswith('LCU::HPTZNTIMEZONE:'):
                     competition_day.utc_to_local = int(line[19:-1])
 
     def determine_outlanding_location(self, competition_day):
         from math import cos, pi, radians
 
-        task_pointM1 = competition_day.task[self.outlanding_leg+2]
-        task_point = competition_day.task[self.outlanding_leg+2+1]
+        task_pointM1 = competition_day.task[self.outlanding_leg].LCU_line
+
+        task_point = competition_day.task[self.outlanding_leg+1].LCU_line
         bearing_to_next_tp = det_bearing(task_pointM1, task_point, 'tsk', 'tsk')
 
-        if not self.outlanding_b_record == "":
+        if self.outlanding_b_record != "":
             b_rec = self.outlanding_b_record
 
             # todo: replace by function which calculates projected distance
@@ -109,7 +112,6 @@ class Flight(object):
 
                     b_rec = self.b_records[i]
 
-
                     # todo: replace by function which calculates projected distance
                     temp_dist = determine_distance(task_pointM1, b_rec, 'tsk', 'pnt')
                     bearing_to_point = det_bearing(task_pointM1, b_rec, 'tsk', 'pnt')
@@ -123,18 +125,37 @@ class Flight(object):
 
             self.outlanding_distance = max_dist
 
+    def start_refinement(self, competition_day, b_record1, b_record2):
+        from generalFunctions import interpolate_b_records
+
+        b_records_interpolated = interpolate_b_records(b_record1, b_record2)
+
+        refinement = 0
+        for index in range(len(b_records_interpolated)-1):
+            b_record1 = b_records_interpolated[-2-index]
+            b_record2 = b_records_interpolated[-1-index]
+            if competition_day.task[0].taskpoint_completed(b_record1, b_record2):
+                return refinement
+            else:
+                refinement += 1
+
+        return refinement
+
     def determine_tsk_times(self, competition_day):
+
         leg = -1  # leg before startline is crossed
         possible_enl = 0  # excluding motor test
 
         for i in range(len(self.b_records)):
+
             if self.gps_altitude and det_height(self.b_records[i], False) != 0:
                 self.gps_altitude = False
 
             t = det_local_time(self.b_records[i], competition_day.utc_to_local)
 
             if leg == -1 and t > competition_day.start_opening and i > 0:
-                if line_crossed(self.b_records[i - 1], self.b_records[i], 'start', competition_day):
+                start = competition_day.task[0]
+                if start.taskpoint_completed(self.b_records[i - 1], self.b_records[i]):
                     self.tsk_t.append(t)
                     self.tsk_i.append(i)
                     self.first_start_i = i
@@ -143,11 +164,15 @@ class Flight(object):
             elif leg == 0:
                 if used_engine(self, i):
                     possible_enl = determine_engine_start_i(self, i)
-                if line_crossed(self.b_records[i - 1], self.b_records[i], 'start', competition_day):
+                start = competition_day.task[0]
+                tp1 = competition_day.task[1]
+                if start.taskpoint_completed(self.b_records[i - 1], self.b_records[i]):
+                    if self.file_name == "PR.igc":
+                        print "PR restart at t=%s" % ss2hhmmss(t)
                     self.tsk_t[0] = t
                     self.tsk_i[0] = i
                     possible_enl = 0
-                if turnpoint_rounded(self.b_records[i], leg, competition_day):
+                if tp1.taskpoint_completed(self.b_records[i - 1], self.b_records[i]):
                     self.tsk_t.append(t)
                     self.tsk_i.append(i)
                     leg += 1
@@ -155,7 +180,8 @@ class Flight(object):
                 if used_engine(self, i):
                     possible_enl = determine_engine_start_i(self, i)
                     break
-                if turnpoint_rounded(self.b_records[i], leg, competition_day):
+                next_tp = competition_day.task[leg+1]
+                if next_tp.taskpoint_completed(self.b_records[i - 1], self.b_records[i]):
                     self.tsk_t.append(t)
                     self.tsk_i.append(i)
                     leg += 1
@@ -163,18 +189,15 @@ class Flight(object):
                 if used_engine(self, i):
                     possible_enl = determine_engine_start_i(self, i)
                     break
-                if competition_day.tp_line[-1]:  # finish line
-                    finished = line_crossed(self.b_records[i - 1], self.b_records[i], 'finish', competition_day)
-                else:  # finish circle
-                    finished = turnpoint_rounded(self.b_records[i], leg, competition_day)
-                if finished:
+                finish = competition_day.task[-1]
+                if finish.taskpoint_completed(self.b_records[i - 1], self.b_records[i]):
                     self.tsk_t.append(t)
                     self.tsk_i.append(i)
                     leg += 1
 
         b_record1 = self.b_records[self.tsk_i[0]-1]
         b_record2 = self.b_records[self.tsk_i[0]]
-        self.tsk_t[0] += start_refinement(competition_day, b_record1, b_record2)
+        self.tsk_t[0] -= self.start_refinement(competition_day, b_record1, b_record2)
         self.tsk_t[0] -= 1  # Soaring spot takes point before start line!
 
         if not possible_enl == 0:
