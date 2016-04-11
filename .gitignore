@@ -13,3 +13,6 @@ PySoar-manual.pdf
 PySoar-manual.synctex.gz
 PySoar-manual.toc
 hidden
+PySoar/standalone/*.zip
+PySoar/standalone/windows
+PySoar-manual.dvi
