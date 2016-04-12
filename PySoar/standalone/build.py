@@ -59,8 +59,12 @@ def correct_version():
 	if not os.path.exists(platform_name):
 		os.makedirs(platform_name)
 	else:
-		if os.path.exists(os.path.join(platform_name, executable)):
-			os.remove(os.path.join(platform_name, executable))
+		if platform.system() == "Darwin":
+			if os.path.exists(os.path.join(platform_name, executable+".app")):
+				shutil.rmtree(os.path.join(platform_name, executable+".app"))
+		else:
+			if os.path.exists(os.path.join(platform_name, executable)):
+				os.remove(os.path.join(platform_name, executable))			
 	
 	foldername = "%s_v%s" % (platform_name, version)
 	os.makedirs(foldername)
@@ -70,8 +74,12 @@ def correct_version():
 		os.remove("%s.zip" % foldername)
 	
 	# copy executable to zip folder and platform_folder
-	shutil.copy(os.path.join("dist", source_executable), os.path.join(foldername, executable))
-	shutil.move(os.path.join("dist", source_executable), os.path.join(platform_name, executable))
+	if platform.system() == 'Darwin':
+		shutil.copytree(os.path.join("dist", source_executable+".app"), os.path.join(foldername, executable))
+		shutil.move(os.path.join("dist", source_executable+".app"), os.path.join(platform_name, executable))
+	else:  # linux and windows
+		shutil.copy(os.path.join("dist", source_executable), os.path.join(foldername, executable))
+		shutil.move(os.path.join("dist", source_executable), os.path.join(platform_name, executable))
 	
 	# move pdf to zip folder and create zip file
 	shutil.move(os.path.join(manual_location, pdf_filename), os.path.join(foldername, pdf_filename))
