@@ -202,22 +202,10 @@ def ss2hhmmss(time_ss, colon=True):
     minutes = ((time_ss % 3600) - seconds) / 60
     hours = (time_ss - (time_ss % 3600)) / 3600
 
-    if seconds < 10:
-        seconds_str = '0' + str(int(seconds))
-    else:
-        seconds_str = str(int(seconds))
-
-    if minutes < 10:
-        min_str = '0' + str(int(minutes))
-    else:
-        min_str = str(int(minutes))
-
-    hrs_str = str(int(hours))
-
     if colon:
-        return hrs_str + ':' + min_str + ':' + seconds_str
+        return "%02d:%02d:%02d" % (hours, minutes, seconds)
     else:
-        return hrs_str + min_str + seconds_str
+        return "%02d%02d%02d" % (hours, minutes, seconds)
 
 
 def url_is_aat(url):
