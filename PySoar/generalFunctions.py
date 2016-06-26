@@ -162,6 +162,12 @@ def det_bearing(location_record1, location_record2, type1, type2):
     return bearing
 
 
+# normal det_bearing function calculates initial bearing
+def det_final_bearing(location_record1, location_record2, type1, type2):
+    reversed_bearing = det_bearing(location_record2, location_record1, type2, type1)
+    return (reversed_bearing + 180) % 360
+
+
 def det_bearing_change(bearing1, bearing2):
     # always return difference between -180 and +180 degrees
     difference = bearing2 - bearing1

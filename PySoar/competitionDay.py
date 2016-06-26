@@ -1,5 +1,5 @@
 from generalFunctions import hhmmss2ss, determine_distance, print_array_debug,\
-    ss2hhmmss, det_bearing, det_average_bearing, det_bearing_change
+    ss2hhmmss, det_bearing, det_average_bearing, det_bearing_change, det_final_bearing
 from settingsClass import Settings
 from taskpoints import Taskpoint
 
@@ -76,13 +76,15 @@ class CompetitionDay(object):
 
         for index in range(len(self.task)):
             if index == 0:  # necessary for index out of bounds
-                self.task[index].orientation_angle = det_bearing(self.task[index+1].LCU_line, self.task[index].LCU_line, 'tsk', 'tsk')
+                angle = det_final_bearing(self.task[index+1].LCU_line, self.task[index].LCU_line, 'tsk', 'tsk')
+                self.task[index].orientation_angle = angle
             elif index == len(self.task) - 1:  # necessary for index out of bounds
-                self.task[index].orientation_angle = det_bearing(self.task[index-1].LCU_line, self.task[index].LCU_line, 'tsk', 'tsk')
+                angle = det_final_bearing(self.task[index-1].LCU_line, self.task[index].LCU_line, 'tsk', 'tsk')
+                self.task[index].orientation_angle = angle
             else:
-                angle_start = det_bearing(self.task[0].LCU_line, self.task[index].LCU_line, 'tsk', 'tsk')
-                angle_previous = det_bearing(self.task[index-1].LCU_line, self.task[index].LCU_line, 'tsk', 'tsk')
-                angle_next = det_bearing(self.task[index+1].LCU_line, self.task[index].LCU_line, 'tsk', 'tsk')
+                angle_start = det_final_bearing(self.task[0].LCU_line, self.task[index].LCU_line, 'tsk', 'tsk')
+                angle_previous = det_final_bearing(self.task[index-1].LCU_line, self.task[index].LCU_line, 'tsk', 'tsk')
+                angle_next = det_final_bearing(self.task[index+1].LCU_line, self.task[index].LCU_line, 'tsk', 'tsk')
 
                 if self.task[index].sector_orientation == "fixed":
                     pass
