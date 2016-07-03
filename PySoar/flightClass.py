@@ -106,6 +106,7 @@ class Flight(object):
             last_tp_i = self.first_start_i if self.outlanding_leg == 0 else self.tsk_i[-1]
             max_dist = 0
 
+            self.outlanding_b_record = self.b_records[last_tp_i]  # default
             for i in range(len(self.b_records)):
 
                 if i > last_tp_i:
