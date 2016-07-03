@@ -1,14 +1,14 @@
 class Taskpoint(object):  # startpoint, turnpoints and finish
 
     def det_orientation_angle(self):
-        components = self.LSEEYOU_line.split(",")
+        components = self.LSEEYOU_line.rstrip().split(",")
         for component in components:
             if component.startswith("A12="):
                 self.orientation_angle = component.split("=")[1]
                 break
 
     def det_sector_orientation(self):
-        components = self.LSEEYOU_line.split(",")
+        components = self.LSEEYOU_line.rstrip().split(",")
         for component in components:
             if component.startswith("Style="):
                 style = int(component.split("=")[1])
@@ -28,7 +28,7 @@ class Taskpoint(object):  # startpoint, turnpoints and finish
                     return ""
 
     def det_distance_correction(self):
-        components = self.LSEEYOU_line.split(",")
+        components = self.LSEEYOU_line.rstrip().split(",")
         reduce = False
         move = False
         for component in components:
@@ -47,7 +47,7 @@ class Taskpoint(object):  # startpoint, turnpoints and finish
             return None
 
     def det_sector_sizes(self):
-        components = self.LSEEYOU_line.split(",")
+        components = self.LSEEYOU_line.rstrip().split(",")
         for component in components:
             if component.startswith("R1="):
                 self.r_max = int(component.split("=")[1][:-1])
