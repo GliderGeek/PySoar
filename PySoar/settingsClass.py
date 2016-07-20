@@ -23,7 +23,7 @@ class Settings(object):
         self.set_performance_entry("s_glide_avg",       "Average cruise distance",      "number",   "high", "[km]", True, False, True)
         self.set_performance_entry("LD_avg",            "Average L/D",                  "number",   "high", "[-]", True, False, True)
         self.set_performance_entry("s_extra",           "Excess distance covered",      "number",   "low", "[%]", True, False, True)
-        self.set_performance_entry("xc_v",              "XC speed",                     "number",   "high", "[km/h]", True, False, True)
+        self.set_performance_entry("tsk_v",              "Task speed",                   "number",   "high", "[km/h]", True, False, True)
         self.set_performance_entry("turn_percentage",   "Percentage turning",           "number",   "low", "[%]", True, False, True)
         self.set_performance_entry("s_flown_task",      "Distance covered from task",   "number",   "neutral", "[km]", True, True, True)
         self.set_performance_entry("h_loss_turn",       "Height loss during circling",  "number",   "low", "[%]", False, False, True)
@@ -66,7 +66,7 @@ class Settings(object):
     thermal_threshold_bearingRate = 4 #degr/s
 
     perf_indic_all = ["ranking", "airplane", "compID", "s_flown_task", "t_start", "t_finish", "h_start",
-                      "vario_gem","v_glide_avg", "v_turn_avg", "s_glide_avg", "LD_avg", "s_extra", "xc_v",
+                      "vario_gem","v_glide_avg", "v_turn_avg", "s_glide_avg", "LD_avg", "s_extra", "tsk_v",
                       "turn_percentage", "h_loss_turn"]
 
     WGS84_mayor_axis = 6378137

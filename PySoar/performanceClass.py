@@ -120,13 +120,13 @@ class Performance(object):
         s_extra *= 100
         self.store_perf(leg, "s_extra", s_extra)
 
-    def det_xc_v(self, leg, task_distance, thermal_time, cruise_time):
+    def det_tsk_v(self, leg, task_distance, thermal_time, cruise_time):
         # return the cross country speed in kmh
         if (thermal_time + cruise_time) == 0:
-            xc_v = 42
+            tsk_v = 42
         else:
-            xc_v = float(task_distance) / (thermal_time + cruise_time)
-        self.store_perf(leg, "xc_v", xc_v * 3.6)
+            tsk_v = float(task_distance) / (thermal_time + cruise_time)
+        self.store_perf(leg, "tsk_v", tsk_v * 3.6)
 
     def write_perfs(self, leg,
                     thermal_altitude_gain, thermal_altitude_loss, thermal_time, thermal_distance, thermal_drift,
@@ -150,7 +150,7 @@ class Performance(object):
         self.det_h_loss_turn(leg, thermal_altitude_loss, thermal_altitude_gain)
         self.det_s_glide_avg(leg, cruise_distance, no_cruises)
         self.det_v_glide_avg(leg, cruise_distance, cruise_time)
-        self.det_xc_v(leg, task_distance, thermal_time, cruise_time)
+        self.det_tsk_v(leg, task_distance, thermal_time, cruise_time)
 
     def determine_performance(self, flight, competitionday):
 
