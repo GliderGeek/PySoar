@@ -11,12 +11,16 @@ Start time is given in local time.
 Finish time is in local time. Finish times are not shown for outlandings. For those flights only the finish times of completed legs are shown.
 
 \section{Start height [m]}
-The height is taken from the gps fix when the startline is crossed. This altitude can be stored from two sources: barometric altitude, gps altitude. 
+\label{sec:start_height}
+The height is taken from the gps fix when the startline is crossed or at the beginning of a leg when the turnpoint is rounded. This altitude can be stored from two sources: barometric altitude, gps altitude. 
 \begin{itemize}
 \item barometric start height:ICAO ISA above the 1013.25 HPa sea level datum
 \item gps start height: above the WGS84 ellipsoid
 \end{itemize}
 If both are present, the barometric altitude is used.
+
+\section{Finish height[m]}
+The height is taken from the gps fix when the finish line is crossed or at the end of a leg when the turnpoint is rounded. For details on different height calculation methods, see section \ref{sec:start_height} on the start height.
 
 \section{Average rate of climb [$\frac{m}{s}$]}
 The average rate of climb is simply calculated using:

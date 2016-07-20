@@ -4,29 +4,31 @@ import sys
 
 class Settings(object):
 
-    def set_performance_entry(self, key, name, _format, order, unit, visible_only_cruise, visible_on_outlanding, visible_on_leg):
+    def set_performance_entry(self, key, name, _format, order, unit, visible_only_cruise, visible_on_outlanding, visible_on_leg, visible_on_flight):
         self.perf_dict[key] = {"name": name, "format": _format, "order": order, "unit": unit,
                                "visible_only_cruise": visible_only_cruise,
                                "visible_on_outlanding": visible_on_outlanding,
-                               "visible_on_leg": visible_on_leg}
+                               "visible_on_leg": visible_on_leg,
+                               "visible_on_entire_flight": visible_on_flight}
 
     def determine_performance_dictionary(self):
-        self.set_performance_entry("ranking",           "Ranking",                      "int",      "neutral", "", True, True, True)
-        self.set_performance_entry("airplane",          "Airplane",                     "text",     "neutral", "", True, True, True)
-        self.set_performance_entry("compID",            "Callsign",                     "text",     "neutral", "", True, True, True)
-        self.set_performance_entry("t_start",           "Start time",                   "text",     "neutral", "[local time]", True, True, True)
-        self.set_performance_entry("t_finish",          "Finish time",                  "text",     "neutral", "[local time]", True, False, True)
-        self.set_performance_entry("h_start",           "Start height",                 "number",   "high", "[m]", True, True, False)
-        self.set_performance_entry("vario_gem",         "Average rate of climb",        "number",   "high", "[m/s]", False, False, True)
-        self.set_performance_entry("v_glide_avg",       "Average cruise speed (GS)",    "number",   "high", "[km/h]", True, False, True)
-        self.set_performance_entry("v_turn_avg",        "Average thermal speed (GS)",   "number",   "low", "[km/h]", False, False, True)
-        self.set_performance_entry("s_glide_avg",       "Average cruise distance",      "number",   "high", "[km]", True, False, True)
-        self.set_performance_entry("LD_avg",            "Average L/D",                  "number",   "high", "[-]", True, False, True)
-        self.set_performance_entry("s_extra",           "Excess distance covered",      "number",   "low", "[%]", True, False, True)
-        self.set_performance_entry("tsk_v",              "Task speed",                   "number",   "high", "[km/h]", True, False, True)
-        self.set_performance_entry("turn_percentage",   "Percentage turning",           "number",   "low", "[%]", True, False, True)
-        self.set_performance_entry("s_flown_task",      "Distance covered from task",   "number",   "neutral", "[km]", True, True, True)
-        self.set_performance_entry("h_loss_turn",       "Height loss during circling",  "number",   "low", "[%]", False, False, True)
+        self.set_performance_entry("ranking",           "Ranking",                      "int",      "neutral", "", True, True, True, True)
+        self.set_performance_entry("airplane",          "Airplane",                     "text",     "neutral", "", True, True, True, True)
+        self.set_performance_entry("compID",            "Callsign",                     "text",     "neutral", "", True, True, True, True)
+        self.set_performance_entry("t_start",           "Start time",                   "text",     "neutral", "[local time]", True, True, True, True)
+        self.set_performance_entry("t_finish",          "Finish time",                  "text",     "neutral", "[local time]", True, False, True, True)
+        self.set_performance_entry("h_start",           "Start height",                 "number",   "high", "[m]", True, True, True, True)
+        self.set_performance_entry("h_finish",          "Finish height",                "number",   "high", "[m]", True, False, True, False)
+        self.set_performance_entry("vario_gem",         "Average rate of climb",        "number",   "high", "[m/s]", False, False, True, True)
+        self.set_performance_entry("v_glide_avg",       "Average cruise speed (GS)",    "number",   "high", "[km/h]", True, False, True, True)
+        self.set_performance_entry("v_turn_avg",        "Average thermal speed (GS)",   "number",   "low", "[km/h]", False, False, True, True)
+        self.set_performance_entry("s_glide_avg",       "Average cruise distance",      "number",   "high", "[km]", True, False, True, True)
+        self.set_performance_entry("LD_avg",            "Average L/D",                  "number",   "high", "[-]", True, False, True, True)
+        self.set_performance_entry("s_extra",           "Excess distance covered",      "number",   "low", "[%]", True, False, True, True)
+        self.set_performance_entry("tsk_v",              "Task speed",                   "number",   "high", "[km/h]", True, False, True, True)
+        self.set_performance_entry("turn_percentage",   "Percentage turning",           "number",   "low", "[%]", False, False, True, True)
+        self.set_performance_entry("s_flown_task",      "Distance covered from task",   "number",   "neutral", "[km]", True, True, True, True)
+        self.set_performance_entry("h_loss_turn",       "Height loss during circling",  "number",   "low", "[%]", False, False, True, True)
 
     def __init__(self):
         import platform
@@ -65,8 +67,8 @@ class Settings(object):
     thermal_threshold_bearingRateAvg = 2 #degr/s
     thermal_threshold_bearingRate = 4 #degr/s
 
-    perf_indic_all = ["ranking", "airplane", "compID", "s_flown_task", "t_start", "t_finish", "h_start",
-                      "vario_gem","v_glide_avg", "v_turn_avg", "s_glide_avg", "LD_avg", "s_extra", "tsk_v",
+    perf_indic_all = ["ranking", "airplane", "compID", "s_flown_task", "t_start", "t_finish", "h_start", "h_finish",
+                      "vario_gem", "v_glide_avg", "v_turn_avg", "s_glide_avg", "LD_avg", "s_extra", "tsk_v",
                       "turn_percentage", "h_loss_turn"]
 
     WGS84_mayor_axis = 6378137

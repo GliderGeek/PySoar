@@ -80,6 +80,9 @@ class ExcelExport(object):
 
             for flight in competition_day.flights:
 
+                if not settings.perf_dict[perf_ind]["visible_on_entire_flight"]:  # continue to next performance indicator
+                    continue
+
                 if flight.outlanded:
                     continue
 
@@ -184,6 +187,9 @@ class ExcelExport(object):
         for perf_ind in settings.perf_indic_all:
 
             if leg != -1 and not settings.perf_dict[perf_ind]["visible_on_leg"]:
+                continue
+
+            if leg == -1 and not settings.perf_dict[perf_ind]["visible_on_entire_flight"]:
                 continue
 
             row = 1

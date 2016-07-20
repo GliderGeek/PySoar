@@ -14,6 +14,7 @@ class Performance(object):
         self.no_thermals_leg = flight.phases.thermals_leg
 
         startheight = det_height(flight.b_records[flight.tsk_i[0]], flight.gps_altitude)
+        finish_height = det_height(flight.b_records[flight.tsk_i[-1]], flight.gps_altitude)
 
         if flight.outlanded:
             s_flown_task_all = 0
@@ -30,6 +31,7 @@ class Performance(object):
                     "t_start": ss2hhmmss(flight.tsk_t[0]),
                     "t_finish": ss2hhmmss(flight.tsk_t[-1]),
                     "h_start": startheight,
+                    "h_finish": finish_height,
                     "s_flown_task": s_flown_task_all}
 
         self.leg = []
@@ -40,19 +42,28 @@ class Performance(object):
                 t_start = flight.tsk_t[leg]
                 t_finish = 0
                 s_flown_task_leg = flight.outlanding_distance / 1000
+                startheight = det_height(flight.b_records[flight.tsk_i[leg]], flight.gps_altitude)
+                finish_height = 0
             elif flight.outlanded and leg > flight.outlanding_leg:
                 t_start = 0
                 t_finish = 0
                 s_flown_task_leg = 0
+                startheight = 0
+                finish_height = 0
             else:
                 t_start = flight.tsk_t[leg]
                 t_finish = flight.tsk_t[leg+1]
                 s_flown_task_leg = competition_day.task_distances[leg] / 1000
+                startheight = det_height(flight.b_records[flight.tsk_i[leg]], flight.gps_altitude)
+                finish_height = det_height(flight.b_records[flight.tsk_i[leg+1]], flight.gps_altitude)
+
             self.leg.append({"ranking": self.all["ranking"],
                              "airplane": self.all["airplane"],
                              "compID": self.all["compID"],
                              "t_start": ss2hhmmss(t_start),
                              "t_finish": ss2hhmmss(t_finish),
+                             "h_start": startheight,
+                             "h_finish": finish_height,
                              "s_flown_task": s_flown_task_leg})
 
     def store_perf(self, leg, key, value):
