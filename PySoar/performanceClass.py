@@ -126,6 +126,13 @@ class Performance(object):
             s_glide_avg = float(cruise_distance) / no_cruises
         self.store_perf(leg, "s_glide_avg", s_glide_avg / 1000)
 
+    def det_dh_cruise_avg(self, leg, cruise_dh, no_cruises):
+        if no_cruises == 0:
+            dh_cruise_avg = 0
+        else:
+            dh_cruise_avg = float(cruise_dh) / no_cruises
+        self.store_perf(leg, "dh_cruise_avg", dh_cruise_avg)
+
     def det_s_extra(self, leg, cruise_distance, task_distance, thermal_drift):
         s_extra = float(cruise_distance + thermal_drift - task_distance) / task_distance
         s_extra *= 100
@@ -160,6 +167,7 @@ class Performance(object):
         self.det_s_extra(leg, cruise_distance, task_distance, thermal_drift)
         self.det_h_loss_turn(leg, thermal_altitude_loss, thermal_altitude_gain)
         self.det_s_glide_avg(leg, cruise_distance, no_cruises)
+        self.det_dh_cruise_avg(leg, cruise_height_diff, no_cruises)
         self.det_v_glide_avg(leg, cruise_distance, cruise_time)
         self.det_tsk_v(leg, task_distance, thermal_time, cruise_time)
 
