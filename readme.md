@@ -2,6 +2,15 @@
 
 PySoar automates the analysis of glider competitions. It starts with a Soaring Spot URL and delivers a spreadsheet as output.
 
+A screenshot of the program:
+
+[![PySoar screenshot](https://github.com/glidergeek/pysoar/raw/master/images/pysoar_screenshot_thumbnail.jpg)](https://github.com/glidergeek/pysoar/raw/master/images/pysoar_screenshot.png)
+
+An example analysis is provided for [this](http://www.soaringspot.com/en/sallandse-tweedaagse-2014/results/club/task-1-on-2014-06-21/daily) competition day:
+
+[![Example pysoar analysis](https://github.com/glidergeek/pysoar/raw/master/images/excel_logo.jpg)](https://github.com/glidergeek/pysoar/raw/master/example_analysis.xls)
+
+
 ## Stand alone versions
 Stand alone versions for Windows, Mac and Linux are available under [releases](https://github.com/GliderGeek/PySoar/releases).
 
