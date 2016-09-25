@@ -1,6 +1,25 @@
+from generalFunctions import det_average_bearing
+
+
 class Taskpoint(object):  # startpoint, turnpoints and finish
 
-    def det_orientation_angle(self):
+    def __init__(self, LCU_line, LSEEYOU_line):
+        self.LCU_line = LCU_line
+        self.LSEEYOU_line = LSEEYOU_line
+
+        self.orientation_angle = None
+        self.r_max = None
+        self.angle_max = None
+        self.r_min = None
+        self.angle_min = None
+
+        self.name = LCU_line[23::]
+        self.line = 'Line=1\n' in self.LSEEYOU_line.split(',') or 'Line=1' in self.LSEEYOU_line.split(',')
+        self.sector_orientation = self.det_sector_orientation()  # fixed, symmetrical, next, previous, start
+        self.distance_correction = self.det_distance_correction()  # None, displace_tp, shorten_legs
+        self.det_sector_sizes()
+
+    def fixed_orientation_angle(self):
         components = self.LSEEYOU_line.rstrip().split(",")
         for component in components:
             if component.startswith("A12="):
@@ -13,7 +32,6 @@ class Taskpoint(object):  # startpoint, turnpoints and finish
             if component.startswith("Style="):
                 style = int(component.split("=")[1])
                 if style == 0:
-                    self.det_orientation_angle()
                     return "fixed"
                 elif style == 1:
                     return "symmetrical"
@@ -46,6 +64,20 @@ class Taskpoint(object):  # startpoint, turnpoints and finish
         else:
             return None
 
+    def set_orientation_angle(self, angle_start=None, angle_previous=None, angle_next=None):
+        if self.sector_orientation == "fixed":
+            self.fixed_orientation_angle()
+        elif self.sector_orientation == "symmetrical":
+            self.orientation_angle = det_average_bearing(angle_previous, angle_next)
+        elif self.sector_orientation == "next":
+            self.orientation_angle = angle_next
+        elif self.sector_orientation == "previous":
+            self.orientation_angle = angle_previous
+        elif self.sector_orientation == "start":
+            self.orientation_angle = angle_start
+        else:
+            print "Unknown sector orientation! " + str(self.sector_orientation)
+
     def det_sector_sizes(self):
         components = self.LSEEYOU_line.rstrip().split(",")
         for component in components:
@@ -57,22 +89,6 @@ class Taskpoint(object):  # startpoint, turnpoints and finish
                 self.r_min = int(component.split("=")[1][:-1])
             elif component.startswith("A2="):
                 self.angle_min = int(component.split("=")[1])
-
-    def __init__(self, LCU_line, LSEEYOU_line):
-        self.LCU_line = LCU_line
-        self.LSEEYOU_line = LSEEYOU_line
-
-        self.orientation_angle = None
-        self.r_max = None
-        self.angle_max = None
-        self.r_min = None
-        self.angle_min = None
-
-        self.name = LCU_line[23::]
-        self.line = 'Line=1\n' in self.LSEEYOU_line.split(',') or 'Line=1' in self.LSEEYOU_line.split(',')
-        self.sector_orientation = self.det_sector_orientation()  # fixed, symmetrical, next, previous, start
-        self.distance_correction = self.det_distance_correction()  # None, displace_tp, shorten_legs
-        self.det_sector_sizes()
 
     def taskpoint_completed(self, brecord1, brecord2):
         from generalFunctions import det_bearing, det_bearing_change, determine_distance, det_local_time, ss2hhmmss

@@ -7,8 +7,10 @@ settings = Settings()
 
 
 class Flight(object):
-    def __init__(self, file_name, ranking):
+    def __init__(self, folder_path, file_name, ranking):
         self.file_name = file_name
+
+        self.folder_path = folder_path
 
         self.airplane = ""
         self.competition_id = ""
@@ -83,6 +85,48 @@ class Flight(object):
                     competition_day.LSEEYOU_lines.append(line)
                 if line.startswith('LCU::HPTZNTIMEZONE:'):
                     competition_day.utc_to_local = int(line[19:-1])
+
+    def get_task_information(self):
+        # this is a candidate for and IGC reader class / aerofiles functionality
+
+        task_information = {
+            't_min': None,
+            'start_opening': None,
+            'multi-start': False,
+            'aat': False,
+            'lcu_lines': [],
+            'lseeyou_lines': [],
+            'utc_diff': None
+        }
+
+        f = open(self.folder_path + self.file_name, "U")  # U extension is a necessity for cross compatibility!
+        full_file = f.readlines()
+        f.close()
+
+        for line in full_file:
+
+            if line.startswith('LSEEYOU TSK'):
+
+                tsk_split = line.split(',')
+                for task_element in tsk_split:
+                    if task_element.startswith('TaskTime'):
+                        task_information['t_min'] = hhmmss2ss(task_element[9::], 0)  # assuming no UTC offset
+                        task_information['aat'] = True
+                    if task_element.startswith('NoStart'):
+                        task_information['start_opening'] = hhmmss2ss(task_element[8::], 0)  # time in local time, not UTC
+                    if task_element.startswith('MultiStart=True'):
+                        task_information['multi_start'] = True
+                continue
+
+            if line.startswith('LCU::C'):
+                task_information['lcu_lines'].append(line)
+            if line.startswith('LSEEYOU OZ='):
+                task_information['lseeyou_lines'].append(line)
+            if line.startswith('LCU::HPTZNTIMEZONE:'):
+                task_information['utc_diff'] = int(line[19:-1])
+
+        return task_information
+
 
     def determine_outlanding_location(self, competition_day):
 

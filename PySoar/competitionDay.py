@@ -1,7 +1,11 @@
 from generalFunctions import hhmmss2ss, determine_distance, print_array_debug,\
     ss2hhmmss, det_bearing, det_average_bearing, det_bearing_change, det_final_bearing
 from settingsClass import Settings
-from taskpoints import Taskpoint
+from taskpoint import Taskpoint
+from task import Task
+from aat import AAT
+from race_task import RaceTask
+from datetime import date
 
 settings = Settings()
 
@@ -11,6 +15,11 @@ class CompetitionDay(object):
     def __init__(self):
         self.flights = []
         self.file_paths = []
+
+        # following variables are from new task implementation for AAT
+        self.task2 = None
+        self.utc_diff = None
+        self.date = None
 
         self.task = []
         self.LCU_lines = []
@@ -65,6 +74,33 @@ class CompetitionDay(object):
 
         return distance
 
+    def load_task_information(self):  # new task implementation for AAT
+
+        # task part
+        task = None
+        for flight in self.flights:
+            task_info = flight.get_task_information()
+
+            if task is None:
+                task = task_info
+            elif task != task_info:
+                print 'different tasks present'
+                # different tasks present in igc files
+                # issue #65
+                pass
+
+        if task['aat']:
+            self.task = AAT(task)
+        else:
+            self.task2 = RaceTask(task)
+
+        # utc difference and date
+        date_raw = task['lcu_lines'][0][6:12]
+        self.date = date(date_raw[4::], date_raw[2:4], date_raw[0:2])
+        print self.date.strftime('%d-%m-&y')
+
+        self.utc_diff = task['utc_diff']
+
     def write_task(self):
 
         date_raw = self.LCU_lines[0][6:12]
@@ -74,6 +110,7 @@ class CompetitionDay(object):
             taskpoint = Taskpoint(self.LCU_lines[index+2], self.LSEEYOU_lines[index])
             self.task.append(taskpoint)
 
+        # sector orientations and angles
         for index in range(len(self.task)):
             if index == 0:  # necessary for index out of bounds
                 angle = det_final_bearing(self.task[index+1].LCU_line, self.task[index].LCU_line, 'tsk', 'tsk')
@@ -102,6 +139,7 @@ class CompetitionDay(object):
         self.no_tps = len(self.task) - 2  # excluding start and finish
         self.no_legs = self.no_tps + 1
 
+        # task distances, next up in generalization
         for index in range(len(self.task)-1):
 
             current = self.task[index]

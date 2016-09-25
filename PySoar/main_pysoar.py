@@ -64,7 +64,7 @@ def run():
             file_name = soaring_spot_info.file_names[ii]
             ranking = soaring_spot_info.rankings[ii]
             competition_day.file_paths.append(soaring_spot_info.igc_directory + file_name)
-            competition_day.flights.append(Flight(file_name, ranking))
+            competition_day.flights.append(Flight(soaring_spot_info.igc_directory, file_name, ranking))
             competition_day.flights[-1].read_igc(competition_day, soaring_spot_info)
 
         competition_day.write_task()
