@@ -7,6 +7,5 @@ class AAT(Task):
         super(AAT, self).__init__(task_information)
 
         self.t_min = task_information['t_min']
-        self.distances = []
 
     # def set_task_distances(self, flight)  # different from racetask in that it takes the flight into account
