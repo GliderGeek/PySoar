@@ -5,7 +5,7 @@ from phasesClass import FlightPhases
 from performanceClass import Performance
 from importClass import SoaringSpotImport
 from exportClass import ExcelExport
-from Tkinter import Label, Tk, Button, Entry, W
+from Tkinter import Label, Tk, Button, Entry, W, E
 from generalFunctions import url_format_correct
 from generalFunctions import open_analysis_file
 import time
@@ -115,6 +115,7 @@ def run():
     report_problem = Button(root, text='Report problem')
     report_problem.bind('<Button-1>', go_bugform)
     root.bind('<Return>', url_check)
+    version = Label(root, text='v %s' % settings.version)
 
     title.grid(row=0, column=0)
     url_accompanying_text.grid(row=1, column=0, sticky=W)
@@ -124,6 +125,7 @@ def run():
     download_progress.grid(row=4, column=0, pady=5)
     analysis_progress.grid(row=5, column=0, pady=5)
     report_problem.grid(row=7, column=0, sticky=W)
+    version.grid(row=7, column=1, sticky=E)
 
     root.mainloop()
 
