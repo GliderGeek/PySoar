@@ -98,7 +98,7 @@ def run():
             analysis_progress.update()
 
         excel_sheet = ExcelExport(settings, competition_day)
-        excel_sheet.write_file(competition_day, settings)
+        excel_sheet.write_file(competition_day, settings, soaring_spot_info)
 
         analysis_done = Button(root, text='Excel produced', command=open_analysis_file)
         analysis_done.grid(row=6, column=0, pady=5)
