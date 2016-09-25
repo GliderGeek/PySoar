@@ -85,22 +85,18 @@ class Flight(object):
                     competition_day.utc_to_local = int(line[19:-1])
 
     def determine_outlanding_location(self, competition_day):
-        from math import cos, pi, radians
 
         task_pointM1 = competition_day.task[self.outlanding_leg].LCU_line
-
         task_point = competition_day.task[self.outlanding_leg+1].LCU_line
-        bearing_to_next_tp = det_bearing(task_pointM1, task_point, 'tsk', 'tsk')
 
         if self.outlanding_b_record != "":
             b_rec = self.outlanding_b_record
 
-            # todo: replace by function which calculates projected distance
-            temp_dist = determine_distance(task_pointM1, b_rec, 'tsk', 'pnt')
-            bearing_to_point = det_bearing(task_pointM1, b_rec, 'tsk', 'pnt')
+            # outlanding distance = distance between tps minus distance from next tp to outlanding
+            outlanding_dist = determine_distance(task_pointM1, task_point, 'tsk', 'tsk')
+            outlanding_dist -= determine_distance(task_point, b_rec, 'tsk', 'pnt')
 
-            angle = abs(det_bearing_change(bearing_to_point, bearing_to_next_tp))
-            self.outlanding_distance = cos(radians(angle)) * temp_dist
+            self.outlanding_distance = outlanding_dist
 
         else:
             last_tp_i = self.first_start_i if self.outlanding_leg == 0 else self.tsk_i[-1]
@@ -113,15 +109,12 @@ class Flight(object):
 
                     b_rec = self.b_records[i]
 
-                    # todo: replace by function which calculates projected distance
-                    temp_dist = determine_distance(task_pointM1, b_rec, 'tsk', 'pnt')
-                    bearing_to_point = det_bearing(task_pointM1, b_rec, 'tsk', 'pnt')
+                    # outlanding distance = distance between tps minus distance from next tp to outlanding
+                    outlanding_dist = determine_distance(task_pointM1, task_point, 'tsk', 'tsk')
+                    outlanding_dist -= determine_distance(task_point, b_rec, 'tsk', 'pnt')
 
-                    angle = abs(det_bearing_change(bearing_to_point, bearing_to_next_tp))
-                    projected_dist = cos(radians(angle)) * temp_dist
-
-                    if projected_dist > max_dist:
-                        max_dist = projected_dist
+                    if outlanding_dist > max_dist:
+                        max_dist = outlanding_dist
                         self.outlanding_b_record = b_rec
 
             self.outlanding_distance = max_dist
