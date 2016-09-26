@@ -91,8 +91,8 @@ class Flight(object):
 
         task_information = {
             't_min': None,
-            'start_opening': None,
-            'multi-start': False,
+            'start_opening': hhmmss2ss("09:00:00", 0),
+            'multi_start': False,
             'aat': False,
             'lcu_lines': [],
             'lseeyou_lines': [],

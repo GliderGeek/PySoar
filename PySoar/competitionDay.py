@@ -2,10 +2,10 @@ from generalFunctions import hhmmss2ss, determine_distance, print_array_debug,\
     ss2hhmmss, det_bearing, det_average_bearing, det_bearing_change, det_final_bearing
 from settingsClass import Settings
 from taskpoint import Taskpoint
-from task import Task
 from aat import AAT
 from race_task import RaceTask
 from datetime import date
+import copy
 
 settings = Settings()
 
@@ -83,11 +83,19 @@ class CompetitionDay(object):
 
             if task is None:
                 task = task_info
-            elif task != task_info:
-                print 'different tasks present'
-                # different tasks present in igc files
-                # issue #65
-                pass
+            else:
+                # temporarily take out first lcu_line (timestamped) for comparison
+                # this means that the date is not compared!
+                temp_task = copy.deepcopy(task)
+                temp_task_info = copy.deepcopy(task_info)
+                del temp_task['lcu_lines'][0]
+                del temp_task_info['lcu_lines'][0]
+
+                if temp_task != temp_task_info:
+                    print 'different task information present in igc files'
+                    # different tasks present in igc files
+                    # issue #65
+                    #todo: check whether full task description if present. if not, update task
 
         if task['aat']:
             self.task = AAT(task)
@@ -96,7 +104,11 @@ class CompetitionDay(object):
 
         # utc difference and date
         date_raw = task['lcu_lines'][0][6:12]
-        self.date = date(date_raw[4::], date_raw[2:4], date_raw[0:2])
+        year = int(date_raw[4::])
+        year = 1900+year if year > 90 else 2000+year
+        month = int(date_raw[2:4])
+        day = int(date_raw[0:2])
+        self.date = date(year, month, day)
         print self.date.strftime('%d-%m-&y')
 
         self.utc_diff = task['utc_diff']
