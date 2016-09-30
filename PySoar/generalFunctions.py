@@ -1,6 +1,7 @@
 from mechanize import Browser
 from BeautifulSoup import BeautifulSoup
 from settingsClass import Settings
+from datetime import date
 settings = Settings()
 
 
@@ -275,10 +276,10 @@ def determine_flown_task_distance(_leg, b_record, competition_day):
 
     task_distance = 0
     for leg in range(_leg-1):
-        task_distance += competition_day.task_distances[leg]
+        task_distance += competition_day.task.distances[leg]
 
-    previous_tp = competition_day.task[_leg-1].LCU_line
-    next_tp = competition_day.task[_leg].LCU_line
+    previous_tp = competition_day.task.taskpoints[_leg-1].LCU_line
+    next_tp = competition_day.task.taskpoints[_leg].LCU_line
 
     bearing1 = det_bearing(previous_tp, next_tp, 'tsk', 'tsk')
     bearing2 = det_bearing(previous_tp, b_record, 'tsk', 'pnt')
@@ -385,6 +386,17 @@ def interpolate_b_records(b_record1, b_record2):
 
     b_records.append(b_record2)
     return b_records
+
+
+def get_date(lcu_line):
+    date_raw = lcu_line[6:12]
+
+    year = int(date_raw[4::])
+    year = 1900+year if year > 90 else 2000+year
+    month = int(date_raw[2:4])
+    day = int(date_raw[0:2])
+
+    return date(year, month, day)
 
 
 if __name__ == '__main__':

@@ -4,8 +4,8 @@ from generalFunctions import det_height, ss2hhmmss, determine_distance
 class Performance(object):
     def __init__(self, competition_day, flight):
 
-        self.tsk_distance_all = sum(competition_day.task_distances)
-        self.tsk_distance_leg = competition_day.task_distances
+        self.tsk_distance_all = sum(competition_day.task.distances)
+        self.tsk_distance_leg = competition_day.task.distances
 
         self.no_cruises = flight.phases.cruises_all
         self.no_cruises_leg = flight.phases.cruises_leg
@@ -19,11 +19,11 @@ class Performance(object):
         if flight.outlanded:
             s_flown_task_all = 0
             for leg in range(flight.outlanding_leg):
-                s_flown_task_all += competition_day.task_distances[leg]
+                s_flown_task_all += competition_day.task.distances[leg]
             s_flown_task_all += flight.outlanding_distance
             s_flown_task_all /= 1000
         else:
-            s_flown_task_all = sum(competition_day.task_distances) / 1000
+            s_flown_task_all = sum(competition_day.task.distances) / 1000
 
         self.all = {"ranking": flight.ranking,
                     "airplane": flight.airplane,
@@ -37,7 +37,7 @@ class Performance(object):
         self.leg = []
 
         # in case of outlanding: only performance is stored from completed legs
-        for leg in range(competition_day.no_legs):
+        for leg in range(competition_day.task.no_legs):
             if flight.outlanded and leg == flight.outlanding_leg:
                 t_start = flight.tsk_t[leg]
                 t_finish = 0
@@ -53,7 +53,7 @@ class Performance(object):
             else:
                 t_start = flight.tsk_t[leg]
                 t_finish = flight.tsk_t[leg+1]
-                s_flown_task_leg = competition_day.task_distances[leg] / 1000
+                s_flown_task_leg = competition_day.task.distances[leg] / 1000
                 startheight = det_height(flight.b_records[flight.tsk_i[leg]], flight.gps_altitude)
                 finish_height = det_height(flight.b_records[flight.tsk_i[leg+1]], flight.gps_altitude)
 
@@ -182,7 +182,7 @@ class Performance(object):
         cruise_distance_tot = 0
         cruise_height_diff_tot = 0
 
-        for leg in range(competitionday.no_legs):
+        for leg in range(competitionday.task.no_legs):
 
             thermal_altitude_gain = 0
             thermal_altitude_loss = 0

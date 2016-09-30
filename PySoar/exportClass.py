@@ -41,7 +41,7 @@ class ExcelExport(object):
 
     def initiate_best_worst(self, settings, competition_day):
         self.fill_best_worst_bib(-1, settings)
-        for leg in range(competition_day.no_legs):
+        for leg in range(competition_day.task.no_legs):
             self.best_parameters_leg.append({})
             self.worst_parameters_leg.append({})
 
@@ -53,7 +53,7 @@ class ExcelExport(object):
         self.wb = xlwt.Workbook()  # initialize excel sheet
         self.ws_all = self.wb.add_sheet('Entire Flight', cell_overwrite_ok=True)
         self.ws_legs = []
-        for leg in range(competition_day.no_legs):
+        for leg in range(competition_day.task.no_legs):
             self.ws_legs.append(self.wb.add_sheet("Leg " + str(leg+1), cell_overwrite_ok=True))
 
         self.style_dict = {}
@@ -118,7 +118,7 @@ class ExcelExport(object):
             if not settings.perf_dict[perf_ind]["visible_on_leg"]:  # continue to next performance indicator
                 continue
 
-            for leg in range(competition_day.no_legs):
+            for leg in range(competition_day.task.no_legs):
 
                 temp_best = 0
                 temp_worst = 0
@@ -157,8 +157,8 @@ class ExcelExport(object):
                         self.worst_parameters_leg[leg][perf_ind] = filename
 
     def write_general_info(self, competition_day):
-        date = competition_day.task_date
-        self.ws_all.write(0, 0, date)
+        date = competition_day.date
+        self.ws_all.write(0, 0, date.strftime('%d-%m-%y'))
 
     def write_cell(self, leg, row, col, content, style):
         if leg == -1:
@@ -237,8 +237,8 @@ class ExcelExport(object):
             self.ws_all.write_merge(row, row, col, col+no_cols, title, self.style_dict['style_phase'])
         else:
             no_cols = settings.no_leg_indicators
-            name1 = competition_day.task[leg].name
-            name2 = competition_day.task[leg+1].name
+            name1 = competition_day.task.taskpoints[leg].name
+            name2 = competition_day.task.taskpoints[leg+1].name
             title = "Leg " + str(leg+1) + ": " + name1 + " - " + name2
             self.ws_legs[leg].write_merge(row, row, col, col+no_cols, title, self.style_dict['style_phase'])
 
@@ -247,7 +247,7 @@ class ExcelExport(object):
         self.write_perf_indics(-1, settings, competition_day)
 
     def write_legs(self, settings, competition_day):
-        for leg in range(competition_day.no_legs):
+        for leg in range(competition_day.task.no_legs):
             self.write_title(leg, settings, competition_day)
             self.write_perf_indics(leg, settings, competition_day)
 

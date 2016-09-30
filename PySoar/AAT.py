@@ -10,3 +10,6 @@ class AAT(Task):
 
     def set_task_distances(self, flight):  # different from racetask in that it takes the flight into account
         pass
+
+    def set_taskpoints(self, flight):
+        pass

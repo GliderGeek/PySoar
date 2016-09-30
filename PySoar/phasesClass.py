@@ -23,7 +23,7 @@ class FlightPhases(object):
         self.pointwise_all = {}
         self.pointwise_leg = []
 
-        for leg in range(competition_day.no_legs):
+        for leg in range(competition_day.task.no_legs):
             self.leg.append([])
             self.pointwise_leg.append(self.get_difference_bib())
             self.cruises_leg.append(0)
@@ -55,10 +55,10 @@ class FlightPhases(object):
     def determine_phases(self, settings, competitionday, flight):
 
         b_record_m1 = flight.b_records[flight.tsk_i[0] - 2]
-        time_m1 = det_local_time(b_record_m1, competitionday.utc_to_local)
+        time_m1 = det_local_time(b_record_m1, competitionday.utc_diff)
 
         b_record = flight.b_records[flight.tsk_i[0] - 1]
-        time = det_local_time(b_record, competitionday.utc_to_local)
+        time = det_local_time(b_record, competitionday.utc_diff)
         bearing = det_bearing(b_record_m1, b_record, 'pnt', 'pnt')
 
         cruise = True
@@ -84,7 +84,7 @@ class FlightPhases(object):
                 b_record_m1 = b_record
 
                 b_record = flight.b_records[i]
-                time = det_local_time(b_record, competitionday.utc_to_local)
+                time = det_local_time(b_record, competitionday.utc_diff)
 
                 bearing = det_bearing(b_record_m1, b_record, 'pnt', 'pnt')
                 bearing_change = det_bearing_change(bearing_m1, bearing)
@@ -121,7 +121,7 @@ class FlightPhases(object):
 
                     if abs(bearing_change_tot) > settings.cruise_threshold_bearingTot:
                         cruise = False
-                        thermal_start_time = det_local_time(flight.b_records[possible_thermal_start], competitionday.utc_to_local)
+                        thermal_start_time = det_local_time(flight.b_records[possible_thermal_start], competitionday.utc_diff)
                         self.close_entry(possible_thermal_start, thermal_start_time, -2)
                         self.close_entry(possible_thermal_start, thermal_start_time, leg)
                         self.create_entry(possible_thermal_start, thermal_start_time, 'thermal', -2)
@@ -161,7 +161,7 @@ class FlightPhases(object):
                             temp_bearing_change = 0
                             bearing_change_tot = 0
 
-        time = det_local_time(flight.b_records[flight.tsk_i[-1]], competitionday.utc_to_local)
+        time = det_local_time(flight.b_records[flight.tsk_i[-1]], competitionday.utc_diff)
         self.close_entry(flight.tsk_i[-1], time, -2)
         self.close_entry(flight.tsk_i[-1], time, leg)
 
@@ -173,7 +173,7 @@ class FlightPhases(object):
     def determine_point_statistics(self, flight, competition_day):
 
         self.pointwise_all = self.get_difference_bib()
-        for leg in range(competition_day.no_legs):
+        for leg in range(competition_day.task.no_legs):
             self.pointwise_leg.append(self.get_difference_bib())
 
         phase_number = 0
@@ -194,9 +194,9 @@ class FlightPhases(object):
                                     det_height(flight.b_records[i], flight.gps_altitude)
                 height = det_height(flight.b_records[i], flight.gps_altitude)
                 distance = determine_distance(flight.b_records[i], flight.b_records[i+1], 'pnt', 'pnt')
-                time_difference = det_local_time(flight.b_records[i+1], competition_day.utc_to_local) -\
-                                  det_local_time(flight.b_records[i], competition_day.utc_to_local)
-                time_secs = det_local_time(flight.b_records[i], competition_day.utc_to_local)
+                time_difference = det_local_time(flight.b_records[i+1], competition_day.utc_diff) -\
+                                  det_local_time(flight.b_records[i], competition_day.utc_diff)
+                time_secs = det_local_time(flight.b_records[i], competition_day.utc_diff)
                 date_obj = datetime.datetime(2014, 6, 21) + datetime.timedelta(seconds=time_secs)
                 distance_task = determine_flown_task_distance(leg, flight.b_records[i], competition_day)
 

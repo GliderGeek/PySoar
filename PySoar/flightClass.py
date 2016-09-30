@@ -1,6 +1,6 @@
 from generalFunctions import hhmmss2ss, det_local_time, det_height,\
     print_array_debug, ss2hhmmss, determine_distance, det_bearing, det_bearing_change, used_engine,\
-    determine_engine_start_i
+    determine_engine_start_i, get_date
 from settingsClass import Settings
 
 settings = Settings()
@@ -29,13 +29,10 @@ class Flight(object):
         self.outlanding_b_record = ""
         self.outlanding_distance = 0
 
-    def read_igc(self, competition_day, soaring_spot_info):
+    def read_igc(self, soaring_spot_info):
         f = open(soaring_spot_info.igc_directory + self.file_name, "U")  # U extension is a necessity for cross compatibility!
         full_file = f.readlines()
         f.close()
-
-        if len(competition_day.LCU_lines) != 0:
-            competition_day.task_found = True
 
         for line in full_file:
 
@@ -65,32 +62,12 @@ class Flight(object):
                 self.competition_id = line[24:-1]
                 continue
 
-            if line.startswith('LSEEYOU TSK'):
-
-                tsk_split = line.split(',')
-                for task_element in tsk_split:
-                    if task_element.startswith('TaskTime') and not hasattr(competition_day, 't_min'):
-                        competition_day.t_min = hhmmss2ss(task_element[9::], 0)  # asuming no UTC offset
-                        competition_day.aat = True  # Default is False
-                    if task_element.startswith('NoStart') and competition_day.start_opening == hhmmss2ss("09:00:00", 0):
-                        competition_day.start_opening = hhmmss2ss(task_element[8::], 0)  # time in local time, not UTC
-                    if task_element.startswith('MultiStart=True'):
-                        competition_day.multi_start = True
-                continue
-
-            if not competition_day.task_found:
-                if line.startswith('LCU::C'):
-                    competition_day.LCU_lines.append(line)
-                if line.startswith('LSEEYOU OZ='):
-                    competition_day.LSEEYOU_lines.append(line)
-                if line.startswith('LCU::HPTZNTIMEZONE:'):
-                    competition_day.utc_to_local = int(line[19:-1])
-
     def get_task_information(self):
         # this is a candidate for and IGC reader class / aerofiles functionality
 
         task_information = {
             't_min': None,
+            'date': None,
             'start_opening': hhmmss2ss("09:00:00", 0),
             'multi_start': False,
             'aat': False,
@@ -125,13 +102,17 @@ class Flight(object):
             if line.startswith('LCU::HPTZNTIMEZONE:'):
                 task_information['utc_diff'] = int(line[19:-1])
 
+        # extract date from fist lcu line
+        if len(task_information['lcu_lines']) != 0:
+            task_information['date'] = get_date(task_information['lcu_lines'][0])
+
         return task_information
 
 
     def determine_outlanding_location(self, competition_day):
 
-        task_pointM1 = competition_day.task[self.outlanding_leg].LCU_line
-        task_point = competition_day.task[self.outlanding_leg+1].LCU_line
+        task_pointM1 = competition_day.task.taskpoints[self.outlanding_leg].LCU_line
+        task_point = competition_day.task.taskpoints[self.outlanding_leg+1].LCU_line
 
         if self.outlanding_b_record != "":
             b_rec = self.outlanding_b_record
@@ -172,7 +153,7 @@ class Flight(object):
         for index in range(len(b_records_interpolated)-1):
             b_record1 = b_records_interpolated[-2-index]
             b_record2 = b_records_interpolated[-1-index]
-            if competition_day.task[0].taskpoint_completed(b_record1, b_record2):
+            if competition_day.task.taskpoints[0].taskpoint_completed(b_record1, b_record2):
                 return refinement
             else:
                 refinement += 1
@@ -189,10 +170,10 @@ class Flight(object):
             if self.gps_altitude and det_height(self.b_records[i], False) != 0:
                 self.gps_altitude = False
 
-            t = det_local_time(self.b_records[i], competition_day.utc_to_local)
+            t = det_local_time(self.b_records[i], competition_day.utc_diff)
 
-            if leg == -1 and t > competition_day.start_opening and i > 0:
-                start = competition_day.task[0]
+            if leg == -1 and t > competition_day.task.start_opening and i > 0:
+                start = competition_day.task.taskpoints[0]
                 if start.taskpoint_completed(self.b_records[i - 1], self.b_records[i]):
                     self.tsk_t.append(t)
                     self.tsk_i.append(i)
@@ -202,8 +183,8 @@ class Flight(object):
             elif leg == 0:
                 if used_engine(self, i):
                     possible_enl = determine_engine_start_i(self, i)
-                start = competition_day.task[0]
-                tp1 = competition_day.task[1]
+                start = competition_day.task.taskpoints[0]
+                tp1 = competition_day.task.taskpoints[1]
                 if start.taskpoint_completed(self.b_records[i - 1], self.b_records[i]):
                     if self.file_name == "PR.igc":
                         print "PR restart at t=%s" % ss2hhmmss(t)
@@ -214,20 +195,20 @@ class Flight(object):
                     self.tsk_t.append(t)
                     self.tsk_i.append(i)
                     leg += 1
-            elif 0 < leg < competition_day.no_tps:
+            elif 0 < leg < competition_day.task.no_tps:
                 if used_engine(self, i):
                     possible_enl = determine_engine_start_i(self, i)
                     break
-                next_tp = competition_day.task[leg+1]
+                next_tp = competition_day.task.taskpoints[leg+1]
                 if next_tp.taskpoint_completed(self.b_records[i - 1], self.b_records[i]):
                     self.tsk_t.append(t)
                     self.tsk_i.append(i)
                     leg += 1
-            elif leg == competition_day.no_legs - 1:
+            elif leg == competition_day.task.no_legs - 1:
                 if used_engine(self, i):
                     possible_enl = determine_engine_start_i(self, i)
                     break
-                finish = competition_day.task[-1]
+                finish = competition_day.task.taskpoints[-1]
                 if finish.taskpoint_completed(self.b_records[i - 1], self.b_records[i]):
                     self.tsk_t.append(t)
                     self.tsk_i.append(i)
@@ -241,7 +222,7 @@ class Flight(object):
         if not possible_enl == 0:
             self.outlanding_b_record = self.b_records[possible_enl]
 
-        if not possible_enl == 0 or len(self.tsk_t) != competition_day.no_legs + 1:
+        if not possible_enl == 0 or len(self.tsk_t) != competition_day.task.no_legs + 1:
             self.outlanded = True
             self.outlanding_leg = len(self.tsk_t)-1
             self.determine_outlanding_location(competition_day)

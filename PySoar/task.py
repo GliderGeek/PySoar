@@ -6,11 +6,6 @@ class Task(object):
 
     def __init__(self, task_information):
 
-        print 'inside constructor of task'
-
-        print task_information
-
-        self.utc_diff = task_information['utc_diff']
         self.aat = task_information['aat']
         self.multi_start = task_information['multi_start']
         self.start_opening = task_information['start_opening']
