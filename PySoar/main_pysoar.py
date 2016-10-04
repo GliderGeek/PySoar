@@ -25,7 +25,7 @@ def start_gui():
 
     def start_analysis():
 
-        run(url_entry, download_progress, url_status, analysis_progress)
+        run(url_entry.get(), download_progress, url_status, analysis_progress)
 
         analysis_done = Button(root, text='Excel produced', command=open_analysis_file)
         analysis_done.grid(row=6, column=0, pady=5)

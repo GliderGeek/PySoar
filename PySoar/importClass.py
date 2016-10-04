@@ -10,7 +10,7 @@ settings = Settings()
 
 class SoaringSpotImport(object):
 
-    def __init__(self):
+    def __init__(self, url, download_progress):
         # combine parameters in dictionary?
         self.url_page = ""
         self.competition = ""
@@ -25,6 +25,9 @@ class SoaringSpotImport(object):
         self.file_urls = []
         self.file_names = []
         self.rankings = []
+
+        self.load(url)
+        self.download_flights(download_progress)
 
     def download_flights(self, download_progress):
         for index in range(len(self.file_urls)):

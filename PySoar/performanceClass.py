@@ -66,6 +66,8 @@ class Performance(object):
                              "h_finish": finish_height,
                              "s_flown_task": s_flown_task_leg})
 
+        self.determine_performance(flight, competition_day)
+
     def store_perf(self, leg, key, value):
         if leg == -1:
             self.all[key] = value

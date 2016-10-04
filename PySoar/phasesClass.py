@@ -11,7 +11,7 @@ class FlightPhases(object):
     def get_difference_bib(self):
         return {"height_difference": [], "height":[], "distance": [], "distance_task": [], "time_difference": [], "time": [], "phase": []}
 
-    def __init__(self, competition_day):
+    def __init__(self, settings, competition_day, flight):
         self.all = []
         self.leg = []
 
@@ -28,6 +28,9 @@ class FlightPhases(object):
             self.pointwise_leg.append(self.get_difference_bib())
             self.cruises_leg.append(0)
             self.thermals_leg.append(0)
+
+        self.determine_phases(settings, competition_day, flight)
+        self.determine_point_statistics(flight, competition_day)
 
     def create_entry(self, i_start, t_start, phase, leg):
         content = {'i_start': i_start, 'i_end': i_start, 't_start': t_start, 't_end': t_start, 'phase': phase}

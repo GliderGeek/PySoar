@@ -10,7 +10,7 @@ settings = Settings()
 
 class CompetitionDay(object):
 
-    def __init__(self):
+    def __init__(self, soaring_spot_info):
         self.flights = []
         self.file_paths = []
 
@@ -18,6 +18,9 @@ class CompetitionDay(object):
         self.task = None
         self.utc_diff = None
         self.date = None
+
+        self.read_flights(soaring_spot_info)
+        self.load_task_information()
 
     def read_flights(self, soaring_spot_info):
         for ii in range(len(soaring_spot_info.file_names)):
