@@ -108,7 +108,6 @@ class Flight(object):
 
         return task_information
 
-
     def determine_outlanding_location(self, competition_day):
 
         task_pointM1 = competition_day.task.taskpoints[self.outlanding_leg].LCU_line
@@ -259,9 +258,9 @@ class Flight(object):
 
 
 if __name__ == '__main__':
-    from main_pysoar import run
+    from main_pysoar import start_gui
 
-    run()
+    start_gui()
 
 #############################  LICENSE  #####################################
 

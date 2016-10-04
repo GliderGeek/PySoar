@@ -3,6 +3,7 @@ from settingsClass import Settings
 from aat import AAT
 from race_task import RaceTask
 import copy
+from flightClass import Flight
 
 settings = Settings()
 
@@ -17,6 +18,14 @@ class CompetitionDay(object):
         self.task = None
         self.utc_diff = None
         self.date = None
+
+    def read_flights(self, soaring_spot_info):
+        for ii in range(len(soaring_spot_info.file_names)):
+            file_name = soaring_spot_info.file_names[ii]
+            ranking = soaring_spot_info.rankings[ii]
+            self.file_paths.append(soaring_spot_info.igc_directory + file_name)
+            self.flights.append(Flight(soaring_spot_info.igc_directory, file_name, ranking))
+            self.flights[-1].read_igc(soaring_spot_info)
 
     def load_task_information(self):  # new task implementation for AAT
 
@@ -77,8 +86,8 @@ class CompetitionDay(object):
         text_file.close()
 
 if __name__ == '__main__':
-    from main_pysoar import run
-    run()
+    from main_pysoar import start_gui
+    start_gui()
 
 #############################  LICENSE  #####################################
 

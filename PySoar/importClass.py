@@ -3,6 +3,7 @@ from mechanize import Browser
 from BeautifulSoup import BeautifulSoup
 import urllib
 from settingsClass import Settings
+import time
 
 settings = Settings()
 
@@ -24,6 +25,15 @@ class SoaringSpotImport(object):
         self.file_urls = []
         self.file_names = []
         self.rankings = []
+
+    def download_flights(self, download_progress):
+        for index in range(len(self.file_urls)):
+            while not os.path.exists(self.igc_directory + "/" + self.file_names[index]):
+                self.download_flight(index)
+                time.sleep(0.1)
+            self.flights_downloaded += 1
+            download_progress.configure(text='Downloaded: ' + str(self.flights_downloaded) + '/' + str(len(self.file_names)))
+            download_progress.update()
 
     def download_flight(self, index):
         url_location = self.file_urls[index]
@@ -83,8 +93,8 @@ class SoaringSpotImport(object):
         text_file.close()
 
 if __name__ == '__main__':
-    from main_pysoar import run
-    run()
+    from main_pysoar import start_gui
+    start_gui()
 
 #############################  LICENSE  #####################################
 

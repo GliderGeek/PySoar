@@ -251,6 +251,20 @@ def url_format_correct(url_string):
         return 'URL correct'
 
 
+def go_bugform(url_entry, event):
+    import webbrowser
+
+    form_url = settings.debug_form_url
+    versionID = settings.pysoar_version_formID
+    urlID = settings.competition_url_formID
+    pysoar_version = settings.version
+
+    comp_url = url_entry.get()
+
+    complete_url = '%s?entry.%s=%s&entry.%s=%s' % (form_url, versionID, pysoar_version, urlID, comp_url)
+    webbrowser.open(complete_url)
+
+
 def print_array_debug(text_file, array_name, array):
     text_file.write(array_name + " \n")
     for ii in range(len(array)):

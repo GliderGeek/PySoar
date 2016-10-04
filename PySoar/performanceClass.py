@@ -235,9 +235,9 @@ class Performance(object):
 
 
 if __name__ == '__main__':
-    from main_pysoar import run
+    from main_pysoar import start_gui
 
-    run()
+    start_gui()
 
 #############################  LICENSE  #####################################
 

@@ -81,8 +81,8 @@ class Settings(object):
     ENL_time_threshold = 30  # seconds
 
 if __name__ == '__main__':
-    from main_pysoar import run
-    run()
+    from main_pysoar import start_gui
+    start_gui()
 
 #############################  LICENSE  #####################################
 
