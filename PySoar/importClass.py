@@ -19,7 +19,6 @@ class SoaringSpotImport(object):
         self.igc_directory = ""
 
         self.flights_downloaded = 0
-        self.flights_analyzed = 0
 
         self.baseUrl = "http://www.soaringspot.com"
         self.file_urls = []

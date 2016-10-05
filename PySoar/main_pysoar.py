@@ -1,11 +1,7 @@
-from settingsClass import Settings
 from Tkinter import Label, Tk, Button, Entry, W
-from generalFunctions import url_format_correct, go_bugform
-from generalFunctions import open_analysis_file
+from generalFunctions import open_analysis_file, url_format_correct, go_bugform
 from analysis import run
 from functools import partial
-
-settings = Settings()
 
 
 def start_gui():
@@ -25,7 +21,7 @@ def start_gui():
 
     def start_analysis():
 
-        run(url_entry.get(), download_progress, url_status, analysis_progress)
+        run(url_entry.get(), url_status, download_progress, analysis_progress)
 
         analysis_done = Button(root, text='Excel produced', command=open_analysis_file)
         analysis_done.grid(row=6, column=0, pady=5)

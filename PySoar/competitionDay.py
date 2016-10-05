@@ -1,26 +1,41 @@
 from generalFunctions import print_array_debug, ss2hhmmss, get_date
 from settingsClass import Settings
-from aat import AAT
 from race_task import RaceTask
-import copy
+from aat import AAT
 from flightClass import Flight
+import copy
 
 settings = Settings()
 
 
 class CompetitionDay(object):
 
-    def __init__(self, soaring_spot_info):
+    def __init__(self, soaring_spot_info, url_status):
         self.flights = []
         self.file_paths = []
 
-        # following variables are from new task implementation for AAT
         self.task = None
         self.utc_diff = None
         self.date = None
 
         self.read_flights(soaring_spot_info)
         self.load_task_information()
+
+        # shortcoming of PySoar
+        if self.task.multi_start:
+            url_status.configure(text="Multiple starting points not implemented!", foreground='red')
+            url_status.update()
+            return
+
+    def analyze_flights(self, soaring_spot_info, analysis_progress):
+        flights_analyzed = 0
+        for flight in self.flights:
+            flight.analyze(self)
+
+            flights_analyzed += 1
+            analysis_progress.configure(text='Analyzed: %s/%s' %
+                                             (str(flights_analyzed), str(len(soaring_spot_info.file_names))))
+            analysis_progress.update()
 
     def read_flights(self, soaring_spot_info):
         for ii in range(len(soaring_spot_info.file_names)):

@@ -13,8 +13,8 @@ class Performance(object):
         self.no_thermals = flight.phases.thermals_all
         self.no_thermals_leg = flight.phases.thermals_leg
 
-        startheight = det_height(flight.b_records[flight.tsk_i[0]], flight.gps_altitude)
-        finish_height = det_height(flight.b_records[flight.tsk_i[-1]], flight.gps_altitude)
+        startheight = det_height(flight.trace[flight.tsk_i[0]], flight.gps_altitude)
+        finish_height = det_height(flight.trace[flight.tsk_i[-1]], flight.gps_altitude)
 
         if flight.outlanded:
             s_flown_task_all = 0
@@ -42,7 +42,7 @@ class Performance(object):
                 t_start = flight.tsk_t[leg]
                 t_finish = 0
                 s_flown_task_leg = flight.outlanding_distance / 1000
-                startheight = det_height(flight.b_records[flight.tsk_i[leg]], flight.gps_altitude)
+                startheight = det_height(flight.trace[flight.tsk_i[leg]], flight.gps_altitude)
                 finish_height = 0
             elif flight.outlanded and leg > flight.outlanding_leg:
                 t_start = 0
@@ -54,8 +54,8 @@ class Performance(object):
                 t_start = flight.tsk_t[leg]
                 t_finish = flight.tsk_t[leg+1]
                 s_flown_task_leg = competition_day.task.distances[leg] / 1000
-                startheight = det_height(flight.b_records[flight.tsk_i[leg]], flight.gps_altitude)
-                finish_height = det_height(flight.b_records[flight.tsk_i[leg+1]], flight.gps_altitude)
+                startheight = det_height(flight.trace[flight.tsk_i[leg]], flight.gps_altitude)
+                finish_height = det_height(flight.trace[flight.tsk_i[leg+1]], flight.gps_altitude)
 
             self.leg.append({"ranking": self.all["ranking"],
                              "airplane": self.all["airplane"],
@@ -216,7 +216,7 @@ class Performance(object):
                 if entry["phase"] == "thermal":
                     i_st = entry["i_start"]
                     i_end = entry["i_end"]
-                    thermal_drift += determine_distance(flight.b_records[i_st], flight.b_records[i_end], 'pnt', 'pnt')
+                    thermal_drift += determine_distance(flight.trace[i_st], flight.trace[i_end], 'pnt', 'pnt')
 
             # write to total performance values
             thermal_altitude_gain_tot += thermal_altitude_gain

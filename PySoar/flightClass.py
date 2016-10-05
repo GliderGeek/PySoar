@@ -1,7 +1,10 @@
 from generalFunctions import hhmmss2ss, det_local_time, det_height,\
-    print_array_debug, ss2hhmmss, determine_distance, det_bearing, det_bearing_change, used_engine,\
+    print_array_debug, ss2hhmmss, determine_distance, used_engine,\
     determine_engine_start_i, get_date
 from settingsClass import Settings
+from phasesClass import FlightPhases
+from performanceClass import Performance
+from trip import Trip
 
 settings = Settings()
 
@@ -12,14 +15,16 @@ class Flight(object):
 
         self.folder_path = folder_path
 
-        self.airplane = ""
-        self.competition_id = ""
+        self.airplane = None
+        self.competition_id = None
         self.ranking = ranking
 
-        self.b_records = []
+        self.trace = []
         self.tsk_t = []
         self.tsk_i = []
         self.first_start_i = 0  # necessary for determination of outlanding on leg 0. quite rare case
+
+        self.trip = None
 
         self.gps_altitude = True
         self.outlanded = False
@@ -29,7 +34,20 @@ class Flight(object):
         self.outlanding_b_record = ""
         self.outlanding_distance = 0
 
+        self.phases = None
+        self.performance = None
+
+    def analyze(self, competition_day):
+        print self.file_name
+
+        self.trip = Trip(competition_day.task, self.trace)
+
+        self.determine_tsk_times(competition_day)
+        self.phases = FlightPhases(settings, competition_day, self)
+        self.performance = Performance(competition_day, self)
+
     def read_igc(self, soaring_spot_info):
+        # this is a candidate for and IGC reader class / aerofiles functionality
         f = open(soaring_spot_info.igc_directory + self.file_name, "U")  # U extension is a necessity for cross compatibility!
         full_file = f.readlines()
         f.close()
@@ -37,8 +55,8 @@ class Flight(object):
         for line in full_file:
 
             if line.startswith('B'):
-                if len(self.b_records) == 0 or (len(self.b_records) > 0 and self.b_records[-1][0:7] != line[0:7]):
-                    self.b_records.append(line)
+                if len(self.trace) == 0 or (len(self.trace) > 0 and self.trace[-1][0:7] != line[0:7]):
+                    self.trace.append(line)
                     continue
 
             if line.startswith('I'):
@@ -126,12 +144,12 @@ class Flight(object):
             last_tp_i = self.first_start_i if self.outlanding_leg == 0 else self.tsk_i[-1]
             max_dist = 0
 
-            self.outlanding_b_record = self.b_records[last_tp_i]  # default
-            for i in range(len(self.b_records)):
+            self.outlanding_b_record = self.trace[last_tp_i]  # default
+            for i in range(len(self.trace)):
 
                 if i > last_tp_i:
 
-                    b_rec = self.b_records[i]
+                    b_rec = self.trace[i]
 
                     # outlanding distance = distance between tps minus distance from next tp to outlanding
                     outlanding_dist = determine_distance(task_pointM1, task_point, 'tsk', 'tsk')
@@ -164,16 +182,16 @@ class Flight(object):
         leg = -1  # leg before startline is crossed
         possible_enl = 0  # excluding motor test
 
-        for i in range(len(self.b_records)):
+        for i in range(len(self.trace)):
 
-            if self.gps_altitude and det_height(self.b_records[i], False) != 0:
+            if self.gps_altitude and det_height(self.trace[i], False) != 0:
                 self.gps_altitude = False
 
-            t = det_local_time(self.b_records[i], competition_day.utc_diff)
+            t = det_local_time(self.trace[i], competition_day.utc_diff)
 
             if leg == -1 and t > competition_day.task.start_opening and i > 0:
                 start = competition_day.task.taskpoints[0]
-                if start.taskpoint_completed(self.b_records[i - 1], self.b_records[i]):
+                if start.taskpoint_completed(self.trace[i - 1], self.trace[i]):
                     self.tsk_t.append(t)
                     self.tsk_i.append(i)
                     self.first_start_i = i
@@ -184,13 +202,13 @@ class Flight(object):
                     possible_enl = determine_engine_start_i(self, i)
                 start = competition_day.task.taskpoints[0]
                 tp1 = competition_day.task.taskpoints[1]
-                if start.taskpoint_completed(self.b_records[i - 1], self.b_records[i]):
+                if start.taskpoint_completed(self.trace[i - 1], self.trace[i]):
                     if self.file_name == "PR.igc":
                         print "PR restart at t=%s" % ss2hhmmss(t)
                     self.tsk_t[0] = t
                     self.tsk_i[0] = i
                     possible_enl = 0
-                if tp1.taskpoint_completed(self.b_records[i - 1], self.b_records[i]):
+                if tp1.taskpoint_completed(self.trace[i - 1], self.trace[i]):
                     self.tsk_t.append(t)
                     self.tsk_i.append(i)
                     leg += 1
@@ -199,7 +217,7 @@ class Flight(object):
                     possible_enl = determine_engine_start_i(self, i)
                     break
                 next_tp = competition_day.task.taskpoints[leg+1]
-                if next_tp.taskpoint_completed(self.b_records[i - 1], self.b_records[i]):
+                if next_tp.taskpoint_completed(self.trace[i - 1], self.trace[i]):
                     self.tsk_t.append(t)
                     self.tsk_i.append(i)
                     leg += 1
@@ -208,18 +226,18 @@ class Flight(object):
                     possible_enl = determine_engine_start_i(self, i)
                     break
                 finish = competition_day.task.taskpoints[-1]
-                if finish.taskpoint_completed(self.b_records[i - 1], self.b_records[i]):
+                if finish.taskpoint_completed(self.trace[i - 1], self.trace[i]):
                     self.tsk_t.append(t)
                     self.tsk_i.append(i)
                     leg += 1
 
-        b_record1 = self.b_records[self.tsk_i[0]-1]
-        b_record2 = self.b_records[self.tsk_i[0]]
+        b_record1 = self.trace[self.tsk_i[0]-1]
+        b_record2 = self.trace[self.tsk_i[0]]
         self.tsk_t[0] -= self.start_refinement(competition_day, b_record1, b_record2)
         self.tsk_t[0] -= 1  # Soaring spot takes point before start line!
 
         if not possible_enl == 0:
-            self.outlanding_b_record = self.b_records[possible_enl]
+            self.outlanding_b_record = self.trace[possible_enl]
 
         if not possible_enl == 0 or len(self.tsk_t) != competition_day.task.no_legs + 1:
             self.outlanded = True

@@ -310,21 +310,21 @@ def used_engine(flight, i):
         ENL_start_byte = flight.ENL_indices[0]
         ENL_end_byte = flight.ENL_indices[1]
 
-        ENL_value = int(flight.b_records[i][ENL_start_byte-1:ENL_end_byte])
+        ENL_value = int(flight.trace[i][ENL_start_byte-1:ENL_end_byte])
         if ENL_value < settings.ENL_value_threshold:
             return False
         else:
-            time_now = det_local_time(flight.b_records[i], 0)
+            time_now = det_local_time(flight.trace[i], 0)
             i -= 1
-            time = det_local_time(flight.b_records[i], 0)
+            time = det_local_time(flight.trace[i], 0)
             while time_now - time < settings.ENL_time_threshold:
 
-                ENL_value = int(flight.b_records[i][ENL_start_byte-1:ENL_end_byte])
+                ENL_value = int(flight.trace[i][ENL_start_byte-1:ENL_end_byte])
                 if ENL_value < settings.ENL_value_threshold:
                     return False
 
                 i -= 1
-                time = det_local_time(flight.b_records[i], 0)
+                time = det_local_time(flight.trace[i], 0)
 
             print "ENL land out at i=%s, t=%s" % (i, ss2hhmmss(time))
             print ENL_value
@@ -333,12 +333,12 @@ def used_engine(flight, i):
 
 def determine_engine_start_i(flight, i):
 
-    time_last = det_local_time(flight.b_records[i], 0)
+    time_last = det_local_time(flight.trace[i], 0)
     i -= 1
-    time = det_local_time(flight.b_records[i], 0)
+    time = det_local_time(flight.trace[i], 0)
     while time_last - time < settings.ENL_time_threshold:
         i -= 1
-        time = det_local_time(flight.b_records[i], 0)
+        time = det_local_time(flight.trace[i], 0)
 
     return i
 
