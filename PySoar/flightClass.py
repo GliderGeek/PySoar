@@ -218,8 +218,6 @@ class Flight(object):
                 start = competition_day.task.taskpoints[0]
                 tp1 = competition_day.task.taskpoints[1]
                 if start.taskpoint_completed(self.trace[i - 1], self.trace[i]):
-                    if self.file_name == "PR.igc":
-                        print "PR restart at t=%s" % ss2hhmmss(t)
                     self.tsk_t[0] = t
                     self.tsk_i[0] = i
                     possible_enl = 0

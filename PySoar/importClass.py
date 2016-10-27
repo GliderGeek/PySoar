@@ -34,7 +34,7 @@ class SoaringSpotImport(object):
                 self.download_flight(index)
                 time.sleep(0.1)
             self.flights_downloaded += 1
-            download_progress.configure(text='Downloaded: ' + str(self.flights_downloaded) + '/' + str(len(self.file_names)))
+            download_progress.configure(text='Downloaded: %s/%s' % (self.flights_downloaded, len(self.file_names)))
             download_progress.update()
 
     def download_flight(self, index):
