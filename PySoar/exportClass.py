@@ -83,7 +83,7 @@ class ExcelExport(object):
                 if not settings.perf_dict[perf_ind]["visible_on_entire_flight"]:  # continue to next performance indicator
                     continue
 
-                if flight.outlanded:
+                if flight.outlanded or flight.trip.outlanding_fix is not None:
                     continue
 
                 if flight.performance.no_thermals == 0 and not settings.perf_dict[perf_ind]["visible_only_cruise"]:

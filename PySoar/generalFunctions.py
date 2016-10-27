@@ -331,6 +331,17 @@ def used_engine(flight, i):
             return True
 
 
+def enl_value_exceeded(fix, enl_indices):
+    enl_value_threshold = 500
+    enl_value = int(fix[enl_indices[0] - 1:enl_indices[1]])
+    return enl_value > enl_value_threshold
+
+
+def enl_time_exceeded(enl_time):
+    enl_time_threshold = 30
+    return enl_time >= enl_time_threshold
+
+
 def determine_engine_start_i(flight, i):
 
     time_last = det_local_time(flight.trace[i], 0)

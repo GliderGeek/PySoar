@@ -42,15 +42,22 @@ class Flight(object):
         self.phases = None
         self.performance = None
 
+        self.phases2 = None
+        self.performance2 = None
+
     def analyze(self, competition_day):
         print self.file_name
 
-        self.trip = Trip(competition_day.task, self.trace)
         self.trip = Trip(competition_day.task, self.trace, self.trace_settings)
 
         self.determine_tsk_times(competition_day)
         self.phases = FlightPhases(settings, competition_day, self)
         self.performance = Performance(competition_day, self)
+
+        # expand constructors with needed arguments and default at None
+        if len(self.trip.fixes) > 1:  # at least started
+            self.phases2 = FlightPhases(settings, competition_day, self, self.trip, self.trace, self.trace_settings)
+            self.performance2 = Performance(competition_day, self, competition_day.task, self.trip, self.phases2, self.trace, self.trace_settings)
 
     def read_igc(self, soaring_spot_info):
         # this is a candidate for and IGC reader class / aerofiles functionality
