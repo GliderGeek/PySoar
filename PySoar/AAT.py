@@ -11,5 +11,12 @@ class AAT(Task):
     def set_task_distances(self, flight):  # different from racetask in that it takes the flight into account
         pass
 
-    def set_taskpoints(self, flight):
+    def apply_rules(self, trace, trip, trace_settings):
+        self.determine_trip_fixes(trace, trip, trace_settings)
+        self.determine_trip_distances(trip)
+
+    def determine_trip_fixes(self, trace, trip, trace_settings):
+        pass
+
+    def determine_trip_distances(self, trip):
         pass

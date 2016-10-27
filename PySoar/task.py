@@ -11,13 +11,14 @@ class Task(object):
         self.start_opening = task_information['start_opening']
         self.lcu_lines = task_information['lcu_lines']
         self.lseeyou_lines = task_information['lseeyou_lines']
+        self.utc_diff = task_information['utc_diff']
 
         self.taskpoints = []
         self.initialize_taskpoints()
         self.no_tps = len(self.taskpoints) - 2  # excluding start and finish
         self.no_legs = self.no_tps + 1
 
-        self.distances = []  # to be filled with specific functions in race_task and aat
+        self.distances = []  # to be filled by specific functions in race_task and aat
 
     def initialize_taskpoints(self):
 

@@ -34,6 +34,11 @@ class Flight(object):
         self.outlanding_b_record = ""
         self.outlanding_distance = 0
 
+        self.trace_settings = {
+            'gps_altitude': True,
+            'enl_indices': None
+        }
+
         self.phases = None
         self.performance = None
 
@@ -41,6 +46,7 @@ class Flight(object):
         print self.file_name
 
         self.trip = Trip(competition_day.task, self.trace)
+        self.trip = Trip(competition_day.task, self.trace, self.trace_settings)
 
         self.determine_tsk_times(competition_day)
         self.phases = FlightPhases(settings, competition_day, self)
@@ -71,6 +77,7 @@ class Flight(object):
                     if extension_name == 'ENL':
                         self.ENL = True
                         self.ENL_indices = [extension_start_byte, extension_end_byte]
+                        self.trace_settings['enl_indices'] = [extension_start_byte, extension_end_byte]
 
             if line.startswith('LCU::HPGTYGLIDERTYPE:'):
                 self.airplane = line[21:-1]
@@ -186,6 +193,7 @@ class Flight(object):
 
             if self.gps_altitude and det_height(self.trace[i], False) != 0:
                 self.gps_altitude = False
+                self.trace_settings['gps_altitude'] = False
 
             t = det_local_time(self.trace[i], competition_day.utc_diff)
 
