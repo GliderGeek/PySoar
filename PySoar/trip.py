@@ -3,7 +3,7 @@ class Trip(object):
     def __init__(self, task, trace, trace_settings):
         self.distances = []
         self.fixes = []
-        self.start_times = []
+        self.start_fixes = []
 
         self.enl_fix = None
         self.outlanding_fix = None

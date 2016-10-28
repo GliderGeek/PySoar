@@ -89,13 +89,13 @@ class RaceTask(Task):
                 if self.taskpoints[0].taskpoint_completed(trace[i - 1], trace[i]):
                     start_fix = trace[i]
                     trip.fixes.append(start_fix)
-                    trip.start_times.append(start_fix)
+                    trip.start_fixes.append(start_fix)
                     leg += 1
             elif leg == 0:
                 if self.taskpoints[0].taskpoint_completed(trace[i - 1], trace[i]):  # restart
                     start_fix = trace[i]
                     trip.fixes[0] = start_fix
-                    trip.start_times.append(start_fix)
+                    trip.start_fixes.append(start_fix)
                     enl_time = 0
                     enl_first_fix = None
                     enl_registered = False
@@ -110,12 +110,12 @@ class RaceTask(Task):
         if enl_registered:
             trip.enl_fix = enl_first_fix
 
-        if trip.fixes is not len(self.taskpoints):
+        if len(trip.fixes) is not len(self.taskpoints):
             self.determine_outlanding_fix(trip, trace)
 
     def determine_outlanding_fix(self, trip, trace):
 
-        last_tp_i = trace.index(trip.fixes[-1])
+        last_tp_i = trace.index(trip.fixes[-1]) if trip.outlanding_leg() != 0 else trace.index(trip.start_fixes[0])
         if trip.enl_fix is not None:
             enl_i = trace.index(trip.enl_fix)
 
@@ -123,7 +123,7 @@ class RaceTask(Task):
         outlanding_fix = None
         for i, fix in enumerate(trace):
 
-            if last_tp_i < i and (trip.enl_fix is not None and i < enl_i):
+            if (trip.enl_fix is None and last_tp_i < i) or (trip.enl_fix is not None and last_tp_i <i < enl_i):
 
                 outlanding_dist = self.determine_outlanding_distance(trip.outlanding_leg(), fix)
 

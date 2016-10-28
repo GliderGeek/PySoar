@@ -33,11 +33,11 @@ class FlightPhases(object):
             self.determine_phases(settings, competition_day, flight)
             self.determine_point_statistics(flight, competition_day)
         else:
-            no_succesful_legs = len(trip.fixes)-1  # unclear whether leg with outlanding should be included. if so: use distances
-            self.leg = [[] for i in range(no_succesful_legs)]
-            self.pointwise_leg = [self.get_difference_bib() for i in range(no_succesful_legs)]
-            self.cruises_leg = [0] * no_succesful_legs
-            self.thermals_leg = [0] * no_succesful_legs
+            no_trip_legs = len(trip.distances)
+            self.leg = [[] for i in range(no_trip_legs)]
+            self.pointwise_leg = [self.get_difference_bib() for i in range(no_trip_legs)]
+            self.cruises_leg = [0] * no_trip_legs
+            self.thermals_leg = [0] * no_trip_legs
 
             self.determine_phases2(trip, trace, trace_settings)
             self.determine_point_statistics2(trip, trace, trace_settings)
