@@ -205,6 +205,9 @@ def hhmmss2ss(time_string, utc_to_local):
 
 def ss2hhmmss(time_ss, colon=True):
 
+    if time_ss is None:
+        return None
+
     seconds = (time_ss % 3600) % 60
     minutes = ((time_ss % 3600) - seconds) / 60
     hours = (time_ss - (time_ss % 3600)) / 3600

@@ -12,3 +12,6 @@ class Trip(object):
 
     def outlanding_leg(self):
         return len(self.fixes) - 1
+
+    def outlanded(self):
+        return self.outlanding_fix is not None

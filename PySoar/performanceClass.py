@@ -34,7 +34,7 @@ class Performance(object):
             # should be possible to ditch trace as it is already in phases
             # can also ditch flight if you add details (ranking, name etc only in export phase)
             # should ditch task as well (utc diff should be in export)
-            self.init_all2(task, flight, trip, trace, trace_settings)
+            self.init_all2(flight, trip, trace, trace_settings)
             self.init_leg2(trip, trace, trace_settings)
 
             self.determine_performance2(trip, phases, trace)
@@ -61,27 +61,27 @@ class Performance(object):
                     "h_finish": finish_height,
                     "s_flown_task": s_flown_task_all}
 
-    def init_all2(self, task, flight, trip, trace, trace_settings):
+    def init_all2(self, flight, trip, trace, trace_settings):
         start_i = trace.index(trip.fixes[0])
         start_h = det_height(trace[start_i], trace_settings['gps_altitude'])
-        start_t = det_local_time(trace[start_i], task.utc_diff)
+        start_t = det_local_time(trace[start_i], 0)
 
-        if len(trip.fixes) != 1:
+        if len(trip.fixes) == 1:
+            last_tp_i = None
+            finish_h = None
+            finish_t = None
+        else:
             last_tp_i = trace.index(trip.fixes[-1])
             finish_h = det_height(trace[last_tp_i], trace_settings['gps_altitude'])
-            finish_t = det_local_time(trace[last_tp_i], task.utc_diff)
-        else:
-            last_tp_i = None
-            finish_height = None
-            finish_t = None
+            finish_t = det_local_time(trace[last_tp_i], 0)
 
         s_flown_task_all = sum(trip.distances) / 1000
 
         self.all = {"ranking": flight.ranking,
                     "airplane": flight.airplane,
                     "compID": flight.competition_id,
-                    "t_start": ss2hhmmss(start_t),
-                    "t_finish": ss2hhmmss(finish_t),
+                    "t_start": start_t,
+                    "t_finish": finish_t,
                     "h_start": start_h,
                     "h_finish": finish_h,
                     "s_flown_task": s_flown_task_all}
@@ -122,7 +122,6 @@ class Performance(object):
     def init_leg2(self, trip, trace, trace_settings):
         self.leg = []
 
-        # in case of outlanding: only performance is stored from completed legs
         for leg in range(len(trip.distances)):
             if trip.outlanding_fix is not None and leg == trip.outlanding_leg():
                 start_i = trace.index(trip.fixes[leg])
@@ -155,8 +154,8 @@ class Performance(object):
             self.leg.append({"ranking": self.all["ranking"],
                              "airplane": self.all["airplane"],
                              "compID": self.all["compID"],
-                             "t_start": ss2hhmmss(start_t),
-                             "t_finish": ss2hhmmss(finish_t),
+                             "t_start": start_t,
+                             "t_finish": finish_t,
                              "h_start": start_h,
                              "h_finish": finish_h,
                              "s_flown_task": s_flown_task_leg})

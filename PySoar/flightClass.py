@@ -55,7 +55,7 @@ class Flight(object):
         self.performance = Performance(competition_day, self)
 
         # expand constructors with needed arguments and default at None
-        if len(self.trip.fixes) > 1:  # at least started
+        if len(self.trip.fixes) >= 1:  # at least started
             self.phases2 = FlightPhases(settings, competition_day, self, self.trip, self.trace, self.trace_settings)
             self.performance2 = Performance(competition_day, self, competition_day.task, self.trip, self.phases2, self.trace, self.trace_settings)
 

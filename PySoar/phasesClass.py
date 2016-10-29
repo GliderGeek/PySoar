@@ -182,12 +182,15 @@ class FlightPhases(object):
 
         start_i = trace.index(trip.fixes[0])
 
+        if trip.outlanding_fix is not None:
+            last_tp_i = trace.index(trip.outlanding_fix)
+        else:
+            last_tp_i = trace.index(trip.fixes[-1])
+
         if trip.outlanding_leg() == 0:
             next_tp_i = trace.index(trip.outlanding_fix)
-            last_tp_i = next_tp_i
         else:
             next_tp_i = trace.index(trip.fixes[1])
-            last_tp_i = trace.index(trip.fixes[-1])
 
         b_record_m1 = trace[start_i-2]
         time_m1 = det_local_time(b_record_m1, 0)
@@ -227,10 +230,13 @@ class FlightPhases(object):
 
                 if i == next_tp_i:
                     phase = 'cruise' if cruise else 'thermal'
+                    self.close_entry(i, time, leg)
+                    self.create_entry(i, time, phase, leg + 1)
                     leg += 1
-                    next_tp_i = trace.index(trip.fixes[leg+1])
-                    self.close_entry(i, time, leg-1)
-                    self.create_entry(i, time, phase, leg)
+                    if trip.outlanding_leg() == leg:
+                        next_tp_i = trace.index(trip.outlanding_fix)
+                    else:
+                        next_tp_i = trace.index(trip.fixes[leg+1])
 
                 if cruise:
 
@@ -352,8 +358,16 @@ class FlightPhases(object):
         phase = self.all[phase_number]['phase']
 
         start_i = trace.index(trip.fixes[0])
-        next_tp_i = trace.index(trip.fixes[1])
-        last_tp_i = trace.index(trip.fixes[-1])
+
+        if trip.outlanding_fix is not None:
+            last_tp_i = trace.index(trip.outlanding_fix)
+        else:
+            last_tp_i = trace.index(trip.fixes[-1])
+
+        if trip.outlanding_leg() == 0:
+            next_tp_i = trace.index(trip.outlanding_fix)
+        else:
+            next_tp_i = trace.index(trip.fixes[1])
 
         for i in range(len(trace)):
             if start_i <= i < last_tp_i:
@@ -364,7 +378,10 @@ class FlightPhases(object):
 
                 if i == next_tp_i:
                     leg += 1
-                    trace.index(trip.fixes[leg+1])
+                    if trip.outlanding_leg() == leg:
+                        next_tp_i = trace.index(trip.outlanding_fix)
+                    else:
+                        next_tp_i = trace.index(trip.fixes[leg+1])
 
                 height_difference = det_height(trace[i+1], trace_settings['gps_altitude']) -\
                                     det_height(trace[i], trace_settings['gps_altitude'])
@@ -382,7 +399,7 @@ class FlightPhases(object):
                                          'time': date_obj,
                                          'phase': phase}
 
-                self.append_differences(difference_indicators, leg)
+                self.append_differences(difference_indicators, leg+1)
 
     def save_phases(self, soaring_spot_info, flight):
         file_name = settings.current_dir + "/debug_logs/phasesClassPhaseDebug.txt"

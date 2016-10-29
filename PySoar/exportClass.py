@@ -1,4 +1,5 @@
 import xlwt
+from generalFunctions import ss2hhmmss
 
 
 class ExcelExport(object):
@@ -75,6 +76,9 @@ class ExcelExport(object):
 
             order = settings.perf_dict[perf_ind]["order"]
 
+            if order == 'neutral':
+                continue
+
             temp_best = 0
             temp_worst = 0
 
@@ -83,13 +87,13 @@ class ExcelExport(object):
                 if not settings.perf_dict[perf_ind]["visible_on_entire_flight"]:  # continue to next performance indicator
                     continue
 
-                if flight.outlanded or flight.trip.outlanding_fix is not None:
+                if flight.trip.outlanded():
                     continue
 
-                if flight.performance.no_thermals == 0 and not settings.perf_dict[perf_ind]["visible_only_cruise"]:
+                if flight.performance2.no_thermals == 0 and not settings.perf_dict[perf_ind]["visible_only_cruise"]:
                     continue
 
-                value = flight.performance.all[perf_ind]
+                value = flight.performance2.all[perf_ind]
                 filename = flight.file_name
 
                 # initiate values
@@ -125,13 +129,17 @@ class ExcelExport(object):
 
                 for flight in competition_day.flights:
 
-                    if flight.outlanded and flight.outlanding_leg <= leg and not settings.perf_dict[perf_ind]["visible_on_outlanding"]:
+                    if flight.trip.outlanded() and flight.trip.outlanding_leg() < leg:
+                        continue
+                    elif flight.trip.outlanded()\
+                            and flight.trip.outlanding_leg() == leg\
+                            and not settings.perf_dict[perf_ind]["visible_on_outlanding"]:
                         continue
 
-                    if flight.performance.no_thermals_leg[leg] == 0 and not settings.perf_dict[perf_ind]["visible_only_cruise"]:
+                    if flight.performance2.no_thermals_leg[leg] == 0 and not settings.perf_dict[perf_ind]["visible_only_cruise"]:
                         continue
 
-                    value = flight.performance.leg[leg][perf_ind]
+                    value = flight.performance2.leg[leg][perf_ind]
                     filename = flight.file_name
 
                     if (order == 'high' or order == 'low') and temp_best == 0:
@@ -210,18 +218,22 @@ class ExcelExport(object):
                 row += 1
 
                 if leg == -1:
-                    if flight.outlanded and not settings.perf_dict[perf_ind]["visible_on_outlanding"] or\
-                                            flight.performance.no_thermals == 0 and not settings.perf_dict[perf_ind]["visible_only_cruise"]:
+                    if flight.trip.outlanded() and not settings.perf_dict[perf_ind]["visible_on_outlanding"]\
+                            or flight.performance2.no_thermals == 0 and not settings.perf_dict[perf_ind]["visible_only_cruise"]:
                         continue
                     else:
-                        content = flight.performance.all[perf_ind]
+                        content = flight.performance2.all[perf_ind]
                 else:
-                    if flight.outlanded and flight.outlanding_leg < leg or\
-                        flight.outlanded and flight.outlanding_leg <= leg and not settings.perf_dict[perf_ind]["visible_on_outlanding"] or\
-                                            flight.performance.no_thermals_leg[leg] == 0 and not settings.perf_dict[perf_ind]["visible_only_cruise"]:
+                    if flight.trip.outlanded() and flight.trip.outlanding_leg() < leg or\
+                        flight.trip.outlanded() and flight.trip.outlanding_leg() <= leg and not settings.perf_dict[perf_ind]["visible_on_outlanding"] or\
+                                            flight.performance2.no_thermals_leg[leg] == 0 and not settings.perf_dict[perf_ind]["visible_only_cruise"]:
                         continue
                     else:
-                        content = flight.performance.leg[leg][perf_ind]
+                        content = flight.performance2.leg[leg][perf_ind]
+
+                if perf_ind in ['t_start', 't_finish']:
+                    content = ss2hhmmss(content+competition_day.task.utc_diff*3600)
+
                 style = self.style_dict[perf_format + self.style_addition(leg, perf_ind, flight.file_name)]
                 self.write_cell(leg, row, col, content, style)
 
