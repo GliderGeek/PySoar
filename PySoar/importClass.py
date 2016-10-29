@@ -82,22 +82,6 @@ class SoaringSpotImport(object):
         if not os.path.exists(settings.current_dir + '/debug_logs'):
             os.makedirs(settings.current_dir + '/debug_logs')
 
-    def save(self, settings):
-        file_name = settings.current_dir + "/debug_logs/importClassDebug.txt"
-        text_file = open(file_name, "w")
-
-        text_file.write("rankings\t file_names\t file_urls\t \n")
-        for ii in range(len(self.file_urls)):
-            text_file.write(str(self.rankings[ii])+'\t')
-            text_file.write(str(self.file_names[ii]) + '\t')
-            text_file.write(str(self.file_urls[ii]) + '\n')
-
-        text_file.close()
-
-if __name__ == '__main__':
-    from main_pysoar import start_gui
-    start_gui()
-
 #############################  LICENSE  #####################################
 
 #   PySoar - Automating gliding competition analysis

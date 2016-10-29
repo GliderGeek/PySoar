@@ -272,11 +272,6 @@ class ExcelExport(object):
 
         self.wb.save(self.file_name)
 
-
-if __name__ == '__main__':
-    from main_pysoar import start_gui
-    start_gui()
-
 #############################  LICENSE  #####################################
 
 #   PySoar - Automating gliding competition analysis

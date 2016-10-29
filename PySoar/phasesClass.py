@@ -401,64 +401,6 @@ class FlightPhases(object):
 
                 self.append_differences(difference_indicators, leg+1)
 
-    def save_phases(self, soaring_spot_info, flight):
-        file_name = settings.current_dir + "/debug_logs/phasesClassPhaseDebug.txt"
-        if flight.file_name == soaring_spot_info.file_names[0]:
-            text_file = open(file_name, "w")  # overwriting if exist
-        else:
-            text_file = open(file_name, "a")  # appending
-
-        text_file.write(flight.file_name + "\n\n")
-        text_file.write("phases.all:\n")
-        for entry in self.all:
-            text_file.write(entry['phase'] + '\t' + ss2hhmmss(entry['t_start']) + '\t'
-                            + ss2hhmmss(entry['t_end']) + '\t' + str(entry['i_start']) + '\t' + str(entry['i_end']) + "\n")
-        text_file.write("\n")
-
-        for leg in range(len(self.leg)):
-            text_file.write('leg' + str(leg) + "\n")
-            for entry in self.leg[leg]:
-                text_file.write(entry['phase'] + '\t' + ss2hhmmss(entry['t_start'])
-                                + '\t' + ss2hhmmss(entry['t_end']) + '\t' + str(entry['i_start']) + '\t' + str(entry['i_end']) + "\n")
-            text_file.write("\n")
-
-        text_file.write("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n")
-
-        text_file.close()
-
-    def save_point_stats(self, soaring_spot_info, flight):
-        file_name = settings.current_dir + "/debug_logs/phasesClassPointStatsDebug.txt"
-        if flight.file_name == soaring_spot_info.file_names[0]:
-            text_file = open(file_name, "w")  # overwriting if exist
-        else:
-            text_file = open(file_name, "a")  # appending
-
-        text_file.write(flight.file_name + "\n\n")
-        text_file.write("pointwise_all:\n")
-
-        for key in self.pointwise_all.iterkeys():
-            text_file.write(key + ":" + str(self.pointwise_all[key]) + "\n")
-
-        text_file.write("\n")
-        for leg in range(len(self.leg)):
-            text_file.write('leg' + str(leg) + "\n")
-            for key in self.pointwise_leg[leg].iterkeys():
-                text_file.write(key + ":" + str(self.pointwise_all[key]) + "\n")
-
-        text_file.write("\n")
-        text_file.write("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n")
-
-        text_file.close()
-
-    def save(self, soaring_spot_info, flight):
-        self.save_phases(soaring_spot_info, flight)
-        # self.save_point_stats(soaring_spot_info, flight)
-
-
-if __name__ == '__main__':
-    from main_pysoar import start_gui
-    start_gui()
-
 #############################  LICENSE  #####################################
 
 #   PySoar - Automating gliding competition analysis

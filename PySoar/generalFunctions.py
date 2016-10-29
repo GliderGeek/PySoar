@@ -426,12 +426,6 @@ def get_date(lcu_line):
 
     return date(year, month, day)
 
-
-if __name__ == '__main__':
-    from main_pysoar import run
-
-    run()
-
 #############################  LICENSE  #####################################
 
 #   PySoar - Automating gliding competition analysis

@@ -80,10 +80,6 @@ class Settings(object):
     ENL_value_threshold = 500  # above which it is seen as engine noise
     ENL_time_threshold = 30  # seconds
 
-if __name__ == '__main__':
-    from main_pysoar import start_gui
-    start_gui()
-
 #############################  LICENSE  #####################################
 
 #   PySoar - Automating gliding competition analysis

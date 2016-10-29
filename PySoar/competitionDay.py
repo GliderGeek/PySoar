@@ -86,26 +86,6 @@ class CompetitionDay(object):
         self.date = task_info['date']
         self.utc_diff = task_info['utc_diff']
 
-    def save(self):
-        file_name = settings.current_dir + "/debug_logs/competitionDayDebug.txt"
-        text_file = open(file_name, "w")
-
-        print_array_debug(text_file, "task", self.task.taskpoints)
-        print_array_debug(text_file, "task_dists", self.task.distances)
-
-        text_file.write("task_date: " + self.date.strftime('%d-%m-%y') + "\n\n")
-
-        text_file.write("no_tps: " + str(self.task.no_tps) + "\n")
-        text_file.write("no_legs: " + str(self.task.no_legs) + "\n\n")
-
-        text_file.write("aat: " + str(self.task.aat) + "\n")
-        text_file.write("start_opening: " + ss2hhmmss(self.task.start_opening) + "\n\n")
-
-        text_file.close()
-
-if __name__ == '__main__':
-    from main_pysoar import start_gui
-    start_gui()
 
 #############################  LICENSE  #####################################
 

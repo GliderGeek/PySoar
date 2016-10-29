@@ -257,42 +257,6 @@ class Flight(object):
             self.outlanding_leg = len(self.tsk_t)-1
             self.determine_outlanding_location(competition_day)
 
-    def save(self, soaring_spot_info):
-        file_name = settings.current_dir + "/debug_logs/flightClassDebug.txt"
-        if self.file_name == soaring_spot_info.file_names[0]:
-            text_file = open(file_name, "w")  # overwriting if exist
-        else:
-            text_file = open(file_name, "a")  # appending
-
-        text_file.write("file_name: " + self.file_name + "\n")
-        text_file.write("airplane: " + self.airplane + "\n")
-        text_file.write("competition_id: " + self.competition_id + "\n\n")
-
-        print_array_debug(text_file, "tsk_t", self.tsk_t)
-
-        tsk_t_temp = [""] * len(self.tsk_t)
-        for ii in range(len(self.tsk_t)):
-            tsk_t_temp[ii] = ss2hhmmss(self.tsk_t[ii])
-
-        print_array_debug(text_file, "tsk_t", tsk_t_temp)
-        print_array_debug(text_file, "tsk_i", self.tsk_i)
-
-        text_file.write("gps_altitude: " + str(self.gps_altitude) + "\n")
-        text_file.write("outlanded: " + str(self.outlanded) + "\n")
-        if self.outlanded:
-            text_file.write("outlanding_leg: " + str(self.outlanding_leg) + "\n")
-            text_file.write("outlanding time(UTC): " + ss2hhmmss(det_local_time(self.outlanding_b_record, 0)) + "\n")
-            text_file.write("outlanding distance from previous tp: " + str(self.outlanding_distance) + "\n")
-        text_file.write("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n")
-
-        text_file.close()
-
-
-if __name__ == '__main__':
-    from main_pysoar import start_gui
-
-    start_gui()
-
 #############################  LICENSE  #####################################
 
 #   PySoar - Automating gliding competition analysis
