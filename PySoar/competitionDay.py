@@ -1,4 +1,4 @@
-from generalFunctions import print_array_debug, ss2hhmmss, get_date
+from generalFunctions import get_date
 from settingsClass import Settings
 from race_task import RaceTask
 from aat import AAT
