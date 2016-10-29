@@ -2,6 +2,7 @@ from Tkinter import Label, Tk, Button, Entry, W
 from generalFunctions import open_analysis_file, url_format_correct, go_bugform
 from analysis import run
 from functools import partial
+import sys
 
 
 def start_gui():
@@ -51,10 +52,12 @@ def start_gui():
     root.mainloop()
 
 
-if __name__ == '__main__':
-    from main_pysoar import start_gui
-
+if len(sys.argv) == 1:
     start_gui()
+elif len(sys.argv) == 2:
+    run(sys.argv[1])
+else:
+    exit(1, 'Incorrect number of sys.argv')
 
 #############################  LICENSE  #####################################
 

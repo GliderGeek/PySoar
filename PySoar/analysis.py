@@ -6,7 +6,7 @@ from settingsClass import Settings
 settings = Settings()
 
 
-def run(url, url_status, download_progress, analysis_progress):
+def run(url, url_status=None, download_progress=None, analysis_progress=None):
 
     soaring_spot_info = SoaringSpotImport(url, download_progress)
     competition_day = CompetitionDay(soaring_spot_info, url_status)

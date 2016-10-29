@@ -33,9 +33,10 @@ class CompetitionDay(object):
             flight.analyze(self)
 
             flights_analyzed += 1
-            analysis_progress.configure(text='Analyzed: %s/%s' %
-                                             (str(flights_analyzed), str(len(soaring_spot_info.file_names))))
-            analysis_progress.update()
+            if analysis_progress is not None:
+                analysis_progress.configure(text='Analyzed: %s/%s' %
+                                                 (str(flights_analyzed), str(len(soaring_spot_info.file_names))))
+                analysis_progress.update()
 
     def read_flights(self, soaring_spot_info):
         for ii in range(len(soaring_spot_info.file_names)):
