@@ -8,6 +8,8 @@ class Trip(object):
         self.enl_fix = None
         self.outlanding_fix = None
 
+        self.refined_start_time = None
+
         task.apply_rules(trace, self, trace_settings)
 
     def outlanding_leg(self):

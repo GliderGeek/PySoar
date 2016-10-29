@@ -1,5 +1,5 @@
 from task import Task
-from generalFunctions import determine_distance, det_local_time, used_engine, enl_value_exceeded, enl_time_exceeded, \
+from generalFunctions import determine_distance, det_local_time, enl_value_exceeded, enl_time_exceeded, \
     det_time_difference
 
 
@@ -61,6 +61,7 @@ class RaceTask(Task):
 
         self.determine_trip_fixes(trip, trace, trace_settings)
         self.determine_trip_distances(trip)
+        self.refine_start(trip, trace)
 
     def determine_trip_fixes(self, trip, trace, trace_settings):
 

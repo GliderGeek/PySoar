@@ -25,7 +25,7 @@ class Performance(object):
     def init_all(self, trip, trace, trace_settings):
         start_i = trace.index(trip.fixes[0])
         start_h = det_height(trace[start_i], trace_settings['gps_altitude'])
-        start_t = det_local_time(trace[start_i], 0)
+        start_t = trip.refined_start_time
 
         if len(trip.fixes) == 1:
             finish_h = None
@@ -49,8 +49,8 @@ class Performance(object):
         for leg in range(len(trip.distances)):
             if trip.outlanding_fix is not None and leg == trip.outlanding_leg():
                 start_i = trace.index(trip.fixes[leg])
-                start_t = det_local_time(trace[start_i], 0)
                 start_h = det_height(trace[start_i], trace_settings['gps_altitude'])
+                start_t = trip.refined_start_time if leg == 0 else det_local_time(trace[start_i], 0)
 
                 finish_t = 0
                 finish_h = 0
@@ -66,8 +66,8 @@ class Performance(object):
                 s_flown_task_leg = 0
             else:
                 start_i = trace.index(trip.fixes[leg])
-                start_t = det_local_time(trace[start_i], 0)
                 start_h = det_height(trace[start_i], trace_settings['gps_altitude'])
+                start_t = trip.refined_start_time if leg == 0 else det_local_time(trace[start_i], 0)
 
                 finish_i = trace.index(trip.fixes[leg+1])
                 finish_t = det_local_time(trace[finish_i], 0)

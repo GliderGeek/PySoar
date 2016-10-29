@@ -1,5 +1,6 @@
 from taskpoint import Taskpoint
-from generalFunctions import det_final_bearing, determine_distance, det_bearing, det_bearing_change
+from generalFunctions import det_final_bearing, determine_distance, det_bearing, det_bearing_change, \
+    interpolate_b_records, det_local_time
 
 
 class Task(object):
@@ -97,6 +98,15 @@ class Task(object):
         distance = sqrt(distance**2 + displacement_dist**2 - 2 * distance * displacement_dist * cos(angle * pi / 180))
 
         return distance
+
+    def refine_start(self, trip, trace):
+        start_i = trace.index(trip.fixes[0])
+        fixes = interpolate_b_records(trace[start_i-1], trace[start_i])
+
+        for i, fix in enumerate(fixes[:-1]):
+            if self.taskpoints[0].taskpoint_completed(fixes[i], fixes[i+1]):
+                trip.refined_start_time = det_local_time(fixes[i], 0)
+                break
 
     # function instead of variable to keep it linked
     # maybe also idea for no_tps and no_legs?
