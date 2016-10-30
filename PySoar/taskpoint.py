@@ -145,6 +145,50 @@ class Taskpoint(object):  # startpoint, turnpoints and finish
                 else:  # distance2 <= self.r_max
                     return angle_wrt_orientation2 < self.angle_max
 
+    def inside_sector(self, fix):
+        from generalFunctions import determine_distance, det_bearing, det_bearing_change
+
+        distance = determine_distance(fix, self.LCU_line, 'pnt', 'tsk')
+        bearing = det_bearing(self.LCU_line, fix, 'tsk', 'pnt')
+        angle_wrt_orientation = abs(det_bearing_change(self.orientation_angle, bearing))
+
+        if self.line:
+            print 'Calling inside_sector on a line!'
+            exit(1)
+        elif self.r_min is not None:
+            pass
+        else:  # self.r_min is None
+            return distance > self.r_max and angle_wrt_orientation < self.angle_max
+
+    def crossed_line(self, fix1, fix2):
+        from generalFunctions import determine_distance, det_bearing, det_bearing_change
+
+        distance1 = determine_distance(fix1, self.LCU_line, 'pnt', 'tsk')
+        distance2 = determine_distance(fix2, self.LCU_line, 'pnt', 'tsk')
+
+        if not self.line:
+            print 'Calling crossed_line on a sector!'
+            exit(1)
+        else:
+            if distance2 > self.r_max or distance1 > self.r_max:
+                return False
+            else:
+                bearing1 = det_bearing(self.LCU_line, fix1, 'tsk', 'pnt')
+                bearing2 = det_bearing(self.LCU_line, fix2, 'tsk', 'pnt')
+
+                angle_wrt_orientation1 = abs(det_bearing_change(self.orientation_angle, bearing1))
+                angle_wrt_orientation2 = abs(det_bearing_change(self.orientation_angle, bearing2))
+
+                if self.sector_orientation == "next":  # start line
+                    return angle_wrt_orientation1 < 90 < angle_wrt_orientation2
+                elif self.sector_orientation == "previous":  # finish line
+                    return angle_wrt_orientation2 < 90 < angle_wrt_orientation1
+                else:
+                    print "A line with this orientation is not implemented!"
+                    exit(1)
+
+
+
 #############################  LICENSE  #####################################
 
 #   PySoar - Automating gliding competition analysis

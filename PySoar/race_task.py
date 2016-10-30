@@ -8,6 +8,7 @@ class RaceTask(Task):
     def __init__(self, task_information):
         super(RaceTask, self).__init__(task_information)
 
+        self.distances = []
         self.set_task_distances()
 
     def set_task_distances(self):
@@ -152,3 +153,8 @@ class RaceTask(Task):
 
         if trip.outlanding_fix is not None:
             trip.distances.append(self.determine_outlanding_distance(trip.outlanding_leg(), trip.outlanding_fix))
+
+    # function instead of variable to keep it linked
+    # maybe also idea for no_tps and no_legs?
+    def total_distance(self):
+        return sum(self.distances)

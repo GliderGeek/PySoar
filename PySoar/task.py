@@ -19,8 +19,6 @@ class Task(object):
         self.no_tps = len(self.taskpoints) - 2  # excluding start and finish
         self.no_legs = self.no_tps + 1
 
-        self.distances = []  # to be filled by specific functions in race_task and aat
-
     def initialize_taskpoints(self):
 
         # check on sizes
@@ -71,10 +69,10 @@ class Task(object):
         else:
             print "Shortened point is not recognized! " + shortened_point
 
-    def distance_moved_turnpoint(self, distance, begin, end, moved_point):
+    def distance_moved_turnpoint(self, distance, begin, end, moved_point, move_direction='reduce'):
         from math import sqrt, cos, pi, acos
 
-        if moved_point == "current":
+        if moved_point == "begin":
             moved = begin
             other = end
             angle_reduction = 0
@@ -94,10 +92,27 @@ class Task(object):
         displacement_dist = moved.r_max if moved.angle_max == 180 else moved.r_min
         bearing1 = moved.orientation_angle
         bearing2 = det_bearing(other.LCU_line, moved.LCU_line, 'tsk', 'tsk')
-        angle = abs(det_bearing_change(bearing1, bearing2)) - angle_reduction
+        if move_direction == 'increase':
+            angle = 180 - abs(det_bearing_change(bearing1, bearing2)) - angle_reduction
+        else:
+            angle = abs(det_bearing_change(bearing1, bearing2)) - angle_reduction
         distance = sqrt(distance**2 + displacement_dist**2 - 2 * distance * displacement_dist * cos(angle * pi / 180))
 
         return distance
+
+    def started(self, fix1, fix2):
+        start = self.taskpoints[0]
+        if start.line:
+            return start.crossed_line(fix1, fix2)
+        else:
+            return start.inside_sector(fix1) and not start.inside_sector(fix2)
+
+    def finished(self, fix1, fix2):
+        finish = self.taskpoints[-1]
+        if finish.line:
+            return finish.crossed_line(fix1, fix2)
+        else:
+            return not finish.inside_sector(fix1) and finish.inside_sector(fix2)
 
     def refine_start(self, trip, trace):
         start_i = trace.index(trip.fixes[0])
@@ -107,11 +122,3 @@ class Task(object):
             if self.taskpoints[0].taskpoint_completed(fixes[i], fixes[i+1]):
                 trip.refined_start_time = det_local_time(fixes[i], 0)
                 break
-
-    # function instead of variable to keep it linked
-    # maybe also idea for no_tps and no_legs?
-    def total_distance(self):
-        tot = 0.
-        for distance in self.distances:
-            tot += distance
-        return tot
