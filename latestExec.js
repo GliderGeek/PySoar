@@ -19,7 +19,7 @@ function setExecutables(){
 				mac_url = asset.browser_download_url;
 			} else if (asset.name.substring(0, 7) == "windows") {
 				windows_url = asset.browser_download_url;
-			} else if (asset.name.substring(0, 3) == "mac") {
+			} else if (asset.name.substring(0, 5) == "linux") {
 				linux_url = asset.browser_download_url;
 			}	
 		}
