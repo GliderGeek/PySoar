@@ -1,4 +1,4 @@
-from generalFunctions import hhmmss2ss, get_date
+from generalFunctions import hhmmss2ss, get_date, det_height
 from settingsClass import Settings
 from phasesClass import FlightPhases
 from performanceClass import Performance
@@ -44,6 +44,11 @@ class Flight(object):
         for line in full_file:
 
             if line.startswith('B'):
+
+                # put gps_altitude to False when nonzero pressure altitude is found
+                if self.trace_settings['gps_altitude'] is True and det_height(line, gps_altitude=False) != 0:
+                    self.trace_settings['gps_altitude'] = False
+
                 if len(self.trace) == 0 or (len(self.trace) > 0 and self.trace[-1][0:7] != line[0:7]):
                     self.trace.append(line)
                     continue
@@ -58,8 +63,6 @@ class Flight(object):
                     i_record_byte += 7
 
                     if extension_name == 'ENL':
-                        self.ENL = True
-                        self.ENL_indices = [extension_start_byte, extension_end_byte]
                         self.trace_settings['enl_indices'] = [extension_start_byte, extension_end_byte]
 
             if line.startswith('LCU::HPGTYGLIDERTYPE:'):
