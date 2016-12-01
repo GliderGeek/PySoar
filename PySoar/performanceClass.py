@@ -2,7 +2,7 @@ from generalFunctions import det_height, determine_distance, det_local_time
 
 
 class Performance(object):
-    def __init__(self, trip, phases, trace, trace_settings):
+    def __init__(self, task, trip, phases, trace, trace_settings):
 
         self.all = None
         self.leg = None
@@ -20,7 +20,7 @@ class Performance(object):
         self.init_all(trip, trace, trace_settings)
         self.init_leg(trip, trace, trace_settings)
 
-        self.determine_performance(trip, phases, trace)
+        self.determine_performance(task, trip, phases, trace)
 
     def init_all(self, trip, trace, trace_settings):
         start_i = trace.index(trip.fixes[0])
@@ -153,17 +153,17 @@ class Performance(object):
         s_extra *= 100
         self.store_perf(leg, "s_extra", s_extra)
 
-    def det_tsk_v(self, leg, task_distance, thermal_time, cruise_time):
+    def det_tsk_v(self, leg, task_distance, task_time):
         # return the cross country speed in kmh
-        if (thermal_time + cruise_time) == 0:
+        if task_time == 0:
             tsk_v = 42
         else:
-            tsk_v = float(task_distance) / (thermal_time + cruise_time)
+            tsk_v = float(task_distance) / task_time
         self.store_perf(leg, "tsk_v", tsk_v * 3.6)
 
     def write_perfs(self, leg,
                     thermal_altitude_gain, thermal_altitude_loss, thermal_time, thermal_distance, thermal_drift,
-                    cruise_time, cruise_distance, cruise_height_diff):
+                    cruise_time, cruise_distance, cruise_height_diff, task_time):
 
         if leg == -1:
             no_cruises = self.no_cruises
@@ -184,9 +184,9 @@ class Performance(object):
         self.det_s_glide_avg(leg, cruise_distance, no_cruises)
         self.det_dh_cruise_avg(leg, cruise_height_diff, no_cruises)
         self.det_v_glide_avg(leg, cruise_distance, cruise_time)
-        self.det_tsk_v(leg, task_distance, thermal_time, cruise_time)
+        self.det_tsk_v(leg, task_distance, task_time)
 
-    def determine_performance(self, trip, phases, trace):
+    def determine_performance(self, task, trip, phases, trace):
 
         thermal_altitude_gain_tot = 0
         thermal_altitude_loss_tot = 0
@@ -196,6 +196,7 @@ class Performance(object):
         cruise_time_tot = 0
         cruise_distance_tot = 0
         cruise_height_diff_tot = 0
+        task_time_tot = 0
 
         for leg in range(len(trip.distances)):
 
@@ -207,6 +208,7 @@ class Performance(object):
             cruise_time = 0
             cruise_distance = 0
             cruise_height_diff = 0
+            task_time = 0
 
             for point in range(len(phases.pointwise_leg[leg]['phase'])):
 
@@ -240,13 +242,19 @@ class Performance(object):
             cruise_time_tot += cruise_time
             cruise_distance_tot += cruise_distance
             cruise_height_diff_tot += cruise_height_diff
+            task_time = cruise_time + thermal_time
+            task_time_tot += task_time
 
             self.write_perfs(leg,
                              thermal_altitude_gain, thermal_altitude_loss, thermal_time, thermal_distance, thermal_drift,
-                             cruise_time, cruise_distance, cruise_height_diff)
+                             cruise_time, cruise_distance, cruise_height_diff, task_time)
+
+        if task.aat and task_time_tot < task.t_min:
+            task_time_tot = task.t_min
+
         self.write_perfs(-1,
                          thermal_altitude_gain_tot, thermal_altitude_loss_tot, thermal_time_tot, thermal_distance_tot, thermal_drift_tot,
-                         cruise_time_tot, cruise_distance_tot, cruise_height_diff_tot)
+                         cruise_time_tot, cruise_distance_tot, cruise_height_diff_tot, task_time_tot)
 
 #############################  LICENSE  #####################################
 

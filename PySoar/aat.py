@@ -3,104 +3,186 @@ from generalFunctions import determine_distance
 
 
 class AAT(Task):
-
     def __init__(self, task_information):
         super(AAT, self).__init__(task_information)
 
         self.t_min = task_information['t_min']
         self.nominal_distances = []
-        self.minimal_distances = []
-        self.maximum_distances = []
+        self.minimal_distances = []  # not yet filled
+        self.maximum_distances = []  # not yet filled
 
         self.set_task_distances()
 
     def set_task_distances(self):
         for leg in range(self.no_legs):
-
             begin = self.taskpoints[leg]
-            end = self.taskpoints[leg+1]  # next is built in name
+            end = self.taskpoints[leg + 1]  # next is built in name
 
             distance = determine_distance(begin.LCU_line, end.LCU_line, 'tsk', 'tsk')
             self.nominal_distances.append(distance)
 
-            # calculating maximum distance
-            distance_moved_begin = self.distance_moved_turnpoint(distance, begin, end, "begin")
-            distance_minimal = self.distance_moved_turnpoint(distance_moved_begin, begin, end, "both_end")
-            self.minimal_distances.append(distance_minimal)
-
-            # calculate maximum distance
-            distance_moved_begin = self.distance_moved_turnpoint(distance, begin, end, "begin", 'increase')
-            distance_maximum = self.distance_moved_turnpoint(distance_moved_begin, begin, end, "both_end", 'increase')
-            self.maximum_distances.append(distance_maximum)
+            # unfortunately calculating the minimum and maximum distances seem to be a separate optimization problem
+            # it is not simply the distance on the angle bisector
+            # eg. cae-open-benelux-gliding-championships-2016/results/club/task-2-on-2016-05-19/daily
 
     def apply_rules(self, trace, trip, trace_settings):
         self.determine_trip_fixes(trace, trip, trace_settings)
         self.refine_start(trip, trace)
         self.determine_trip_distances(trip)
 
+    def add_aat_sector_distance(self, sector_distances, taskpoint_index, fix_index, distance):
+        if len(sector_distances[2]) < fix_index + 1:
+            sector_distances[2].append(distance)
+        else:
+            sector_distances[2][fix_index] = distance
+
+    def add_aat_sector_fix(self, sector_fixes, taskpoint_index, fix):
+        if len(sector_fixes) < (taskpoint_index + 1):
+            sector_fixes.append([fix])
+        else:
+            sector_fixes[taskpoint_index].append(fix)
+
     def get_sector_fixes(self, trace):
-        sector_fixes = [[None]]
-        first_start = None
 
-        for trace_index, fix in trace[:-1]:
+        # following assumptions are currently in place
+        # - no outlandings (normal or ENL)  # todo: start with implementation. How to calc distance with outlanding?
+        # - only 1 start point, only 1 finish point  # todo: ask kernploeg about this. is this allways the case?
+        # - no restart after 1st sector has been reached  # this can stay in (also for race)
 
-            taskpoints_completed = len(sector_fixes) if sector_fixes[0] is not None else 0
+        current_leg = -1  # not yet started
+        sector_fixes = []
 
-            # break when finish has been reached
-            if taskpoints_completed == self.no_tps-1:
-                break
+        for trace_index, fix in enumerate(trace[:-1]):
 
-            for tp_index, taskpoint in enumerate(self.taskpoints):
+            # print current_leg
 
-                # determine start fix
-                if len(sector_fixes) == 1 and tp_index == 0:
-                    fix2 = trace[trace_index+1]
-                    if self.started(fix, fix2):
-                        sector_fixes[0] = fix2
-                        first_start = fix2 if first_start is None else first_start
-
-                # determine finish fix
-                elif tp_index == self.no_tps-1:
-                    fix2 = trace[trace_index + 1]
-                    if self.finished(fix, fix2):
-                        sector_fixes.append(fix2)
-
-                # determine fixes inside sectors
-                elif tp_index > taskpoints_completed - 1:
-                    if taskpoint.inside_sector(fix):
-                        if len(sector_fixes) < (tp_index + 1):
-                            sector_fixes.append([])
-                        sector_fixes[tp_index].append(fix)
-
-                else:
-                    continue
+            if current_leg == -1:  # before start
+                fix2 = trace[trace_index + 1]
+                if self.started(fix, fix2):
+                    self.add_aat_sector_fix(sector_fixes, 0, fix2)  # at task start point
+                    current_leg = 0
+            elif current_leg == 0:  # first leg, re-start still possible
+                fix2 = trace[trace_index + 1]
+                if self.started(fix, fix2):
+                    sector_fixes[0] = [fix2]  # at task start point
+                    current_leg = 0
+                elif self.taskpoints[1].inside_sector(fix):
+                    self.add_aat_sector_fix(sector_fixes, 1, fix)
+                    current_leg += 1
+            elif 0 < current_leg < self.no_legs - 1:  # at least second leg, no re-start possible
+                if self.taskpoints[current_leg].inside_sector(fix):  # previous taskpoint
+                    self.add_aat_sector_fix(sector_fixes, current_leg, fix)
+                elif self.taskpoints[current_leg + 1].inside_sector(fix):  # next taskpoint
+                    self.add_aat_sector_fix(sector_fixes, current_leg + 1, fix)
+                    current_leg += 1
+            elif current_leg == self.no_legs - 1:  # last leg
+                fix2 = trace[trace_index + 1]
+                if self.taskpoints[current_leg].inside_sector(fix):
+                    self.add_aat_sector_fix(sector_fixes, current_leg, fix)
+                elif self.finished(fix, fix2):
+                    sector_fixes.append([fix2])  # at task finish point
+                    current_leg = self.no_legs
+                    break
 
         return sector_fixes
 
-    def determine_trip_fixes(self, trace, trip, trace_settings):
+    def reduce_sector_fixes(self, sector_fixes, max_fixes_sector):
+        reduced_sector_fixes = []
+        for sector in range(len(sector_fixes)):
+            reduction_factor = len(sector_fixes[sector]) / max_fixes_sector + 1
+            reduced_sector_fixes.append(sector_fixes[sector][0::reduction_factor])
+
+        return reduced_sector_fixes
+
+    def refine_max_distance_fixes(self, sector_fixes, max_distance_fixes):
+        # look around fixes whether more precise fixes can be found, increasing the distance
+
+        refinement_fixes = 10  # this amount before and this amount after the provided fix
+
+        refined_sector_fixes = [[max_distance_fixes[0]]]  # already include start fix
+
+        for leg in range(self.no_legs):
+            max_distance_index = sector_fixes[leg+1].index(max_distance_fixes[leg+1])
+
+            if max_distance_index >= refinement_fixes:
+                refinement_start = max_distance_index - refinement_fixes
+            else:
+                refinement_start = 0
+
+            if max_distance_index + refinement_fixes + 1 <= len(sector_fixes[leg + 1]):
+                refinement_end = max_distance_index + refinement_fixes + 1
+            else:
+                refinement_end = len(sector_fixes[leg + 1]) + 1
+
+            refined_sector_fixes.append(sector_fixes[leg+1][refinement_start:refinement_end])
+
+        return self.compute_max_distance_fixes(refined_sector_fixes)
+
+    def compute_max_distance_fixes(self, sector_fixes):
+        distances = [[]] * len(sector_fixes)
+        distances[0] = [[0, 0]] * len(sector_fixes[0])
+
+        for leg in range(self.no_legs):
+
+            distances[leg + 1] = [[0, 0] for i in range(len(sector_fixes[leg + 1]))]
+
+            for fix2_index, fix2 in enumerate(sector_fixes[leg + 1]):
+                for fix1_index, fix1 in enumerate(sector_fixes[leg]):
+
+                    if leg == 0:  # take start-point of task
+                        distance = determine_distance(self.taskpoints[0].LCU_line, fix2, 'tsk', 'pnt')
+                    elif leg == self.no_legs - 1:  # take finish-point of task
+                        distance = determine_distance(fix1, self.taskpoints[-1].LCU_line, 'pnt', 'tsk')
+                    else:
+                        distance = determine_distance(fix1, fix2, 'pnt', 'pnt')
+
+                    total_distance = distances[leg][fix1_index][0] + distance
+                    if total_distance > distances[leg + 1][fix2_index][0]:
+                        distances[leg + 1][fix2_index][0] = total_distance
+                        distances[leg + 1][fix2_index][1] = fix1_index\
+
+        index = 0
+        max_distance_fixes = [sector_fixes[-1][index]]
+
+        for leg in list(reversed(range(self.no_legs))):
+            index = distances[leg + 1][index][1]
+            max_distance_fixes.insert(0, sector_fixes[leg][index])
+
+        return max_distance_fixes
+
+    def determine_trip_fixes(self, trace, trip, trace_settings):  # trace settings for ENL
+
         sector_fixes = self.get_sector_fixes(trace)
 
-        # get start fix
-        trip.fixes.append(sector_fixes[0][0])
+        # reduce sector fixes to reduce computational cost
+        reduced_sector_fixes = self.reduce_sector_fixes(sector_fixes, max_fixes_sector=300)
 
-        # determine sector fixes which give maximum distance
-        pass
+        # compute maximum distance fixes
+        max_distance_fixes = self.compute_max_distance_fixes(reduced_sector_fixes)
 
-    def determine_outlanding_distance(self, outlanding_leg, fix):
-        pass
+        # refine these fixes
+        max_distance_fixes = self.refine_max_distance_fixes(sector_fixes, max_distance_fixes)
 
-    def determine_outlanding_fix(self, trip, trace):
-        pass
+        trip.fixes = max_distance_fixes
 
+    # candidate for trip class?
     def determine_trip_distances(self, trip):
-        for fix_index, fix1 in trip.fixes[:-1]:
-            fix2 = trip.fixes[fix_index + 1]
+        # distance corrections are applied to start and finish if applicable
 
-            if fix_index == 0:  # start: using taskpoint
-                distance = determine_distance(self.taskpoints[0], fix2, 'tsk', 'pnt')
-            elif fix_index+1 == self.no_tps-1:  # finish: using taskpoint
-                distance = determine_distance(fix1, self.taskpoints[-1], 'pnt', 'tsk')
+        # todo: apply distance correction for start and finish
+        # how does this work for reduced distance? r_min? r_max? work this out in SeeYou
+        # this logic should live in taskpoint? or is it dependent on the other taskpoints?
+        # in the case of move it is (but other points can be used as inputs)
+        # in the case of shorten_legs it seem independent? or is the orientation relevant?
+
+        for fix1_index, fix1 in enumerate(trip.fixes[:-1]):
+            if fix1_index == 0:
+                fix2 = trip.fixes[fix1_index + 1]
+                distance = determine_distance(self.taskpoints[0].LCU_line, fix2, 'tsk', 'pnt')
+            elif fix1_index == self.no_legs:
+                distance = determine_distance(fix1, self.taskpoints[-1].LCU_line, 'tsk', 'pnt')
             else:
+                fix2 = trip.fixes[fix1_index + 1]
                 distance = determine_distance(fix1, fix2, 'pnt', 'pnt')
 
             trip.distances.append(distance)

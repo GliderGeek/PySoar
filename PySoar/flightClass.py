@@ -33,7 +33,7 @@ class Flight(object):
 
         if len(self.trip.fixes) >= 1:  # competitor must have started
             self.phases = FlightPhases(self.trip, self.trace, self.trace_settings)
-            self.performance = Performance(self.trip, self.phases, self.trace, self.trace_settings)
+            self.performance = Performance(competition_day.task, self.trip, self.phases, self.trace, self.trace_settings)
 
     def read_igc(self, soaring_spot_info):
         # this is a candidate for and IGC reader class / aerofiles functionality
