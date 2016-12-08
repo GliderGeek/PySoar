@@ -51,9 +51,9 @@ class Taskpoint(object):  # startpoint, turnpoints and finish
         move = False
         for component in components:
             if component.startswith("Reduce="):
-                reduce = component.split("=")[1]
+                reduce = bool(component.split("=")[1])
             elif component.startswith("Move="):
-                move = component.split("=")[1]
+                move = bool(component.split("=")[1])
 
         if reduce and move:
             return "shorten_legs"

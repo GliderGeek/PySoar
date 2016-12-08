@@ -46,7 +46,6 @@ class AAT(Task):
 
         # following assumptions are currently in place
         # - no outlandings (normal or ENL)  # todo: start with implementation. How to calc distance with outlanding?
-        # - only 1 start point, only 1 finish point  # todo: ask kernploeg about this. is this allways the case?
         # - no restart after 1st sector has been reached  # this can stay in (also for race)
 
         current_leg = -1  # not yet started
@@ -167,20 +166,19 @@ class AAT(Task):
 
     # candidate for trip class?
     def determine_trip_distances(self, trip):
-        # distance corrections are applied to start and finish if applicable
 
-        # todo: apply distance correction for start and finish
-        # how does this work for reduced distance? r_min? r_max? work this out in SeeYou
-        # this logic should live in taskpoint? or is it dependent on the other taskpoints?
-        # in the case of move it is (but other points can be used as inputs)
-        # in the case of shorten_legs it seem independent? or is the orientation relevant?
+        # todo: formalize distance correction for start and finish (inside taskpoint?)
 
         for fix1_index, fix1 in enumerate(trip.fixes[:-1]):
             if fix1_index == 0:
                 fix2 = trip.fixes[fix1_index + 1]
                 distance = determine_distance(self.taskpoints[0].LCU_line, fix2, 'tsk', 'pnt')
-            elif fix1_index == self.no_legs:
-                distance = determine_distance(fix1, self.taskpoints[-1].LCU_line, 'tsk', 'pnt')
+                if self.taskpoints[0].distance_correction == 'shorten_legs':
+                    distance -= self.taskpoints[0].r_max
+            elif fix1_index == self.no_legs-1:
+                distance = determine_distance(fix1, self.taskpoints[-1].LCU_line, 'pnt', 'tsk')
+                if self.taskpoints[-1].distance_correction == 'shorten_legs':
+                    distance -= self.taskpoints[-1].r_max
             else:
                 fix2 = trip.fixes[fix1_index + 1]
                 distance = determine_distance(fix1, fix2, 'pnt', 'pnt')
