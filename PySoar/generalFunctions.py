@@ -61,7 +61,7 @@ def det_velocity(location_record1, location_record2, record_type1, record_type2)
     return dist/delta_t
 
 
-def det_lat_long(location_record, record_type):
+def det_lat_long(location_record, record_type, return_radians=True):
     from math import radians
 
     pnt_lat = 7
@@ -76,7 +76,10 @@ def det_lat_long(location_record, record_type):
         latitude_dms = location_record[tsk_lat:tsk_lat+8]
         longitude_dms = location_record[tsk_long:tsk_long+8]
 
-    return radians(dms2dd(latitude_dms)), radians(dms2dd(longitude_dms))
+    if return_radians:
+        return radians(dms2dd(latitude_dms)), radians(dms2dd(longitude_dms))
+    else:
+        return dms2dd(latitude_dms), dms2dd(longitude_dms)
 
 
 def determine_distance(location_record1, location_record2, record_type1, record_type2):
@@ -144,6 +147,24 @@ def determine_distance(location_record1, location_record2, record_type1, record_
         dist = b*A*(sigma-delta_sigma)
 
     return dist
+
+
+def pygeodesy_determine_destination(location_record, record_type, bearing, distance):
+    from submodules.PyGeodesy.geodesy.ellipsoidalVincenty import LatLon
+
+    start_lat, start_lon = det_lat_long(location_record, record_type, return_radians=False)
+    start_latlon = LatLon(start_lat, start_lon)
+
+    return start_latlon.destination(distance, bearing)
+
+
+def pygeodesy_calculate_distance(location_record, record_type, pygeodesy_latlon):
+    from submodules.PyGeodesy.geodesy.ellipsoidalVincenty import LatLon
+
+    rec_lat, rec_lon = det_lat_long(location_record, record_type, return_radians=False)
+    rec_latlon = LatLon(rec_lat, rec_lon)
+
+    return rec_latlon.distanceTo(pygeodesy_latlon)
 
 
 def det_bearing(location_record1, location_record2, type1, type2):
@@ -248,8 +269,8 @@ def url_format_correct(url_string):
         return 'URL should start with http://www.soaringspot.com'
     elif url_string[-5::] != 'daily':
         return 'URL does not give daily results'
-    elif url_is_aat(url_string):
-        return 'AAT not yet implemented'
+    # elif url_is_aat(url_string):
+    #     return 'AAT not yet implemented'
     else:
         return 'URL correct'
 
