@@ -1,5 +1,6 @@
 from task import Task
-from generalFunctions import determine_distance
+from generalFunctions import determine_distance, pygeodesy_determine_destination, det_bearing,\
+    pygeodesy_calculate_distance, det_time_difference, enl_time_exceeded, enl_value_exceeded
 
 
 class AAT(Task):
@@ -42,31 +43,54 @@ class AAT(Task):
         else:
             sector_fixes[taskpoint_index].append(fix)
 
-    def get_sector_fixes(self, trace):
+    def get_sector_fixes(self, trace, trace_settings):
 
         # following assumptions are currently in place
-        # - no outlandings (normal or ENL)  # todo: start with implementation. How to calc distance with outlanding?
-        # - outlanding is also possible inside the sector!
-        # - no restart after 1st sector has been reached  # this can stay in (also for race)
+        # - outlanding inside sector leads to wrong distance
 
         current_leg = -1  # not yet started
         sector_fixes = []
 
+        enl_time = 0
+        enl_first_fix = None
+        enl_outlanding = False
+
         for trace_index, fix in enumerate(trace[:-1]):
 
-            # print current_leg
+            # check ENL when aircraft logs ENL and no ENL outlanding has taken place
+            if trace_settings['enl_indices'] is not None and not enl_outlanding:
+                if enl_value_exceeded(fix, trace_settings['enl_indices']):
+                    if enl_first_fix is None:
+                        enl_first_fix = fix
+                    fix2 = trace[trace_index + 1]
+                    enl_time += det_time_difference(fix, fix2, 'pnt', 'pnt')
+                    if enl_time_exceeded(enl_time):
+                        enl_outlanding = True
+                        if current_leg > 0:
+                            break
+                else:
+                    enl_time = 0
+                    enl_first_fix = None
 
             if current_leg == -1:  # before start
                 fix2 = trace[trace_index + 1]
                 if self.started(fix, fix2):
                     self.add_aat_sector_fix(sector_fixes, 0, fix2)  # at task start point
                     current_leg = 0
+                    enl_outlanding = False
+                    enl_first_fix = None
+                    enl_time = 0
             elif current_leg == 0:  # first leg, re-start still possible
                 fix2 = trace[trace_index + 1]
-                if self.started(fix, fix2):
+                if self.started(fix, fix2):  # restart
                     sector_fixes[0] = [fix2]  # at task start point
                     current_leg = 0
-                elif self.taskpoints[1].inside_sector(fix):
+                    enl_outlanding = False
+                    enl_first_fix = None
+                    enl_time = 0
+                elif self.taskpoints[1].inside_sector(fix):  # first sector
+                    if enl_outlanding:
+                        break  # break when ENL is used and not restarted
                     self.add_aat_sector_fix(sector_fixes, 1, fix)
                     current_leg += 1
             elif 0 < current_leg < self.no_legs - 1:  # at least second leg, no re-start possible
@@ -84,7 +108,10 @@ class AAT(Task):
                     current_leg = self.no_legs
                     break
 
-        return sector_fixes
+        if enl_outlanding:
+            return sector_fixes, enl_first_fix
+        else:
+            return sector_fixes, None
 
     def reduce_sector_fixes(self, sector_fixes, max_fixes_sector):
         reduced_sector_fixes = []
@@ -122,6 +149,53 @@ class AAT(Task):
 
         return self.compute_max_distance_fixes(refined_sector_fixes, outlanding)
 
+    def calculate_distance_completed_leg(self, leg, start_tp_fix, end_tp_fix):
+        # room for improvement:
+        # by using LatLon objects instead of records, the switch case can be reduced
+        # since pnt are now the same as tsk records
+        if leg == 0:  # take start-point of task
+            distance = determine_distance(self.taskpoints[0].LCU_line, end_tp_fix, 'tsk', 'pnt')
+        elif leg == self.no_legs - 1:  # take finish-point of task
+            distance = determine_distance(start_tp_fix, self.taskpoints[-1].LCU_line, 'pnt', 'tsk')
+        else:
+            distance = determine_distance(start_tp_fix, end_tp_fix, 'pnt', 'pnt')
+
+        return distance
+
+    def calculate_distance_outlanding_leg(self, leg, start_tp_fix, outlanding_fix):
+        # room for improvement:
+        # by using LatLon objects instead of records, the switch case can be reduced
+        # since pnt are now the same as tsk records
+        if leg == 0:
+            tp1 = self.taskpoints[leg + 1]
+
+            bearing = det_bearing(tp1.LCU_line, outlanding_fix, 'tsk', 'pnt')
+            closest_area_point = pygeodesy_determine_destination(tp1.LCU_line, 'tsk', bearing,
+                                                                 tp1.r_max)
+
+            distance = pygeodesy_calculate_distance(self.taskpoints[0].LCU_line, 'tsk',
+                                                    closest_area_point)
+            distance -= pygeodesy_calculate_distance(outlanding_fix, 'pnt', closest_area_point)
+
+        elif leg == self.no_legs - 1:  # take finish-point of task
+            distance = determine_distance(start_tp_fix, self.taskpoints[leg + 1], 'pnt', 'tsk')
+            distance -= determine_distance(self.taskpoints[leg + 1], outlanding_fix, 'tsk', 'pnt')
+        else:
+            tp1 = self.taskpoints[leg + 1]
+
+            bearing = det_bearing(tp1.LCU_line, outlanding_fix, 'tsk', 'pnt')
+            closest_area_point = pygeodesy_determine_destination(tp1.LCU_line, 'tsk', bearing,
+                                                                 tp1.r_max)
+
+            if leg == 0:
+                distance = pygeodesy_calculate_distance(self.taskpoints[0].LCU_line, 'tsk',
+                                                        closest_area_point)
+            else:
+                distance = pygeodesy_calculate_distance(start_tp_fix, 'pnt', closest_area_point)
+            distance -= pygeodesy_calculate_distance(outlanding_fix, 'pnt', closest_area_point)
+
+        return distance
+
     def compute_max_distance_fixes(self, sector_fixes, outlanding):
         distances = [[]] * len(sector_fixes)
         distances[0] = [[0, 0]] * len(sector_fixes[0])
@@ -135,26 +209,21 @@ class AAT(Task):
                 for fix1_index, fix1 in enumerate(sector_fixes[leg]):
 
                     if outlanding and leg == legs_started-1:  # outlanding leg
-                        distance = determine_distance(self.taskpoints[leg].LCU_line, self.taskpoints[leg + 1].LCU_line, 'tsk', 'tsk')
-                        distance -= determine_distance(fix2, self.taskpoints[leg + 1].LCU_line, 'pnt', 'tsk')
+                        distance = self.calculate_distance_outlanding_leg(leg, fix1, fix2)
                     else:
-                        if leg == 0:  # take start-point of task
-                            distance = determine_distance(self.taskpoints[0].LCU_line, fix2, 'tsk', 'pnt')
-                        elif leg == self.no_legs - 1:  # take finish-point of task
-                            distance = determine_distance(fix1, self.taskpoints[-1].LCU_line, 'pnt', 'tsk')
-                        else:
-                            distance = determine_distance(fix1, fix2, 'pnt', 'pnt')
+                        distance = self.calculate_distance_completed_leg(leg, fix1, fix2)
 
                     total_distance = distances[leg][fix1_index][0] + distance
                     if total_distance > distances[leg + 1][fix2_index][0]:
                         distances[leg + 1][fix2_index][0] = total_distance
-                        distances[leg + 1][fix2_index][1] = fix1_index\
+                        distances[leg + 1][fix2_index][1] = fix1_index
 
         # determine index on last sector/outlanding-group with maximum distance
         max_dist = 0
         maximized_dist_index = None
         for i, distance in enumerate(distances[-1]):
             if distance[0] > max_dist:
+                max_dist = distance[0]
                 maximized_dist_index = i
 
         index = maximized_dist_index
@@ -166,19 +235,29 @@ class AAT(Task):
 
         return max_distance_fixes
 
-    def add_outlanding_fixes(self, trace, sector_fixes):
+    def add_outlanding_fixes(self, trace, sector_fixes, enl_outlanding_fix):
         last_sector_fix = sector_fixes[-1][-1]
         last_sector_index = trace.index(last_sector_fix)
-        sector_fixes.append(trace[last_sector_index+1:])
+
+        if enl_outlanding_fix is not None:
+            enl_outlanding_index = trace.index(enl_outlanding_fix)
+
+            if enl_outlanding_index > last_sector_index:
+                sector_fixes.append(trace[last_sector_index + 1: enl_outlanding_index + 1])
+        else:
+            sector_fixes.append(trace[last_sector_index+1:])
 
     def determine_trip_fixes(self, trace, trip, trace_settings):  # trace settings for ENL
 
-        sector_fixes = self.get_sector_fixes(trace)
+        sector_fixes, enl_outlanding_fix = self.get_sector_fixes(trace, trace_settings)
+
+        if enl_outlanding_fix is not None:
+            trip.enl_fix = enl_outlanding_fix
 
         outlanded = False
-        if len(sector_fixes) != self.no_legs+1:  # outlanded (also for ENL)
-            self.add_outlanding_fixes(trace, sector_fixes)
+        if len(sector_fixes) != self.no_legs+1:
             outlanded = True
+            self.add_outlanding_fixes(trace, sector_fixes, enl_outlanding_fix)
 
         # reduce sector fixes to reduce computational cost
         reduced_sector_fixes = self.reduce_sector_fixes(sector_fixes, max_fixes_sector=300)
@@ -200,6 +279,7 @@ class AAT(Task):
 
         # todo: formalize distance correction for start and finish (inside taskpoint?)
 
+        # can this be replaced by call to self.calculate_distance_completed_leg?
         for fix1_index, fix1 in enumerate(trip.fixes[:-1]):
             if fix1_index == 0:
                 fix2 = trip.fixes[fix1_index + 1]
@@ -217,8 +297,6 @@ class AAT(Task):
             trip.distances.append(distance)
 
         if trip.outlanded():
-            distance = determine_distance(self.taskpoints[trip.outlanding_leg()].LCU_line,
-                                          self.taskpoints[trip.outlanding_leg() + 1].LCU_line, 'tsk', 'tsk')
-            distance -= determine_distance(trip.outlanding_fix,
-                                           self.taskpoints[trip.outlanding_leg() + 1].LCU_line, 'pnt', 'tsk')
+            leg = trip.outlanding_leg()
+            distance = self.calculate_distance_outlanding_leg(leg, trip.fixes[-1], trip.outlanding_fix)
             trip.distances.append(distance)
