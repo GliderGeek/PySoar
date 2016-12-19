@@ -149,8 +149,11 @@ class Performance(object):
         self.store_perf(leg, "dh_cruise_avg", dh_cruise_avg)
 
     def det_s_extra(self, leg, cruise_distance, task_distance, thermal_drift):
-        s_extra = float(cruise_distance + thermal_drift - task_distance) / task_distance
-        s_extra *= 100
+        if task_distance > 0:
+            s_extra = float(cruise_distance + thermal_drift - task_distance) / task_distance
+            s_extra *= 100
+        else:
+            s_extra = None
         self.store_perf(leg, "s_extra", s_extra)
 
     def det_tsk_v(self, leg, task_distance, task_time):

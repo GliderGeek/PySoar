@@ -133,7 +133,13 @@ class RaceTask(Task):
                     max_dist = outlanding_dist
                     outlanding_fix = fix
 
-        trip.outlanding_fix = outlanding_fix
+        if outlanding_fix is None:  # no outlanding fix that improves the distance
+            if trip.enl_fix is not None:
+                trip.outlanding_fix = trip.enl_fix
+            else:
+                trip.outlanding_fix = trace[-1]
+        else:
+            trip.outlanding_fix = outlanding_fix
 
     def determine_outlanding_distance(self, outlanding_leg, fix):
 
@@ -144,7 +150,10 @@ class RaceTask(Task):
         outlanding_dist = determine_distance(task_pointM1, task_point, 'tsk', 'tsk')
         outlanding_dist -= determine_distance(task_point, fix, 'tsk', 'pnt')
 
-        return outlanding_dist
+        if outlanding_dist > 0:
+            return outlanding_dist
+        else:
+            return 0
 
     def determine_trip_distances(self, trip):
 
