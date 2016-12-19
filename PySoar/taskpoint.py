@@ -23,7 +23,7 @@ class Taskpoint(object):  # startpoint, turnpoints and finish
         components = self.LSEEYOU_line.rstrip().split(",")
         for component in components:
             if component.startswith("A12="):
-                self.orientation_angle = component.split("=")[1]
+                self.orientation_angle = float(component.split("=")[1])
                 break
 
     def det_sector_orientation(self):
