@@ -93,6 +93,9 @@ class RaceTask(Task):
                     trip.fixes.append(start_fix)
                     trip.start_fixes.append(start_fix)
                     leg += 1
+                    enl_time = 0
+                    enl_first_fix = None
+                    enl_registered = False
             elif leg == 0:
                 if self.taskpoints[0].taskpoint_completed(trace[i - 1], trace[i]):  # restart
                     start_fix = trace[i]
