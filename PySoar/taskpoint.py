@@ -1,3 +1,5 @@
+from math import pi
+
 from generalFunctions import det_average_bearing
 
 
@@ -158,7 +160,7 @@ class Taskpoint(object):  # startpoint, turnpoints and finish
         elif self.r_min is not None:
             return self.r_min < distance < self.r_max and angle_wrt_orientation < self.angle_max
         else:  # self.r_min is None
-            return distance < self.r_max and angle_wrt_orientation < self.angle_max
+            return distance < self.r_max and (pi - angle_wrt_orientation) < self.angle_max
 
     def crossed_line(self, fix1, fix2):
         from generalFunctions import determine_distance, det_bearing, det_bearing_change
