@@ -117,6 +117,10 @@ class Flight(object):
         if len(task_information['lcu_lines']) != 0:
             task_information['date'] = get_date(task_information['lcu_lines'][0])
 
+        # fix wrong style definition on start and finish points
+        task_information['lseeyou_lines'][0] = task_information['lseeyou_lines'][0].replace('Style=1', 'Style=2')
+        task_information['lseeyou_lines'][-1] = task_information['lseeyou_lines'][-1].replace('Style=1', 'Style=3')
+
         return task_information
 
 #############################  LICENSE  #####################################
