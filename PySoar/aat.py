@@ -178,8 +178,8 @@ class AAT(Task):
             distance -= pygeodesy_calculate_distance(outlanding_fix, 'pnt', closest_area_point)
 
         elif leg == self.no_legs - 1:  # take finish-point of task
-            distance = determine_distance(start_tp_fix, self.taskpoints[leg + 1], 'pnt', 'tsk')
-            distance -= determine_distance(self.taskpoints[leg + 1], outlanding_fix, 'tsk', 'pnt')
+            distance = determine_distance(start_tp_fix, self.taskpoints[leg + 1].LCU_line, 'pnt', 'tsk')
+            distance -= determine_distance(self.taskpoints[leg + 1].LCU_line, outlanding_fix, 'tsk', 'pnt')
         else:
             tp1 = self.taskpoints[leg + 1]
 
