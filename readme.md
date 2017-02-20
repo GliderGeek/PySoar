@@ -19,7 +19,6 @@ Apart from Excel/Open Office for viewing the spreadsheet, no extra software is n
 ## Limitations
 The following limitations are (currently) in place:
 
-- no AAT
 - no restart after 1st turnpoint
 - no penalties for missing turnpoints -> outlanding
 - no multiple start points
