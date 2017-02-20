@@ -80,8 +80,8 @@ class SoaringSpotImport(object):
         if not os.path.exists(self.igc_directory):
             os.makedirs(self.igc_directory)
 
-        if not os.path.exists(settings.current_dir + '/debug_logs'):
-            os.makedirs(settings.current_dir + '/debug_logs')
+        # if not os.path.exists(settings.current_dir + '/debug_logs'):
+        #     os.makedirs(settings.current_dir + '/debug_logs')
 
 #############################  LICENSE  #####################################
 
