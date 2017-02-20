@@ -3,13 +3,14 @@ from mechanize import Browser
 from BeautifulSoup import BeautifulSoup
 import urllib
 from settingsClass import Settings
+import time
 
 settings = Settings()
 
 
 class SoaringSpotImport(object):
 
-    def __init__(self):
+    def __init__(self, url, download_progress):
         # combine parameters in dictionary?
         self.url_page = ""
         self.competition = ""
@@ -18,12 +19,24 @@ class SoaringSpotImport(object):
         self.igc_directory = ""
 
         self.flights_downloaded = 0
-        self.flights_analyzed = 0
 
         self.baseUrl = "http://www.soaringspot.com"
         self.file_urls = []
         self.file_names = []
         self.rankings = []
+
+        self.load(url)
+        self.download_flights(download_progress)
+
+    def download_flights(self, download_progress):
+        for index in range(len(self.file_urls)):
+            while not os.path.exists(self.igc_directory + "/" + self.file_names[index]):
+                self.download_flight(index)
+                time.sleep(0.1)
+            self.flights_downloaded += 1
+            if download_progress is not None:
+                download_progress.configure(text='Downloaded: %s/%s' % (self.flights_downloaded, len(self.file_names)))
+                download_progress.update()
 
     def download_flight(self, index):
         url_location = self.file_urls[index]
@@ -69,22 +82,6 @@ class SoaringSpotImport(object):
 
         if not os.path.exists(settings.current_dir + '/debug_logs'):
             os.makedirs(settings.current_dir + '/debug_logs')
-
-    def save(self, settings):
-        file_name = settings.current_dir + "/debug_logs/importClassDebug.txt"
-        text_file = open(file_name, "w")
-
-        text_file.write("rankings\t file_names\t file_urls\t \n")
-        for ii in range(len(self.file_urls)):
-            text_file.write(str(self.rankings[ii])+'\t')
-            text_file.write(str(self.file_names[ii]) + '\t')
-            text_file.write(str(self.file_urls[ii]) + '\n')
-
-        text_file.close()
-
-if __name__ == '__main__':
-    from main_pysoar import run
-    run()
 
 #############################  LICENSE  #####################################
 

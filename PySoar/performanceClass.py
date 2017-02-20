@@ -1,69 +1,84 @@
-from generalFunctions import det_height, ss2hhmmss, determine_distance
+from generalFunctions import det_height, determine_distance, det_local_time
 
 
 class Performance(object):
-    def __init__(self, competition_day, flight):
+    def __init__(self, task, trip, phases, trace, trace_settings):
 
-        self.tsk_distance_all = sum(competition_day.task_distances)
-        self.tsk_distance_leg = competition_day.task_distances
+        self.all = None
+        self.leg = None
 
-        self.no_cruises = flight.phases.cruises_all
-        self.no_cruises_leg = flight.phases.cruises_leg
+        self.tsk_distance_all = sum(trip.distances)
+        self.tsk_distance_leg = trip.distances
 
-        self.no_thermals = flight.phases.thermals_all
-        self.no_thermals_leg = flight.phases.thermals_leg
+        # why not use phases directly? pass in functions as argument?
+        self.no_cruises = phases.cruises_all
+        self.no_cruises_leg = phases.cruises_leg
+        self.no_thermals = phases.thermals_all
+        self.no_thermals_leg = phases.thermals_leg
 
-        startheight = det_height(flight.b_records[flight.tsk_i[0]], flight.gps_altitude)
-        finish_height = det_height(flight.b_records[flight.tsk_i[-1]], flight.gps_altitude)
+        # should be possible to ditch trace as it is already in phases
+        self.init_all(trip, trace, trace_settings)
+        self.init_leg(trip, trace, trace_settings)
 
-        if flight.outlanded:
-            s_flown_task_all = 0
-            for leg in range(flight.outlanding_leg):
-                s_flown_task_all += competition_day.task_distances[leg]
-            s_flown_task_all += flight.outlanding_distance
-            s_flown_task_all /= 1000
+        self.determine_performance(task, trip, phases, trace)
+
+    def init_all(self, trip, trace, trace_settings):
+        start_i = trace.index(trip.fixes[0])
+        start_h = det_height(trace[start_i], trace_settings['gps_altitude'])
+        start_t = trip.refined_start_time
+
+        if len(trip.fixes) == 1:
+            finish_h = None
+            finish_t = None
         else:
-            s_flown_task_all = sum(competition_day.task_distances) / 1000
+            last_tp_i = trace.index(trip.fixes[-1])
+            finish_h = det_height(trace[last_tp_i], trace_settings['gps_altitude'])
+            finish_t = det_local_time(trace[last_tp_i], 0)
 
-        self.all = {"ranking": flight.ranking,
-                    "airplane": flight.airplane,
-                    "compID": flight.competition_id,
-                    "t_start": ss2hhmmss(flight.tsk_t[0]),
-                    "t_finish": ss2hhmmss(flight.tsk_t[-1]),
-                    "h_start": startheight,
-                    "h_finish": finish_height,
+        s_flown_task_all = sum(trip.distances) / 1000
+
+        self.all = {"t_start": start_t,
+                    "t_finish": finish_t,
+                    "h_start": start_h,
+                    "h_finish": finish_h,
                     "s_flown_task": s_flown_task_all}
 
+    def init_leg(self, trip, trace, trace_settings):
         self.leg = []
 
-        # in case of outlanding: only performance is stored from completed legs
-        for leg in range(competition_day.no_legs):
-            if flight.outlanded and leg == flight.outlanding_leg:
-                t_start = flight.tsk_t[leg]
-                t_finish = 0
-                s_flown_task_leg = flight.outlanding_distance / 1000
-                startheight = det_height(flight.b_records[flight.tsk_i[leg]], flight.gps_altitude)
-                finish_height = 0
-            elif flight.outlanded and leg > flight.outlanding_leg:
-                t_start = 0
-                t_finish = 0
-                s_flown_task_leg = 0
-                startheight = 0
-                finish_height = 0
-            else:
-                t_start = flight.tsk_t[leg]
-                t_finish = flight.tsk_t[leg+1]
-                s_flown_task_leg = competition_day.task_distances[leg] / 1000
-                startheight = det_height(flight.b_records[flight.tsk_i[leg]], flight.gps_altitude)
-                finish_height = det_height(flight.b_records[flight.tsk_i[leg+1]], flight.gps_altitude)
+        for leg in range(len(trip.distances)):
+            if trip.outlanding_fix is not None and leg == trip.outlanding_leg():
+                start_i = trace.index(trip.fixes[leg])
+                start_h = det_height(trace[start_i], trace_settings['gps_altitude'])
+                start_t = trip.refined_start_time if leg == 0 else det_local_time(trace[start_i], 0)
 
-            self.leg.append({"ranking": self.all["ranking"],
-                             "airplane": self.all["airplane"],
-                             "compID": self.all["compID"],
-                             "t_start": ss2hhmmss(t_start),
-                             "t_finish": ss2hhmmss(t_finish),
-                             "h_start": startheight,
-                             "h_finish": finish_height,
+                finish_t = 0
+                finish_h = 0
+
+                s_flown_task_leg = trip.distances[-1] / 1000
+            elif trip.outlanding_fix is not None and leg > trip.outlanding_leg():
+                start_t = 0
+                start_h = 0
+
+                finish_t = 0
+                finish_h = 0
+
+                s_flown_task_leg = 0
+            else:
+                start_i = trace.index(trip.fixes[leg])
+                start_h = det_height(trace[start_i], trace_settings['gps_altitude'])
+                start_t = trip.refined_start_time if leg == 0 else det_local_time(trace[start_i], 0)
+
+                finish_i = trace.index(trip.fixes[leg+1])
+                finish_t = det_local_time(trace[finish_i], 0)
+                finish_h = det_height(trace[finish_i], trace_settings['gps_altitude'])
+
+                s_flown_task_leg = trip.distances[leg] / 1000
+
+            self.leg.append({"t_start": start_t,
+                             "t_finish": finish_t,
+                             "h_start": start_h,
+                             "h_finish": finish_h,
                              "s_flown_task": s_flown_task_leg})
 
     def store_perf(self, leg, key, value):
@@ -134,21 +149,24 @@ class Performance(object):
         self.store_perf(leg, "dh_cruise_avg", dh_cruise_avg)
 
     def det_s_extra(self, leg, cruise_distance, task_distance, thermal_drift):
-        s_extra = float(cruise_distance + thermal_drift - task_distance) / task_distance
-        s_extra *= 100
+        if task_distance > 0:
+            s_extra = float(cruise_distance + thermal_drift - task_distance) / task_distance
+            s_extra *= 100
+        else:
+            s_extra = None
         self.store_perf(leg, "s_extra", s_extra)
 
-    def det_tsk_v(self, leg, task_distance, thermal_time, cruise_time):
+    def det_tsk_v(self, leg, task_distance, task_time):
         # return the cross country speed in kmh
-        if (thermal_time + cruise_time) == 0:
+        if task_time == 0:
             tsk_v = 42
         else:
-            tsk_v = float(task_distance) / (thermal_time + cruise_time)
+            tsk_v = float(task_distance) / task_time
         self.store_perf(leg, "tsk_v", tsk_v * 3.6)
 
     def write_perfs(self, leg,
                     thermal_altitude_gain, thermal_altitude_loss, thermal_time, thermal_distance, thermal_drift,
-                    cruise_time, cruise_distance, cruise_height_diff):
+                    cruise_time, cruise_distance, cruise_height_diff, task_time):
 
         if leg == -1:
             no_cruises = self.no_cruises
@@ -169,9 +187,9 @@ class Performance(object):
         self.det_s_glide_avg(leg, cruise_distance, no_cruises)
         self.det_dh_cruise_avg(leg, cruise_height_diff, no_cruises)
         self.det_v_glide_avg(leg, cruise_distance, cruise_time)
-        self.det_tsk_v(leg, task_distance, thermal_time, cruise_time)
+        self.det_tsk_v(leg, task_distance, task_time)
 
-    def determine_performance(self, flight, competitionday):
+    def determine_performance(self, task, trip, phases, trace):
 
         thermal_altitude_gain_tot = 0
         thermal_altitude_loss_tot = 0
@@ -181,8 +199,9 @@ class Performance(object):
         cruise_time_tot = 0
         cruise_distance_tot = 0
         cruise_height_diff_tot = 0
+        task_time_tot = 0
 
-        for leg in range(competitionday.no_legs):
+        for leg in range(len(trip.distances)):
 
             thermal_altitude_gain = 0
             thermal_altitude_loss = 0
@@ -192,10 +211,11 @@ class Performance(object):
             cruise_time = 0
             cruise_distance = 0
             cruise_height_diff = 0
+            task_time = 0
 
-            for point in range(len(flight.phases.pointwise_leg[leg]['phase'])):
+            for point in range(len(phases.pointwise_leg[leg]['phase'])):
 
-                leg_pointwise = flight.phases.pointwise_leg[leg]
+                leg_pointwise = phases.pointwise_leg[leg]
                 cruise = True if leg_pointwise["phase"][point] == 'cruise' else False
 
                 if cruise:
@@ -210,11 +230,11 @@ class Performance(object):
                     else:
                         thermal_altitude_loss += leg_pointwise["height_difference"][point]
 
-            for entry in flight.phases.leg[leg]:
+            for entry in phases.leg[leg]:
                 if entry["phase"] == "thermal":
                     i_st = entry["i_start"]
                     i_end = entry["i_end"]
-                    thermal_drift += determine_distance(flight.b_records[i_st], flight.b_records[i_end], 'pnt', 'pnt')
+                    thermal_drift += determine_distance(trace[i_st], trace[i_end], 'pnt', 'pnt')
 
             # write to total performance values
             thermal_altitude_gain_tot += thermal_altitude_gain
@@ -225,19 +245,19 @@ class Performance(object):
             cruise_time_tot += cruise_time
             cruise_distance_tot += cruise_distance
             cruise_height_diff_tot += cruise_height_diff
+            task_time = cruise_time + thermal_time
+            task_time_tot += task_time
 
             self.write_perfs(leg,
                              thermal_altitude_gain, thermal_altitude_loss, thermal_time, thermal_distance, thermal_drift,
-                             cruise_time, cruise_distance, cruise_height_diff)
+                             cruise_time, cruise_distance, cruise_height_diff, task_time)
+
+        if task.aat and task_time_tot < task.t_min:
+            task_time_tot = task.t_min
+
         self.write_perfs(-1,
                          thermal_altitude_gain_tot, thermal_altitude_loss_tot, thermal_time_tot, thermal_distance_tot, thermal_drift_tot,
-                         cruise_time_tot, cruise_distance_tot, cruise_height_diff_tot)
-
-
-if __name__ == '__main__':
-    from main_pysoar import run
-
-    run()
+                         cruise_time_tot, cruise_distance_tot, cruise_height_diff_tot, task_time_tot)
 
 #############################  LICENSE  #####################################
 

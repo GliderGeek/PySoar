@@ -1,5 +1,5 @@
 from generalFunctions import det_local_time, determine_distance, det_bearing, det_bearing_change, ss2hhmmss,\
-    det_height, determine_flown_task_distance
+    det_height
 from settingsClass import Settings
 import datetime
 
@@ -9,9 +9,9 @@ settings = Settings()
 class FlightPhases(object):
 
     def get_difference_bib(self):
-        return {"height_difference": [], "height":[], "distance": [], "distance_task": [], "time_difference": [], "time": [], "phase": []}
+        return {"height_difference": [], "height":[], "distance": [], "time_difference": [], "time": [], "phase": []}
 
-    def __init__(self, competition_day):
+    def __init__(self, trip, trace, trace_settings):
         self.all = []
         self.leg = []
 
@@ -20,14 +20,17 @@ class FlightPhases(object):
         self.thermals_leg = []
         self.thermals_all = 0
 
-        self.pointwise_all = {}
+        self.pointwise_all = self.get_difference_bib()
         self.pointwise_leg = []
 
-        for leg in range(competition_day.no_legs):
-            self.leg.append([])
-            self.pointwise_leg.append(self.get_difference_bib())
-            self.cruises_leg.append(0)
-            self.thermals_leg.append(0)
+        no_trip_legs = len(trip.distances)
+        self.leg = [[] for i in range(no_trip_legs)]
+        self.pointwise_leg = [self.get_difference_bib() for i in range(no_trip_legs)]
+        self.cruises_leg = [0] * no_trip_legs
+        self.thermals_leg = [0] * no_trip_legs
+
+        self.determine_phases(trip, trace)
+        self.determine_point_statistics(trip, trace, trace_settings)
 
     def create_entry(self, i_start, t_start, phase, leg):
         content = {'i_start': i_start, 'i_end': i_start, 't_start': t_start, 't_end': t_start, 'phase': phase}
@@ -52,13 +55,25 @@ class FlightPhases(object):
             self.leg[leg][-1]['i_end'] = i_end
             self.leg[leg][-1]['t_end'] = t_end
 
-    def determine_phases(self, settings, competitionday, flight):
+    def determine_phases(self, trip, trace):
 
-        b_record_m1 = flight.b_records[flight.tsk_i[0] - 2]
-        time_m1 = det_local_time(b_record_m1, competitionday.utc_to_local)
+        start_i = trace.index(trip.fixes[0])
 
-        b_record = flight.b_records[flight.tsk_i[0] - 1]
-        time = det_local_time(b_record, competitionday.utc_to_local)
+        if trip.outlanding_fix is not None:
+            last_tp_i = trace.index(trip.outlanding_fix)
+        else:
+            last_tp_i = trace.index(trip.fixes[-1])
+
+        if trip.outlanding_leg() == 0:
+            next_tp_i = trace.index(trip.outlanding_fix)
+        else:
+            next_tp_i = trace.index(trip.fixes[1])
+
+        b_record_m1 = trace[start_i-2]
+        time_m1 = det_local_time(b_record_m1, 0)
+
+        b_record = trace[start_i-1]
+        time = det_local_time(b_record, 0)
         bearing = det_bearing(b_record_m1, b_record, 'pnt', 'pnt')
 
         cruise = True
@@ -71,11 +86,11 @@ class FlightPhases(object):
         bearing_change_tot = 0
         leg = 0
 
-        self.create_entry(flight.tsk_i[0], time_m1, 'cruise', -2)
-        self.create_entry(flight.tsk_i[0], time_m1, 'cruise', leg)
+        self.create_entry(start_i, time_m1, 'cruise', -2)
+        self.create_entry(start_i, time_m1, 'cruise', leg)
 
-        for i in range(len(flight.b_records)):
-            if flight.tsk_i[0] < i < flight.tsk_i[-1]:
+        for i in range(len(trace)):
+            if start_i < i < last_tp_i:
 
                 time_m2 = time_m1
 
@@ -83,18 +98,22 @@ class FlightPhases(object):
                 bearing_m1 = bearing
                 b_record_m1 = b_record
 
-                b_record = flight.b_records[i]
-                time = det_local_time(b_record, competitionday.utc_to_local)
+                b_record = trace[i]
+                time = det_local_time(b_record, 0)
 
                 bearing = det_bearing(b_record_m1, b_record, 'pnt', 'pnt')
                 bearing_change = det_bearing_change(bearing_m1, bearing)
                 bearing_change_rate = bearing_change / (time - 0.5*time_m1 - 0.5*time_m2)
 
-                if i == flight.tsk_i[leg+1]:
+                if i == next_tp_i:
                     phase = 'cruise' if cruise else 'thermal'
+                    self.close_entry(i, time, leg)
+                    self.create_entry(i, time, phase, leg + 1)
                     leg += 1
-                    self.close_entry(i, time, leg-1)
-                    self.create_entry(i, time, phase, leg)
+                    if trip.outlanding_leg() == leg:
+                        next_tp_i = trace.index(trip.outlanding_fix)
+                    else:
+                        next_tp_i = trace.index(trip.fixes[leg+1])
 
                 if cruise:
 
@@ -121,7 +140,7 @@ class FlightPhases(object):
 
                     if abs(bearing_change_tot) > settings.cruise_threshold_bearingTot:
                         cruise = False
-                        thermal_start_time = det_local_time(flight.b_records[possible_thermal_start], competitionday.utc_to_local)
+                        thermal_start_time = det_local_time(trace[possible_thermal_start], 0)
                         self.close_entry(possible_thermal_start, thermal_start_time, -2)
                         self.close_entry(possible_thermal_start, thermal_start_time, leg)
                         self.create_entry(possible_thermal_start, thermal_start_time, 'thermal', -2)
@@ -145,7 +164,7 @@ class FlightPhases(object):
                             temp_bearing_change += bearing_change
                             temp_bearing_rate_avg = temp_bearing_change / (time-possible_cruise_t)
 
-                        cruise_distance = determine_distance(flight.b_records[possible_cruise_start-1], b_record,
+                        cruise_distance = determine_distance(trace[possible_cruise_start-1], b_record,
                                                              'pnt', 'pnt')
 
                         if cruise_distance > settings.thermal_threshold_distance and \
@@ -161,112 +180,64 @@ class FlightPhases(object):
                             temp_bearing_change = 0
                             bearing_change_tot = 0
 
-        time = det_local_time(flight.b_records[flight.tsk_i[-1]], competitionday.utc_to_local)
-        self.close_entry(flight.tsk_i[-1], time, -2)
-        self.close_entry(flight.tsk_i[-1], time, leg)
+        time = det_local_time(trace[last_tp_i], 0)
+        self.close_entry(last_tp_i, time, -2)
+        self.close_entry(last_tp_i, time, leg)
 
     def append_differences(self, difference_indicators, leg):
         for key, value in difference_indicators.iteritems():
             self.pointwise_all[key].append(value)
             self.pointwise_leg[leg-1][key].append(value)
 
-    def determine_point_statistics(self, flight, competition_day):
-
-        self.pointwise_all = self.get_difference_bib()
-        for leg in range(competition_day.no_legs):
-            self.pointwise_leg.append(self.get_difference_bib())
+    def determine_point_statistics(self, trip, trace, trace_settings):
 
         phase_number = 0
         leg = 0
         phase = self.all[phase_number]['phase']
 
-        for i in range(flight.b_records.__len__()):
-            if flight.tsk_i[0] <= i < flight.tsk_i[-1]:
+        start_i = trace.index(trip.fixes[0])
+
+        if trip.outlanding_fix is not None:
+            last_tp_i = trace.index(trip.outlanding_fix)
+        else:
+            last_tp_i = trace.index(trip.fixes[-1])
+
+        if trip.outlanding_leg() == 0:
+            next_tp_i = trace.index(trip.outlanding_fix)
+        else:
+            next_tp_i = trace.index(trip.fixes[1])
+
+        for i in range(len(trace)):
+            if start_i <= i < last_tp_i:
 
                 if self.all[phase_number]['i_end'] == i:
                     phase_number += 1
                     phase = self.all[phase_number]['phase']
 
-                if i == flight.tsk_i[leg]:
+                if i == next_tp_i:
                     leg += 1
+                    if trip.outlanding_leg() == leg:
+                        next_tp_i = trace.index(trip.outlanding_fix)
+                    else:
+                        next_tp_i = trace.index(trip.fixes[leg+1])
 
-                height_difference = det_height(flight.b_records[i+1], flight.gps_altitude) -\
-                                    det_height(flight.b_records[i], flight.gps_altitude)
-                height = det_height(flight.b_records[i], flight.gps_altitude)
-                distance = determine_distance(flight.b_records[i], flight.b_records[i+1], 'pnt', 'pnt')
-                time_difference = det_local_time(flight.b_records[i+1], competition_day.utc_to_local) -\
-                                  det_local_time(flight.b_records[i], competition_day.utc_to_local)
-                time_secs = det_local_time(flight.b_records[i], competition_day.utc_to_local)
+                height_difference = det_height(trace[i+1], trace_settings['gps_altitude']) -\
+                                    det_height(trace[i], trace_settings['gps_altitude'])
+                height = det_height(trace[i], trace_settings['gps_altitude'])
+                distance = determine_distance(trace[i], trace[i+1], 'pnt', 'pnt')
+                time_difference = det_local_time(trace[i+1], 0) -\
+                                  det_local_time(trace[i], 0)
+                time_secs = det_local_time(trace[i], 0)
                 date_obj = datetime.datetime(2014, 6, 21) + datetime.timedelta(seconds=time_secs)
-                distance_task = determine_flown_task_distance(leg, flight.b_records[i], competition_day)
 
                 difference_indicators = {'height_difference': height_difference,
                                          'height': height,
                                          'distance': distance,
-                                         'distance_task': distance_task,
                                          'time_difference': time_difference,
                                          'time': date_obj,
                                          'phase': phase}
 
-                self.append_differences(difference_indicators, leg)
-
-    def save_phases(self, soaring_spot_info, flight):
-        file_name = settings.current_dir + "/debug_logs/phasesClassPhaseDebug.txt"
-        if flight.file_name == soaring_spot_info.file_names[0]:
-            text_file = open(file_name, "w")  # overwriting if exist
-        else:
-            text_file = open(file_name, "a")  # appending
-
-        text_file.write(flight.file_name + "\n\n")
-        text_file.write("phases.all:\n")
-        for entry in self.all:
-            text_file.write(entry['phase'] + '\t' + ss2hhmmss(entry['t_start']) + '\t'
-                            + ss2hhmmss(entry['t_end']) + '\t' + str(entry['i_start']) + '\t' + str(entry['i_end']) + "\n")
-        text_file.write("\n")
-
-        for leg in range(len(self.leg)):
-            text_file.write('leg' + str(leg) + "\n")
-            for entry in self.leg[leg]:
-                text_file.write(entry['phase'] + '\t' + ss2hhmmss(entry['t_start'])
-                                + '\t' + ss2hhmmss(entry['t_end']) + '\t' + str(entry['i_start']) + '\t' + str(entry['i_end']) + "\n")
-            text_file.write("\n")
-
-        text_file.write("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n")
-
-        text_file.close()
-
-    def save_point_stats(self, soaring_spot_info, flight):
-        file_name = settings.current_dir + "/debug_logs/phasesClassPointStatsDebug.txt"
-        if flight.file_name == soaring_spot_info.file_names[0]:
-            text_file = open(file_name, "w")  # overwriting if exist
-        else:
-            text_file = open(file_name, "a")  # appending
-
-        text_file.write(flight.file_name + "\n\n")
-        text_file.write("pointwise_all:\n")
-
-        for key in self.pointwise_all.iterkeys():
-            text_file.write(key + ":" + str(self.pointwise_all[key]) + "\n")
-
-        text_file.write("\n")
-        for leg in range(len(self.leg)):
-            text_file.write('leg' + str(leg) + "\n")
-            for key in self.pointwise_leg[leg].iterkeys():
-                text_file.write(key + ":" + str(self.pointwise_all[key]) + "\n")
-
-        text_file.write("\n")
-        text_file.write("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n")
-
-        text_file.close()
-
-    def save(self, soaring_spot_info, flight):
-        self.save_phases(soaring_spot_info, flight)
-        # self.save_point_stats(soaring_spot_info, flight)
-
-
-if __name__ == '__main__':
-    from main_pysoar import run
-    run()
+                self.append_differences(difference_indicators, leg+1)
 
 #############################  LICENSE  #####################################
 

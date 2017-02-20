@@ -1,6 +1,7 @@
 from mechanize import Browser
 from BeautifulSoup import BeautifulSoup
 from settingsClass import Settings
+from datetime import date
 settings = Settings()
 
 
@@ -60,7 +61,7 @@ def det_velocity(location_record1, location_record2, record_type1, record_type2)
     return dist/delta_t
 
 
-def det_lat_long(location_record, record_type):
+def det_lat_long(location_record, record_type, return_radians=True):
     from math import radians
 
     pnt_lat = 7
@@ -75,7 +76,10 @@ def det_lat_long(location_record, record_type):
         latitude_dms = location_record[tsk_lat:tsk_lat+8]
         longitude_dms = location_record[tsk_long:tsk_long+8]
 
-    return radians(dms2dd(latitude_dms)), radians(dms2dd(longitude_dms))
+    if return_radians:
+        return radians(dms2dd(latitude_dms)), radians(dms2dd(longitude_dms))
+    else:
+        return dms2dd(latitude_dms), dms2dd(longitude_dms)
 
 
 def determine_distance(location_record1, location_record2, record_type1, record_type2):
@@ -145,6 +149,24 @@ def determine_distance(location_record1, location_record2, record_type1, record_
     return dist
 
 
+def pygeodesy_determine_destination(location_record, record_type, bearing, distance):
+    from submodules.PyGeodesy.geodesy.ellipsoidalVincenty import LatLon
+
+    start_lat, start_lon = det_lat_long(location_record, record_type, return_radians=False)
+    start_latlon = LatLon(start_lat, start_lon)
+
+    return start_latlon.destination(distance, bearing)
+
+
+def pygeodesy_calculate_distance(location_record, record_type, pygeodesy_latlon):
+    from submodules.PyGeodesy.geodesy.ellipsoidalVincenty import LatLon
+
+    rec_lat, rec_lon = det_lat_long(location_record, record_type, return_radians=False)
+    rec_latlon = LatLon(rec_lat, rec_lon)
+
+    return rec_latlon.distanceTo(pygeodesy_latlon)
+
+
 def det_bearing(location_record1, location_record2, type1, type2):
     from math import sin, cos, atan2, radians, degrees, pi
 
@@ -204,6 +226,9 @@ def hhmmss2ss(time_string, utc_to_local):
 
 def ss2hhmmss(time_ss, colon=True):
 
+    if time_ss is None:
+        return None
+
     seconds = (time_ss % 3600) % 60
     minutes = ((time_ss % 3600) - seconds) / 60
     hours = (time_ss - (time_ss % 3600)) / 3600
@@ -244,10 +269,24 @@ def url_format_correct(url_string):
         return 'URL should start with http://www.soaringspot.com'
     elif url_string[-5::] != 'daily':
         return 'URL does not give daily results'
-    elif url_is_aat(url_string):
-        return 'AAT not yet implemented'
+    # elif url_is_aat(url_string):
+    #     return 'AAT not yet implemented'
     else:
         return 'URL correct'
+
+
+def go_bugform(url_entry, event):
+    import webbrowser
+
+    form_url = settings.debug_form_url
+    versionID = settings.pysoar_version_formID
+    urlID = settings.competition_url_formID
+    pysoar_version = settings.version
+
+    comp_url = url_entry.get()
+
+    complete_url = '%s?entry.%s=%s&entry.%s=%s' % (form_url, versionID, pysoar_version, urlID, comp_url)
+    webbrowser.open(complete_url)
 
 
 def print_array_debug(text_file, array_name, array):
@@ -275,10 +314,10 @@ def determine_flown_task_distance(_leg, b_record, competition_day):
 
     task_distance = 0
     for leg in range(_leg-1):
-        task_distance += competition_day.task_distances[leg]
+        task_distance += competition_day.task.distances[leg]
 
-    previous_tp = competition_day.task[_leg-1].LCU_line
-    next_tp = competition_day.task[_leg].LCU_line
+    previous_tp = competition_day.task.taskpoints[_leg-1].LCU_line
+    next_tp = competition_day.task.taskpoints[_leg].LCU_line
 
     bearing1 = det_bearing(previous_tp, next_tp, 'tsk', 'tsk')
     bearing2 = det_bearing(previous_tp, b_record, 'tsk', 'pnt')
@@ -295,35 +334,46 @@ def used_engine(flight, i):
         ENL_start_byte = flight.ENL_indices[0]
         ENL_end_byte = flight.ENL_indices[1]
 
-        ENL_value = int(flight.b_records[i][ENL_start_byte-1:ENL_end_byte])
+        ENL_value = int(flight.trace[i][ENL_start_byte-1:ENL_end_byte])
         if ENL_value < settings.ENL_value_threshold:
             return False
         else:
-            time_now = det_local_time(flight.b_records[i], 0)
+            time_now = det_local_time(flight.trace[i], 0)
             i -= 1
-            time = det_local_time(flight.b_records[i], 0)
+            time = det_local_time(flight.trace[i], 0)
             while time_now - time < settings.ENL_time_threshold:
 
-                ENL_value = int(flight.b_records[i][ENL_start_byte-1:ENL_end_byte])
+                ENL_value = int(flight.trace[i][ENL_start_byte-1:ENL_end_byte])
                 if ENL_value < settings.ENL_value_threshold:
                     return False
 
                 i -= 1
-                time = det_local_time(flight.b_records[i], 0)
+                time = det_local_time(flight.trace[i], 0)
 
             print "ENL land out at i=%s, t=%s" % (i, ss2hhmmss(time))
             print ENL_value
             return True
 
 
+def enl_value_exceeded(fix, enl_indices):
+    enl_value_threshold = 500
+    enl_value = int(fix[enl_indices[0] - 1:enl_indices[1]])
+    return enl_value > enl_value_threshold
+
+
+def enl_time_exceeded(enl_time):
+    enl_time_threshold = 30
+    return enl_time >= enl_time_threshold
+
+
 def determine_engine_start_i(flight, i):
 
-    time_last = det_local_time(flight.b_records[i], 0)
+    time_last = det_local_time(flight.trace[i], 0)
     i -= 1
-    time = det_local_time(flight.b_records[i], 0)
+    time = det_local_time(flight.trace[i], 0)
     while time_last - time < settings.ENL_time_threshold:
         i -= 1
-        time = det_local_time(flight.b_records[i], 0)
+        time = det_local_time(flight.trace[i], 0)
 
     return i
 
@@ -387,10 +437,15 @@ def interpolate_b_records(b_record1, b_record2):
     return b_records
 
 
-if __name__ == '__main__':
-    from main_pysoar import run
+def get_date(lcu_line):
+    date_raw = lcu_line[6:12]
 
-    run()
+    year = int(date_raw[4::])
+    year = 1900+year if year > 90 else 2000+year
+    month = int(date_raw[2:4])
+    day = int(date_raw[0:2])
+
+    return date(year, month, day)
 
 #############################  LICENSE  #####################################
 
