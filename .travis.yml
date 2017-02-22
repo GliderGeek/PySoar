@@ -1,6 +1,15 @@
 dist: trusty
 language: python
 
+addons:
+  apt:
+    packages:
+      - texlive
+      - texlive-latex-extra
+      - texlive-lang-english
+      - latex-xcolor
+      - texlive-science
+
 install:
   - pip install --upgrade pip setuptools wheel
   - pip install --only-binary=numpy,scipy numpy scipy
@@ -10,3 +19,4 @@ script:
   - python PySoar/main_pysoar.py http://www.soaringspot.com/en/sallandse-tweedaagse-2014/results/club/task-1-on-2014-06-21/daily
   - sha512sum -c ci/Analysis_PySoar.xls.sha512
   - pyinstaller -F PySoar/main_pysoar.py 
+  - cd  docs/manual/EN/ && pdflatex PySoar-manual.tex && cd ../../../
