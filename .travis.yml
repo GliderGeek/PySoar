@@ -8,4 +8,4 @@ install:
 
 script:
   - python PySoar/main_pysoar.py http://www.soaringspot.com/en/sallandse-tweedaagse-2014/results/club/task-1-on-2014-06-21/daily
-  - sha512sum example_analysis.xls PySoar/Analysis_PySoar.xls
+  - sha512sum -c ci/Analysis_PySoar.xls.sha512
