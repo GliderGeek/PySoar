@@ -1,0 +1,17 @@
+dist: trusty
+language: python
+
+addons:
+  apt:
+    packages:
+      - python-xlwt
+      - python-mechanize
+      - python-beautifulsoup
+
+install:
+  - pip install --upgrade pip setuptools wheel
+  - pip install --only-binary=numpy,scipy numpy scipy
+
+script:
+  - python PySoar/main_pysoar.py http://www.soaringspot.com/en/sallandse-tweedaagse-2014/results/club/task-1-on-2014-06-21/daily
+  - md5sum example_analysis.xls PySoar/Analysis_PySoar.xls 
