@@ -11,7 +11,6 @@ settings = Settings()
 class SoaringSpotImport(object):
 
     def __init__(self, url, download_progress):
-        # combine parameters in dictionary?
         self.url_page = ""
         self.competition = ""
         self.plane_class = ""
