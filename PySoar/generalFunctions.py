@@ -4,6 +4,13 @@ from settingsClass import Settings
 from datetime import date
 settings = Settings()
 
+import sys
+import os
+import __main__
+main_cwd = os.path.dirname(__main__.__file__)
+geodesy_path = main_cwd + "/" + "submodules/PyGeodesy/geodesy"
+sys.path.append(geodesy_path)
+
 
 def det_local_time(b_record, utc_to_local):
     return hhmmss2ss(b_record[1:3] + ':' + b_record[3:5] + ':' + b_record[5:7], utc_to_local)
@@ -150,7 +157,7 @@ def determine_distance(location_record1, location_record2, record_type1, record_
 
 
 def pygeodesy_determine_destination(location_record, record_type, bearing, distance):
-    from submodules.PyGeodesy.geodesy.ellipsoidalVincenty import LatLon
+    from ellipsoidalVincenty import LatLon
 
     start_lat, start_lon = det_lat_long(location_record, record_type, return_radians=False)
     start_latlon = LatLon(start_lat, start_lon)
@@ -159,7 +166,7 @@ def pygeodesy_determine_destination(location_record, record_type, bearing, dista
 
 
 def pygeodesy_calculate_distance(location_record, record_type, pygeodesy_latlon):
-    from submodules.PyGeodesy.geodesy.ellipsoidalVincenty import LatLon
+    from ellipsoidalVincenty import LatLon
 
     rec_lat, rec_lon = det_lat_long(location_record, record_type, return_radians=False)
     rec_latlon = LatLon(rec_lat, rec_lon)
