@@ -42,6 +42,8 @@ class Flight(object):
         f.close()
 
         for line in full_file:
+            if len(line) > 76:
+              continue
 
             if line.startswith('B'):
 
