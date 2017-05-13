@@ -1,4 +1,4 @@
-from generalFunctions import det_local_time, determine_distance, det_bearing, det_bearing_change, ss2hhmmss,\
+from generalFunctions import det_local_time, calculate_distance, det_bearing, det_bearing_change, ss2hhmmss,\
     det_height
 from settingsClass import Settings
 import datetime
@@ -164,7 +164,7 @@ class FlightPhases(object):
                             temp_bearing_change += bearing_change
                             temp_bearing_rate_avg = temp_bearing_change / (time-possible_cruise_t)
 
-                        cruise_distance = determine_distance(trace[possible_cruise_start-1], b_record,
+                        cruise_distance = calculate_distance(trace[possible_cruise_start - 1], b_record,
                                                              'pnt', 'pnt')
 
                         if cruise_distance > settings.thermal_threshold_distance and \
@@ -224,7 +224,7 @@ class FlightPhases(object):
                 height_difference = det_height(trace[i+1], trace_settings['gps_altitude']) -\
                                     det_height(trace[i], trace_settings['gps_altitude'])
                 height = det_height(trace[i], trace_settings['gps_altitude'])
-                distance = determine_distance(trace[i], trace[i+1], 'pnt', 'pnt')
+                distance = calculate_distance(trace[i], trace[i + 1], 'pnt', 'pnt')
                 time_difference = det_local_time(trace[i+1], 0) -\
                                   det_local_time(trace[i], 0)
                 time_secs = det_local_time(trace[i], 0)
