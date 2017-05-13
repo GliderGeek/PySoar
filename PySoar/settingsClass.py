@@ -72,11 +72,6 @@ class Settings(object):
                       "vario_gem", "v_glide_avg", "v_turn_avg", "s_glide_avg", "dh_cruise_avg", "LD_avg", "s_extra", "tsk_v",
                       "turn_percentage", "h_loss_turn"]
 
-    WGS84_mayor_axis = 6378137
-    WGS84_minor_axis = 6356752.3142
-    FAI_sphere_radius = 6371
-    distance_method = "WGS84 elipse"  # choose between 'FAI sphere' and 'WGS84 elipse'
-
     ENL_value_threshold = 500  # above which it is seen as engine noise
     ENL_time_threshold = 30  # seconds
 
