@@ -19,22 +19,34 @@ class ScoringStreplaImport(object):
 
         self.flights_downloaded = 0
 
-        self.baseUrl = "http://www.strepla.de/scs/Public/"
+        self.baseUrl = "http://www.soaringspot.com"
         self.file_urls = []
         self.file_names = []
         self.rankings = []
-        self.plane = []
+        self.strepla = False
 
-        self.load(url)
+        self.set_source(url)
+
+        if (self.strepla):
+            self.load_scs(url)
+        else:
+            self.load(url)
+            
         self.download_flights(download_progress)
 
-        
+    def set_source(self,url):
+        if ( 'strepla' in url):
+            self.strepla = True
+            self.baseUrl = "http://www.strepla.de/scs/Public/"
+            self.plane = []
+    
     def download_flights(self, download_progress):
 
         for index in range(len(self.file_urls)):
             while not os.path.exists(self.igc_directory + "/" + self.file_names[index]):
                 self.download_flight(index)
-                self.convert_task_scs(index)
+                if (self.strepla):
+                    self.convert_task_scs(index)
                 time.sleep(0.1)
                 self.flights_downloaded += 1
             time.sleep(0.1)
@@ -129,7 +141,7 @@ class ScoringStreplaImport(object):
             f.write("%s\n" % item)
         f.close()    
         
-    def load(self, url_input):
+    def load_scs(self, url_input):
 
         self.url_page = url_input
         print(self.url_page)
@@ -165,3 +177,41 @@ class ScoringStreplaImport(object):
         
         #print(self.file_urls.append)    
         print "Analyzing " + self.competition + ", " + self.plane_class + " class " + self.date
+
+
+    def load(self, url_input):
+
+        self.url_page = url_input
+
+        self.competition = self.url_page.split('/')[4]
+        self.plane_class = self.url_page.split('/')[6]
+        date_us = self.url_page.split('/')[7][-10::]
+        self.date = date_us[-2::] + '-' + date_us[5:7] + '-' + date_us[0:4]
+
+        # Get entire html site
+        mech = Browser()
+        mech.set_handle_robots(False)
+        page = mech.open(self.url_page)
+        html = page.read()
+        soup = BeautifulSoup(html)
+        table = soup.find("table")
+
+        # Get file URLs, rankings and file names
+        for row in table.findAll('tr')[1:]:
+            if row.findAll('td')[0].text != "DNS" and\
+               row.findAll('td')[0].text != "DNF" and\
+                row.findAll('td')[0].text != "HC":
+                self.rankings.append(int(row.findAll('td')[0].text[0:-1]))
+                for link in row.findAll('a'):
+                    if link.get('href').startswith("http://"):
+                        self.file_urls.append(link.get('href'))
+                    elif link.get('href').split('/')[2] == "download-contest-flight":
+                        self.file_urls.append(self.baseUrl + link.get('href'))
+                    self.file_names.append(link.text + '.igc')
+
+        print "Analyzing " + self.competition + ", " + self.plane_class + " class " + self.date
+
+        self.igc_directory = settings.current_dir + '/bin/' + self.competition + '/' + self.plane_class + '/' + self.date + '/'
+
+        if not os.path.exists(self.igc_directory):
+            os.makedirs(self.igc_directory)    
