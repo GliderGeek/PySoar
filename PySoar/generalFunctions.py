@@ -2,6 +2,7 @@ from mechanize import Browser
 from BeautifulSoup import BeautifulSoup
 from settingsClass import Settings
 from datetime import date
+import pygeodesy
 settings = Settings()
 
 
@@ -150,7 +151,7 @@ def determine_distance(location_record1, location_record2, record_type1, record_
 
 
 def pygeodesy_determine_destination(location_record, record_type, bearing, distance):
-    from submodules.PyGeodesy.geodesy.ellipsoidalVincenty import LatLon
+    from pygeodesy.ellipsoidalVincenty import LatLon
 
     start_lat, start_lon = det_lat_long(location_record, record_type, return_radians=False)
     start_latlon = LatLon(start_lat, start_lon)
@@ -159,7 +160,7 @@ def pygeodesy_determine_destination(location_record, record_type, bearing, dista
 
 
 def pygeodesy_calculate_distance(location_record, record_type, pygeodesy_latlon):
-    from submodules.PyGeodesy.geodesy.ellipsoidalVincenty import LatLon
+    from pygeodesy.ellipsoidalVincenty import LatLon
 
     rec_lat, rec_lon = det_lat_long(location_record, record_type, return_radians=False)
     rec_latlon = LatLon(rec_lat, rec_lon)
