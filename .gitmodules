@@ -1,3 +1,0 @@
-[submodule "PySoar/submodules/PyGeodesy"]
-	path = PySoar/submodules/PyGeodesy
-	url = https://github.com/GliderGeek/PyGeodesy

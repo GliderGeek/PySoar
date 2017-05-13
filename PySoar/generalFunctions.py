@@ -2,6 +2,10 @@ from mechanize import Browser
 from BeautifulSoup import BeautifulSoup
 from settingsClass import Settings
 from datetime import date
+from math import radians, degrees, sin, cos, asin, sqrt, atan2, pi, tan, isnan
+
+from pygeodesy.ellipsoidalVincenty import LatLon
+
 settings = Settings()
 
 
@@ -62,7 +66,6 @@ def det_velocity(location_record1, location_record2, record_type1, record_type2)
 
 
 def det_lat_long(location_record, record_type, return_radians=True):
-    from math import radians
 
     pnt_lat = 7
     pnt_long = 15
@@ -83,7 +86,6 @@ def det_lat_long(location_record, record_type, return_radians=True):
 
 
 def determine_distance(location_record1, location_record2, record_type1, record_type2):
-    from math import sin, cos, asin, sqrt, atan2, pi, copysign, atan, tan, isnan
 
     # in radians
     phi1, labda1 = det_lat_long(location_record1, record_type1)
@@ -150,8 +152,6 @@ def determine_distance(location_record1, location_record2, record_type1, record_
 
 
 def pygeodesy_determine_destination(location_record, record_type, bearing, distance):
-    from submodules.PyGeodesy.geodesy.ellipsoidalVincenty import LatLon
-
     start_lat, start_lon = det_lat_long(location_record, record_type, return_radians=False)
     start_latlon = LatLon(start_lat, start_lon)
 
@@ -159,8 +159,6 @@ def pygeodesy_determine_destination(location_record, record_type, bearing, dista
 
 
 def pygeodesy_calculate_distance(location_record, record_type, pygeodesy_latlon):
-    from submodules.PyGeodesy.geodesy.ellipsoidalVincenty import LatLon
-
     rec_lat, rec_lon = det_lat_long(location_record, record_type, return_radians=False)
     rec_latlon = LatLon(rec_lat, rec_lon)
 
@@ -168,7 +166,6 @@ def pygeodesy_calculate_distance(location_record, record_type, pygeodesy_latlon)
 
 
 def det_bearing(location_record1, location_record2, type1, type2):
-    from math import sin, cos, atan2, radians, degrees, pi
 
     latitude1, longitude1 = det_lat_long(location_record1, type1)
     latitude2, longitude2 = det_lat_long(location_record2, type2)
@@ -202,7 +199,6 @@ def det_bearing_change(bearing1, bearing2):
 
 
 def det_bearing_change_rad(bearing1, bearing2):
-    from math import pi
     # always return difference between -pi and +pi radians
     difference = bearing2 - bearing1
     if -pi < difference < pi:
@@ -310,7 +306,6 @@ def open_analysis_file():
 
 
 def determine_flown_task_distance(_leg, b_record, competition_day):
-    from math import cos, pi
 
     task_distance = 0
     for leg in range(_leg-1):
@@ -379,7 +374,6 @@ def determine_engine_start_i(flight, i):
 
 
 def det_average_bearing(bearing1, bearing2):
-    from math import atan2, sin, cos, pi
 
     sin_a = sin(bearing1 * pi / 180)
     sin_b = sin(bearing2 * pi / 180)
@@ -402,7 +396,6 @@ def create_b_record(time_s, lat_dd, lon_dd, altitude_baro, altitude_gps):
 
 
 def interpolate_b_records(b_record1, b_record2):
-    from math import pi
     b_records = [b_record1]
 
     time1 = det_local_time(b_record1, 0)
