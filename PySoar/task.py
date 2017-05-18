@@ -1,5 +1,5 @@
 from taskpoint import Taskpoint
-from generalFunctions import det_final_bearing, determine_distance, det_bearing, det_bearing_change, \
+from generalFunctions import det_final_bearing, calculate_distance, det_bearing, det_bearing_change, \
     interpolate_b_records, det_local_time
 
 
@@ -83,7 +83,7 @@ class Task(object):
         elif moved_point == "both_end":
             moved = end
             other = begin
-            original_distance = determine_distance(begin.LCU_line, end.LCU_line, 'tsk', 'tsk')
+            original_distance = calculate_distance(begin.LCU_line, end.LCU_line, 'tsk', 'tsk')
             distance_moved_current = begin.r_max if begin.angle_max == 180 else begin.r_min
             angle_reduction = abs(acos((distance_moved_current ** 2 - distance ** 2 - original_distance ** 2) / (-2 * distance * original_distance))) * 180 / pi
         else:

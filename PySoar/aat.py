@@ -1,6 +1,13 @@
 from task import Task
-from generalFunctions import determine_distance, pygeodesy_determine_destination, det_bearing,\
-    pygeodesy_calculate_distance, det_time_difference, enl_time_exceeded, enl_value_exceeded
+from generalFunctions import calculate_distance
+from generalFunctions import determine_destination
+from generalFunctions import det_bearing
+from generalFunctions import det_time_difference
+from generalFunctions import enl_time_exceeded
+from generalFunctions import enl_value_exceeded
+from generalFunctions import det_lat_long
+
+from pygeodesy.ellipsoidalVincenty import LatLon
 
 
 class AAT(Task):
@@ -19,7 +26,7 @@ class AAT(Task):
             begin = self.taskpoints[leg]
             end = self.taskpoints[leg + 1]  # next is built in name
 
-            distance = determine_distance(begin.LCU_line, end.LCU_line, 'tsk', 'tsk')
+            distance = calculate_distance(begin.LCU_line, end.LCU_line, 'tsk', 'tsk')
             self.nominal_distances.append(distance)
 
             # unfortunately calculating the minimum and maximum distances seem to be a separate optimization problem
@@ -182,11 +189,11 @@ class AAT(Task):
         # by using LatLon objects instead of records, the switch case can be reduced
         # since pnt are now the same as tsk records
         if leg == 0:  # take start-point of task
-            distance = determine_distance(self.taskpoints[0].LCU_line, end_tp_fix, 'tsk', 'pnt')
+            distance = calculate_distance(self.taskpoints[0].LCU_line, end_tp_fix, 'tsk', 'pnt')
         elif leg == self.no_legs - 1:  # take finish-point of task
-            distance = determine_distance(start_tp_fix, self.taskpoints[-1].LCU_line, 'pnt', 'tsk')
+            distance = calculate_distance(start_tp_fix, self.taskpoints[-1].LCU_line, 'pnt', 'tsk')
         else:
-            distance = determine_distance(start_tp_fix, end_tp_fix, 'pnt', 'pnt')
+            distance = calculate_distance(start_tp_fix, end_tp_fix, 'pnt', 'pnt')
 
         return distance
 
@@ -198,29 +205,42 @@ class AAT(Task):
             tp1 = self.taskpoints[leg + 1]
 
             bearing = det_bearing(tp1.LCU_line, outlanding_fix, 'tsk', 'pnt')
-            closest_area_point = pygeodesy_determine_destination(tp1.LCU_line, 'tsk', bearing,
-                                                                 tp1.r_max)
+            closest_area_point = determine_destination(tp1.LCU_line, 'tsk', bearing,
+                                                       tp1.r_max)
 
-            distance = pygeodesy_calculate_distance(self.taskpoints[0].LCU_line, 'tsk',
-                                                    closest_area_point)
-            distance -= pygeodesy_calculate_distance(outlanding_fix, 'pnt', closest_area_point)
+            lat, lon = det_lat_long(self.taskpoints[0].LCU_line, 'tsk', return_radians=False)
+            start_latlon = LatLon(lat, lon)
+
+            lat, lon = det_lat_long(outlanding_fix, 'pnt', return_radians=False)
+            outlanding_latlon = LatLon(lat, lon)
+
+            distance = start_latlon.distanceTo(closest_area_point)
+            distance -= outlanding_latlon.distanceTo(closest_area_point)
 
         elif leg == self.no_legs - 1:  # take finish-point of task
-            distance = determine_distance(start_tp_fix, self.taskpoints[leg + 1].LCU_line, 'pnt', 'tsk')
-            distance -= determine_distance(self.taskpoints[leg + 1].LCU_line, outlanding_fix, 'tsk', 'pnt')
+            distance = calculate_distance(start_tp_fix, self.taskpoints[leg + 1].LCU_line, 'pnt', 'tsk')
+            distance -= calculate_distance(self.taskpoints[leg + 1].LCU_line, outlanding_fix, 'tsk', 'pnt')
         else:
             tp1 = self.taskpoints[leg + 1]
 
             bearing = det_bearing(tp1.LCU_line, outlanding_fix, 'tsk', 'pnt')
-            closest_area_point = pygeodesy_determine_destination(tp1.LCU_line, 'tsk', bearing,
-                                                                 tp1.r_max)
+            closest_area_point = determine_destination(tp1.LCU_line, 'tsk', bearing,
+                                                       tp1.r_max)
+
+            lat, lon = det_lat_long(self.taskpoints[0].LCU_line, 'tsk', return_radians=False)
+            start_latlon = LatLon(lat, lon)
+
+            lat, lon = det_lat_long(start_tp_fix, 'pnt', return_radians=False)
+            startTp_latlon = LatLon(lat, lon)
+
+            lat, lon = det_lat_long(outlanding_fix, 'pnt', return_radians=False)
+            outlanding_latlon = LatLon(lat, lon)
 
             if leg == 0:
-                distance = pygeodesy_calculate_distance(self.taskpoints[0].LCU_line, 'tsk',
-                                                        closest_area_point)
+                distance = start_latlon.distanceTo(closest_area_point)
             else:
-                distance = pygeodesy_calculate_distance(start_tp_fix, 'pnt', closest_area_point)
-            distance -= pygeodesy_calculate_distance(outlanding_fix, 'pnt', closest_area_point)
+                distance = startTp_latlon.distanceTo(closest_area_point)
+            distance -= outlanding_latlon.distanceTo(closest_area_point)
 
         return distance
 
@@ -352,16 +372,16 @@ class AAT(Task):
         for fix1_index, fix1 in enumerate(trip.fixes[:-1]):
             if fix1_index == 0:
                 fix2 = trip.fixes[fix1_index + 1]
-                distance = determine_distance(self.taskpoints[0].LCU_line, fix2, 'tsk', 'pnt')
+                distance = calculate_distance(self.taskpoints[0].LCU_line, fix2, 'tsk', 'pnt')
                 if self.taskpoints[0].distance_correction == 'shorten_legs':
                     distance -= self.taskpoints[0].r_max
             elif fix1_index == self.no_legs-1:
-                distance = determine_distance(fix1, self.taskpoints[-1].LCU_line, 'pnt', 'tsk')
+                distance = calculate_distance(fix1, self.taskpoints[-1].LCU_line, 'pnt', 'tsk')
                 if self.taskpoints[-1].distance_correction == 'shorten_legs':
                     distance -= self.taskpoints[-1].r_max
             else:
                 fix2 = trip.fixes[fix1_index + 1]
-                distance = determine_distance(fix1, fix2, 'pnt', 'pnt')
+                distance = calculate_distance(fix1, fix2, 'pnt', 'pnt')
 
             trip.distances.append(distance)
 

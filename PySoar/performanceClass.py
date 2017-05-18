@@ -1,4 +1,4 @@
-from generalFunctions import det_height, determine_distance, det_local_time
+from generalFunctions import det_height, calculate_distance, det_local_time
 
 
 class Performance(object):
@@ -234,7 +234,7 @@ class Performance(object):
                 if entry["phase"] == "thermal":
                     i_st = entry["i_start"]
                     i_end = entry["i_end"]
-                    thermal_drift += determine_distance(trace[i_st], trace[i_end], 'pnt', 'pnt')
+                    thermal_drift += calculate_distance(trace[i_st], trace[i_end], 'pnt', 'pnt')
 
             # write to total performance values
             thermal_altitude_gain_tot += thermal_altitude_gain

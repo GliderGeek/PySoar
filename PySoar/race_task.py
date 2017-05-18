@@ -1,5 +1,5 @@
 from task import Task
-from generalFunctions import determine_distance, det_local_time, enl_value_exceeded, enl_time_exceeded, \
+from generalFunctions import calculate_distance, det_local_time, enl_value_exceeded, enl_time_exceeded, \
     det_time_difference
 
 
@@ -17,7 +17,7 @@ class RaceTask(Task):
 
             begin = self.taskpoints[leg]
             end = self.taskpoints[leg+1]  # next is built in name
-            distance = determine_distance(begin.LCU_line, end.LCU_line, 'tsk', 'tsk')
+            distance = calculate_distance(begin.LCU_line, end.LCU_line, 'tsk', 'tsk')
 
             if begin.distance_correction is "shorten_legs":
                 if end.distance_correction is "shorten_legs":
@@ -151,8 +151,8 @@ class RaceTask(Task):
         task_point = self.taskpoints[outlanding_leg + 1].LCU_line
 
         # outlanding distance = distance between tps minus distance from next tp to outlanding
-        outlanding_dist = determine_distance(task_pointM1, task_point, 'tsk', 'tsk')
-        outlanding_dist -= determine_distance(task_point, fix, 'tsk', 'pnt')
+        outlanding_dist = calculate_distance(task_pointM1, task_point, 'tsk', 'tsk')
+        outlanding_dist -= calculate_distance(task_point, fix, 'tsk', 'pnt')
 
         if outlanding_dist > 0:
             return outlanding_dist

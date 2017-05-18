@@ -1,6 +1,7 @@
 from math import pi
 
 from generalFunctions import det_average_bearing
+from generalFunctions import calculate_distance, det_bearing, det_bearing_change
 
 
 class Taskpoint(object):  # startpoint, turnpoints and finish
@@ -93,9 +94,8 @@ class Taskpoint(object):  # startpoint, turnpoints and finish
                 self.angle_min = int(component.split("=")[1])
 
     def inside_sector(self, fix):
-        from generalFunctions import determine_distance, det_bearing, det_bearing_change
 
-        distance = determine_distance(fix, self.LCU_line, 'pnt', 'tsk')
+        distance = calculate_distance(fix, self.LCU_line, 'pnt', 'tsk')
         bearing = det_bearing(self.LCU_line, fix, 'tsk', 'pnt')
         angle_wrt_orientation = abs(det_bearing_change(self.orientation_angle, bearing))
 
@@ -111,10 +111,9 @@ class Taskpoint(object):  # startpoint, turnpoints and finish
         return not self.inside_sector(fix)
 
     def crossed_line(self, fix1, fix2):
-        from generalFunctions import determine_distance, det_bearing, det_bearing_change
 
-        distance1 = determine_distance(fix1, self.LCU_line, 'pnt', 'tsk')
-        distance2 = determine_distance(fix2, self.LCU_line, 'pnt', 'tsk')
+        distance1 = calculate_distance(fix1, self.LCU_line, 'pnt', 'tsk')
+        distance2 = calculate_distance(fix2, self.LCU_line, 'pnt', 'tsk')
 
         if not self.line:
             print 'Calling crossed_line on a sector!'
