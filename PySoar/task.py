@@ -105,20 +105,20 @@ class Task(object):
         if start.line:
             return start.crossed_line(fix1, fix2)
         else:
-            return start.inside_sector(fix1) and not start.inside_sector(fix2)
+            return start.inside_sector(fix1) and start.outside_sector(fix2)
 
     def finished(self, fix1, fix2):
         finish = self.taskpoints[-1]
         if finish.line:
             return finish.crossed_line(fix1, fix2)
         else:
-            return not finish.inside_sector(fix1) and finish.inside_sector(fix2)
+            return finish.outside_sector(fix1) and finish.inside_sector(fix2)
 
     def refine_start(self, trip, trace):
         start_i = trace.index(trip.fixes[0])
         fixes = interpolate_b_records(trace[start_i-1], trace[start_i])
 
         for i, fix in enumerate(fixes[:-1]):
-            if self.taskpoints[0].taskpoint_completed(fixes[i], fixes[i+1]):
+            if self.started(fixes[i], fixes[i + 1]):
                 trip.refined_start_time = det_local_time(fixes[i], 0)
                 break

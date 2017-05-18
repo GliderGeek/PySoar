@@ -93,60 +93,6 @@ class Taskpoint(object):  # startpoint, turnpoints and finish
             elif component.startswith("A2="):
                 self.angle_min = int(component.split("=")[1])
 
-    def taskpoint_completed(self, brecord1, brecord2):
-
-        distance1 = calculate_distance(brecord1, self.LCU_line, 'pnt', 'tsk')
-        distance2 = calculate_distance(brecord2, self.LCU_line, 'pnt', 'tsk')
-
-        if self.line:
-            if distance2 > self.r_max or distance1 > self.r_max:
-                return False
-            else:  # both fixes within circle
-                bearing1 = det_bearing(self.LCU_line, brecord1, 'tsk', 'pnt')
-                bearing2 = det_bearing(self.LCU_line, brecord2, 'tsk', 'pnt')
-
-                angle_wrt_orientation1 = abs(det_bearing_change(self.orientation_angle, bearing1))
-                angle_wrt_orientation2 = abs(det_bearing_change(self.orientation_angle, bearing2))
-
-                if self.sector_orientation == "next":  # start line
-                    return angle_wrt_orientation1 < 90 < angle_wrt_orientation2
-                elif self.sector_orientation == "previous":  # finish line
-                    return angle_wrt_orientation2 < 90 < angle_wrt_orientation1
-                else:
-                    print "A line with this orientation is not implemented!"
-        else:  # general sector
-            bearing1 = det_bearing(self.LCU_line, brecord1, 'tsk', 'pnt')
-            angle_wrt_orientation1 = abs(det_bearing_change(self.orientation_angle, bearing1))
-            bearing2 = det_bearing(self.LCU_line, brecord2, 'tsk', 'pnt')
-            angle_wrt_orientation2 = abs(det_bearing_change(self.orientation_angle, bearing2))
-
-            if self.sector_orientation == "next":
-                if self.r_min is not None:
-                    if self.r_min < distance1 < self.r_max and angle_wrt_orientation1 < self.angle_max:
-                        return (not self.r_min < distance2 < self.r_max) or angle_wrt_orientation2 > self.angle_max
-                    elif distance1 < self.r_min and angle_wrt_orientation1 < self.angle_min:
-                        return distance2 > self.r_min or angle_wrt_orientation2 > self.angle_max
-                    else:
-                        return False
-                else:  # self.r_min is None
-                    if distance1 < self.r_max and angle_wrt_orientation1 < self.angle_max:
-                        return distance2 > self.r_min or angle_wrt_orientation2 > self.angle_max
-                    else:
-                        return False
-
-            else:  # normal turnpoint or finish
-                if self.r_min is not None:
-                    if distance2 > self.r_max:
-                        return False
-                    elif self.r_min < distance2 < self.r_max:
-                        return angle_wrt_orientation2 < self.angle_max
-                    else:  # distance_2 < self.r_min
-                        return angle_wrt_orientation2 < self.angle_min
-                elif distance2 > self.r_max:
-                    return False
-                else:  # distance2 <= self.r_max
-                    return angle_wrt_orientation2 < self.angle_max
-
     def inside_sector(self, fix):
 
         distance = calculate_distance(fix, self.LCU_line, 'pnt', 'tsk')
@@ -160,6 +106,9 @@ class Taskpoint(object):  # startpoint, turnpoints and finish
             return self.r_min < distance < self.r_max and angle_wrt_orientation < self.angle_max
         else:  # self.r_min is None
             return distance < self.r_max and (pi - angle_wrt_orientation) < self.angle_max
+
+    def outside_sector(self, fix):
+        return not self.inside_sector(fix)
 
     def crossed_line(self, fix1, fix2):
 
