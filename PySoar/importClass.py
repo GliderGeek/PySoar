@@ -11,11 +11,13 @@ settings = Settings()
 class SoaringSpotImport(object):
 
     def __init__(self, url, download_progress):
-        self.url_page = ""
-        self.competition = ""
-        self.plane_class = ""
-        self.date = ""
-        self.igc_directory = ""
+        self.url = url
+
+        self.competition, self.plane_class, self.date = self._get_competition_info(self.url)
+
+        # todo: check with windows version whether this can be simplified to os.path.join()
+        self.igc_directory = (settings.current_dir + '/bin/' + self.competition + '/' + self.plane_class + '/' +
+                              self.date + '/')
 
         self.flights_downloaded = 0
 
@@ -24,10 +26,16 @@ class SoaringSpotImport(object):
         self.file_names = []
         self.rankings = []
 
-        self.load(url)
+        self.load_website()
+
+        # make directory
+        if not os.path.exists(self.igc_directory):
+            os.makedirs(self.igc_directory)
+
         self.download_flights(download_progress)
 
     def download_flights(self, download_progress):
+
         for index in range(len(self.file_urls)):
             while not os.path.exists(self.igc_directory + "/" + self.file_names[index]):
                 self.download_flight(index)
@@ -42,28 +50,19 @@ class SoaringSpotImport(object):
         save_location = self.igc_directory + self.file_names[index]
         urllib.URLopener().retrieve(url_location, save_location)
 
-    def load(self, url_input):
-
-        self.url_page = url_input
-
-        self.competition = self.url_page.split('/')[4]
-        self.plane_class = self.url_page.split('/')[6]
-        date_us = self.url_page.split('/')[7][-10::]
-        self.date = date_us[-2::] + '-' + date_us[5:7] + '-' + date_us[0:4]
+    def load_website(self):
 
         # Get entire html site
         mech = Browser()
         mech.set_handle_robots(False)
-        page = mech.open(self.url_page)
+        page = mech.open(self.url)
         html = page.read()
         soup = BeautifulSoup(html)
         table = soup.find("table")
 
         # Get file URLs, rankings and file names
         for row in table.findAll('tr')[1:]:
-            if row.findAll('td')[0].text != "DNS" and\
-               row.findAll('td')[0].text != "DNF" and\
-                row.findAll('td')[0].text != "HC":
+            if row.findAll('td')[0].text not in ["DNS", "DNF", "HC"]:
                 self.rankings.append(int(row.findAll('td')[0].text[0:-1]))
                 for link in row.findAll('a'):
                     if link.get('href').startswith("http://"):
@@ -72,15 +71,18 @@ class SoaringSpotImport(object):
                         self.file_urls.append(self.baseUrl + link.get('href'))
                     self.file_names.append(link.text + '.igc')
 
-        print "Analyzing " + self.competition + ", " + self.plane_class + " class " + self.date
+        print "Analyzing %s, %s %s" % (self.competition, self.plane_class, self.date)
 
-        self.igc_directory = settings.current_dir + '/bin/' + self.competition + '/' + self.plane_class + '/' + self.date + '/'
+    @staticmethod
+    def _get_competition_info(url):
+        competition = url.split('/')[4]
+        plane_class = url.split('/')[6]
+        date_us = url.split('/')[7][-10::]
+        date = date_us[-2::] + '-' + date_us[5:7] + '-' + date_us[0:4]
 
-        if not os.path.exists(self.igc_directory):
-            os.makedirs(self.igc_directory)
+        return competition, plane_class, date
 
-        # if not os.path.exists(settings.current_dir + '/debug_logs'):
-        #     os.makedirs(settings.current_dir + '/debug_logs')
+
 
 #############################  LICENSE  #####################################
 
