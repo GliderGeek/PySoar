@@ -4,6 +4,7 @@ from BeautifulSoup import BeautifulSoup
 import urllib
 from settingsClass import Settings
 import time
+from importClass_scs import set_source, load_scs, convert_task_scs
 
 settings = Settings()
 
@@ -23,14 +24,23 @@ class SoaringSpotImport(object):
         self.file_urls = []
         self.file_names = []
         self.rankings = []
+        
+        self.strepla = False
+        set_source(self,url)
 
-        self.load(url)
+        if (self.strepla):
+            load_scs(self,url)
+        else:
+            self.load(url)
+
         self.download_flights(download_progress)
 
     def download_flights(self, download_progress):
         for index in range(len(self.file_urls)):
             while not os.path.exists(self.igc_directory + "/" + self.file_names[index]):
                 self.download_flight(index)
+                if (self.strepla):
+                    convert_task_scs(self,index)
                 time.sleep(0.1)
             self.flights_downloaded += 1
             if download_progress is not None:
