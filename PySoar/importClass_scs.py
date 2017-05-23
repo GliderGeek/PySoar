@@ -8,7 +8,7 @@ import time
 
 settings = Settings()
 
-class ScoringStreplaImport(object):
+class SoaringSpotImport(object):
 
     def __init__(self, url, download_progress):
         self.url_page = ""
@@ -48,8 +48,6 @@ class ScoringStreplaImport(object):
                 if (self.strepla):
                     self.convert_task_scs(index)
                 time.sleep(0.1)
-                self.flights_downloaded += 1
-            time.sleep(0.1)
             self.flights_downloaded += 1
             if download_progress is not None:
                 download_progress.configure(text='Downloaded: %s/%s' % (self.flights_downloaded, len(self.file_names)))
@@ -144,7 +142,6 @@ class ScoringStreplaImport(object):
     def load_scs(self, url_input):
 
         self.url_page = url_input
-        print(self.url_page)
 
         # Get entire html site
         mech = Browser()
@@ -163,14 +160,13 @@ class ScoringStreplaImport(object):
         num_comp=len(table.findAll('tr'))
         for i in range(num_comp-1):
             comp=table.findAll('tr')[i+1]
-            self.rankings.append(int(comp.findAll('span')[0].text))
-            self.file_urls.append(self.baseUrl + comp.findAll('a')[0].get('href'))
-            self.file_names.append((comp.findAll('span')[1].text) + '.igc')
-            self.plane.append((comp.findAll('span')[3].text))
+            if ((comp.findAll('span')[0].text) != 'dnf'):
+                self.rankings.append(int(comp.findAll('span')[0].text))
+                self.file_urls.append(self.baseUrl + comp.findAll('a')[0].get('href'))
+                self.file_names.append((comp.findAll('span')[1].text) + '.igc')
+                self.plane.append((comp.findAll('span')[3].text))
 
-
-        base_path="/home/jan/Schreibtisch/PySoar/test_download/"    
-        self.igc_directory = base_path +  self.competition + '/' + self.plane_class + '/' + self.date + '/'
+        self.igc_directory = settings.current_dir + '/bin/' + self.competition + '/' + self.plane_class + '/' + self.date + '/'
 
         if not os.path.exists(self.igc_directory):
             os.makedirs(self.igc_directory)
