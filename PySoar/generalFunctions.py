@@ -266,9 +266,9 @@ def task_url_from_daily(daily_url):
 
 
 def url_format_correct(url_string):
-    if url_string[0:26] != "http://www.soaringspot.com":
+    if (url_string[0:26] != "http://www.soaringspot.com" and url_string[0:21] != "http://www.strepla.de") :        
         return 'URL should start with http://www.soaringspot.com'
-    elif url_string[-5::] != 'daily':
+    elif (url_string[-5::] != 'daily' and url_string[33:41] != 'scoreDay'): 
         return 'URL does not give daily results'
     # elif url_is_aat(url_string):
     #     return 'AAT not yet implemented'

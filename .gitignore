@@ -16,3 +16,4 @@ hidden
 PySoar/standalone/*.zip
 PySoar/standalone/windows
 PySoar-manual.dvi
+PySoar/*.pyc
