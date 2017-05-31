@@ -1,5 +1,5 @@
 from taskpoint import Taskpoint
-from generalFunctions import det_final_bearing, determine_distance, det_bearing, det_bearing_change, \
+from generalFunctions import det_final_bearing, calculate_distance, det_bearing, det_bearing_change, \
     interpolate_b_records, det_local_time
 
 
@@ -83,7 +83,7 @@ class Task(object):
         elif moved_point == "both_end":
             moved = end
             other = begin
-            original_distance = determine_distance(begin.LCU_line, end.LCU_line, 'tsk', 'tsk')
+            original_distance = calculate_distance(begin.LCU_line, end.LCU_line, 'tsk', 'tsk')
             distance_moved_current = begin.r_max if begin.angle_max == 180 else begin.r_min
             angle_reduction = abs(acos((distance_moved_current ** 2 - distance ** 2 - original_distance ** 2) / (-2 * distance * original_distance))) * 180 / pi
         else:
@@ -105,20 +105,20 @@ class Task(object):
         if start.line:
             return start.crossed_line(fix1, fix2)
         else:
-            return start.inside_sector(fix1) and not start.inside_sector(fix2)
+            return start.inside_sector(fix1) and start.outside_sector(fix2)
 
     def finished(self, fix1, fix2):
         finish = self.taskpoints[-1]
         if finish.line:
             return finish.crossed_line(fix1, fix2)
         else:
-            return not finish.inside_sector(fix1) and finish.inside_sector(fix2)
+            return finish.outside_sector(fix1) and finish.inside_sector(fix2)
 
     def refine_start(self, trip, trace):
         start_i = trace.index(trip.fixes[0])
         fixes = interpolate_b_records(trace[start_i-1], trace[start_i])
 
         for i, fix in enumerate(fixes[:-1]):
-            if self.taskpoints[0].taskpoint_completed(fixes[i], fixes[i+1]):
+            if self.started(fixes[i], fixes[i + 1]):
                 trip.refined_start_time = det_local_time(fixes[i], 0)
                 break

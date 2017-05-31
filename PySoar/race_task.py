@@ -1,5 +1,5 @@
 from task import Task
-from generalFunctions import determine_distance, det_local_time, enl_value_exceeded, enl_time_exceeded, \
+from generalFunctions import calculate_distance, det_local_time, enl_value_exceeded, enl_time_exceeded, \
     det_time_difference
 
 
@@ -17,7 +17,7 @@ class RaceTask(Task):
 
             begin = self.taskpoints[leg]
             end = self.taskpoints[leg+1]  # next is built in name
-            distance = determine_distance(begin.LCU_line, end.LCU_line, 'tsk', 'tsk')
+            distance = calculate_distance(begin.LCU_line, end.LCU_line, 'tsk', 'tsk')
 
             if begin.distance_correction is "shorten_legs":
                 if end.distance_correction is "shorten_legs":
@@ -89,7 +89,7 @@ class RaceTask(Task):
 
             start_time_buffer = 15
             if leg == -1 and t + start_time_buffer > self.start_opening and i > 0:
-                if self.taskpoints[0].taskpoint_completed(trace[i - 1], trace[i]):
+                if self.started(trace[i - 1], trace[i]):
                     start_fix = trace[i]
                     trip.fixes.append(start_fix)
                     trip.start_fixes.append(start_fix)
@@ -98,18 +98,18 @@ class RaceTask(Task):
                     enl_first_fix = None
                     enl_registered = False
             elif leg == 0:
-                if self.taskpoints[0].taskpoint_completed(trace[i - 1], trace[i]):  # restart
+                if self.started(trace[i - 1], trace[i]):  # restart
                     start_fix = trace[i]
                     trip.fixes[0] = start_fix
                     trip.start_fixes.append(start_fix)
                     enl_time = 0
                     enl_first_fix = None
                     enl_registered = False
-                if self.taskpoints[leg + 1].taskpoint_completed(trace[i - 1], trace[i]) and not enl_registered:
+                if self.finished_leg(leg, trace[i - 1], trace[i]) and not enl_registered:
                     trip.fixes.append(trace[i])
                     leg += 1
             elif 0 < leg < self.no_legs:
-                if self.taskpoints[leg + 1].taskpoint_completed(trace[i - 1], trace[i]) and not enl_registered:
+                if self.finished_leg(leg, trace[i - 1], trace[i]) and not enl_registered:
                     trip.fixes.append(trace[i])
                     leg += 1
 
@@ -151,8 +151,8 @@ class RaceTask(Task):
         task_point = self.taskpoints[outlanding_leg + 1].LCU_line
 
         # outlanding distance = distance between tps minus distance from next tp to outlanding
-        outlanding_dist = determine_distance(task_pointM1, task_point, 'tsk', 'tsk')
-        outlanding_dist -= determine_distance(task_point, fix, 'tsk', 'pnt')
+        outlanding_dist = calculate_distance(task_pointM1, task_point, 'tsk', 'tsk')
+        outlanding_dist -= calculate_distance(task_point, fix, 'tsk', 'pnt')
 
         if outlanding_dist > 0:
             return outlanding_dist
@@ -171,3 +171,12 @@ class RaceTask(Task):
     # maybe also idea for no_tps and no_legs?
     def total_distance(self):
         return sum(self.distances)
+
+    def finished_leg(self, leg, fix1, fix2):
+        """Determines whether leg is finished."""
+
+        next_waypoint = self.taskpoints[leg + 1]
+        if next_waypoint.line:
+            return next_waypoint.crossed_line(fix1, fix2)
+        else:
+            return next_waypoint.outside_sector(fix1) and next_waypoint.inside_sector(fix2)
