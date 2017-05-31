@@ -112,9 +112,9 @@ def convert_task_scs(self,index):
                 tp_sector.append("LSEEYOU OZ="+str(i)+",Style=1,R1=10000m,A1=45,R2=500m,A2=180")
         elif  i == (len(tp_in)-2):
             tp_sector.append("LSEEYOU OZ="+str(i)+",Style=3,R1="+fc_radius+"m,A1=180,Reduce=1")       
-            tp_split  = point.split(':')
-            tp_seeyou.append("LCU::C"+ ((tp_split[2])[1:] + (tp_split[2])[0]) + (((tp_split[3])[1:-1])+(tp_split[3])[0]) +tp_split[1] )
-            i=i+1
+        tp_split  = point.split(':')
+  	tp_seeyou.append("LCU::C"+ ((tp_split[2])[1:] + (tp_split[2])[0]) + (((tp_split[3])[1:-1])+(tp_split[3])[0]) +tp_split[1] )
+        i=i+1
 
     # append sector definitions
     tp_seeyou.append(base)
