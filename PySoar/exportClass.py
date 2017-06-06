@@ -51,7 +51,7 @@ class ExcelExport(object):
     def __init__(self, settings, competition_day):
         self.file_name = settings.file_name
 
-        self.wb = xlwt.Workbook()  # initialize excel sheet
+        self.wb = xlwt.Workbook(encoding='latin-1')  # initialize excel sheet
         self.ws_all = self.wb.add_sheet('Entire Flight', cell_overwrite_ok=True)
         self.ws_legs = []
         for leg in range(competition_day.task.no_legs):
