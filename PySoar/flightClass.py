@@ -1,3 +1,5 @@
+import re
+
 from generalFunctions import hhmmss2ss, get_date, det_height
 from settingsClass import Settings
 from phasesClass import FlightPhases
@@ -116,6 +118,11 @@ class Flight(object):
         # extract date from fist lcu line
         if len(task_information['lcu_lines']) != 0:
             task_information['date'] = get_date(task_information['lcu_lines'][0])
+
+        # fix error in task definition: e.g.: LSEEYOU OZ=-1,Style=2SpeedStyle=0,R1=5000m,A1=180,Line=1
+        # SpeedStyle=# is removed, where # is a number
+        for line_index, line in enumerate(task_information['lseeyou_lines']):
+            task_information['lseeyou_lines'][line_index] = re.sub(r"SpeedStyle=\d{1}", "", line)
 
         # fix wrong style definition on start and finish points
         task_information['lseeyou_lines'][0] = task_information['lseeyou_lines'][0].replace('Style=1', 'Style=2')
