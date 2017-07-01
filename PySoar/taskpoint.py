@@ -103,7 +103,9 @@ class Taskpoint(object):  # startpoint, turnpoints and finish
             print 'Calling inside_sector on a line!'
             exit(1)
         elif self.r_min is not None:
-            return self.r_min < distance < self.r_max and angle_wrt_orientation < self.angle_max
+            inside_outer_sector = self.r_min < distance < self.r_max and angle_wrt_orientation < self.angle_max
+            inside_inner_sector = distance < self.r_min and angle_wrt_orientation < self.angle_min
+            return inside_outer_sector or inside_inner_sector
         else:  # self.r_min is None
             return distance < self.r_max and (pi - angle_wrt_orientation) < self.angle_max
 
