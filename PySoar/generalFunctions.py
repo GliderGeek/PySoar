@@ -1,3 +1,7 @@
+import platform
+import os
+import subprocess
+
 from mechanize import Browser
 from BeautifulSoup import BeautifulSoup
 from settingsClass import Settings
@@ -239,9 +243,6 @@ def print_array_debug(text_file, array_name, array):
 
 
 def open_analysis_file():
-    import platform
-    import os
-    import subprocess
 
     if platform.system() == "Darwin":
         subprocess.call(["open", settings.file_name])

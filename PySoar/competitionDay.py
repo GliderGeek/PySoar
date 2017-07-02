@@ -1,6 +1,5 @@
 import copy
 import pandas as pd
-import json
 
 from performanceClass import Performance
 from generalFunctions import get_date
