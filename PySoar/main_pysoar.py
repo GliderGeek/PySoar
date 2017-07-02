@@ -57,12 +57,21 @@ def start_gui():
     root.mainloop()
 
 
+def print_help():
+    print('There are two options for running PySoar from the commandline:\n'
+          '1. `python main_python` for GUI\n'
+          '2. `python main_pysoar [url]` - where [url] is the daily competition url')
+
+
 if len(sys.argv) == 1:
     start_gui()
 elif len(sys.argv) == 2:
-    run(sys.argv[1])
+    if sys.argv[1] == '--help':
+        print_help()
+    else:
+        run(sys.argv[1], commandline_run=True)
 else:
-    exit(1, 'Incorrect number of sys.argv')
+    print_help()
 
 #############################  LICENSE  #####################################
 

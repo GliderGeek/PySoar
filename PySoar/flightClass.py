@@ -10,6 +10,9 @@ settings = Settings()
 
 
 class Flight(object):
+
+    df_categories = ['ranking', 'airplane', 'compID']
+
     def __init__(self, folder_path, file_name, ranking):
         self.file_name = file_name
         self.folder_path = folder_path
@@ -27,6 +30,18 @@ class Flight(object):
 
         self.phases = None
         self.performance = None
+
+    @property
+    def df_dict(self):
+
+        df_dict = {'ranking': self.ranking,
+                   'airplane': self.airplane,
+                   'compID': self.competition_id}
+
+        # check consistency with df_categories
+        assert sum(1 for key in df_dict if key not in self.df_categories) == 0
+
+        return df_dict
 
     def analyze(self, competition_day):
         print self.file_name

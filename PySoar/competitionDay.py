@@ -1,9 +1,13 @@
+import copy
+import pandas as pd
+import json
+
+from performanceClass import Performance
 from generalFunctions import get_date
 from settingsClass import Settings
 from race_task import RaceTask
 from aat import AAT
 from flightClass import Flight
-import copy
 
 settings = Settings()
 
@@ -17,6 +21,7 @@ class CompetitionDay(object):
         self.task = None
         self.utc_diff = None
         self.date = None
+        self.analyzed = False
 
         self.read_flights(soaring_spot_info)
         self.load_task_information()
@@ -26,6 +31,39 @@ class CompetitionDay(object):
             url_status.configure(text="Multiple starting points not implemented!", foreground='red')
             url_status.update()
             return
+
+    @property
+    def performance_dfs(self):
+        """This method return a list of dataframes. First entry is entire flight, remaining entries cover legs."""
+
+        if not self.analyzed:
+            raise Exception('Performance dataframe cannot be obtained, because flights have not yet been analyzed')
+
+        categories = []
+        categories.extend(Performance.df_categories)
+        categories.extend(Flight.df_categories)
+
+        # first dataframe contains stats over complete flight
+        dfs = [pd.DataFrame(columns=categories)]
+        for flight in self.flights:
+            performance_data = {}
+            performance_data.update(flight.performance.all)
+            performance_data.update(flight.df_dict)
+            dfs[-1] = dfs[-1].append(performance_data, ignore_index=True)
+
+        # remaining dataframes contain stats per leg
+        for leg in range(self.task.no_legs):
+            dfs.append(pd.DataFrame(columns=categories))
+            for flight in self.flights:
+
+                # only append when not outlanded
+                if leg < len(flight.performance.leg):
+                    performance_data = {}
+                    performance_data.update(flight.performance.leg[leg])
+                    performance_data.update(flight.df_dict)
+                    dfs[-1] = dfs[-1].append(performance_data, ignore_index=True)
+
+        return dfs
 
     def analyze_flights(self, soaring_spot_info, analysis_progress):
         flights_analyzed = 0
@@ -38,6 +76,8 @@ class CompetitionDay(object):
                                                  (str(flights_analyzed), str(len(soaring_spot_info.file_names))))
                 analysis_progress.update()
 
+        self.analyzed = True
+
     def read_flights(self, soaring_spot_info):
         for ii in range(len(soaring_spot_info.file_names)):
             file_name = soaring_spot_info.file_names[ii]
@@ -46,9 +86,8 @@ class CompetitionDay(object):
             self.flights.append(Flight(soaring_spot_info.igc_directory, file_name, ranking))
             self.flights[-1].read_igc(soaring_spot_info)
 
-    def load_task_information(self):  # new task implementation for AAT
+    def load_task_information(self):
 
-        # task part
         task_info = None
         for flight in self.flights:
             new_task_info = flight.get_task_information()

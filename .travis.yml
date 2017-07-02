@@ -16,6 +16,7 @@ install:
   - pip install -r requirements.txt
 
 script:
+  - python -m unittest discover
   - python PySoar/main_pysoar.py http://www.soaringspot.com/en/sallandse-tweedaagse-2014/results/club/task-1-on-2014-06-21/daily
   - sha512sum -c ci/Analysis_PySoar.xls.sha512
   - pyinstaller -F PySoar/main_pysoar.py 
