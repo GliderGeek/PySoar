@@ -43,14 +43,14 @@ class Flight(object):
 
         return df_dict
 
-    def analyze(self, competition_day):
+    def analyze(self, task):
         print self.file_name
 
-        self.trip = Trip(competition_day.task, self.trace, self.trace_settings)
+        self.trip = Trip(task, self.trace, self.trace_settings)
 
         if len(self.trip.fixes) >= 1:  # competitor must have started
             self.phases = FlightPhases(self.trip, self.trace, self.trace_settings)
-            self.performance = Performance(competition_day.task, self.trip, self.phases, self.trace, self.trace_settings)
+            self.performance = Performance(task, self.trip, self.phases, self.trace, self.trace_settings)
 
     def read_igc(self, soaring_spot_info):
         # this is a candidate for and IGC reader class / aerofiles functionality

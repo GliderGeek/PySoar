@@ -68,7 +68,7 @@ class CompetitionDay(object):
     def analyze_flights(self, soaring_spot_info, analysis_progress):
         flights_analyzed = 0
         for flight in self.flights:
-            flight.analyze(self)
+            flight.analyze(self.task)
 
             flights_analyzed += 1
             if analysis_progress is not None:

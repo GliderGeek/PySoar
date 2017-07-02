@@ -69,7 +69,7 @@ elif len(sys.argv) == 2:
     if sys.argv[1] == '--help':
         print_help()
     else:
-        run(sys.argv[1], commandline_run=True)
+        run(sys.argv[1])
 else:
     print_help()
 
