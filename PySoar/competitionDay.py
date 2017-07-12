@@ -1,7 +1,5 @@
 import copy
-import pandas as pd
 
-from performanceClass import Performance
 from generalFunctions import get_date
 from settingsClass import Settings
 from race_task import RaceTask
@@ -30,39 +28,6 @@ class CompetitionDay(object):
             url_status.configure(text="Multiple starting points not implemented!", foreground='red')
             url_status.update()
             return
-
-    @property
-    def performance_dfs(self):
-        """This method return a list of dataframes. First entry is entire flight, remaining entries cover legs."""
-
-        if not self.analyzed:
-            raise Exception('Performance dataframe cannot be obtained, because flights have not yet been analyzed')
-
-        categories = []
-        categories.extend(Performance.df_categories)
-        categories.extend(Flight.df_categories)
-
-        # first dataframe contains stats over complete flight
-        dfs = [pd.DataFrame(columns=categories)]
-        for flight in self.flights:
-            performance_data = {}
-            performance_data.update(flight.performance.all)
-            performance_data.update(flight.df_dict)
-            dfs[-1] = dfs[-1].append(performance_data, ignore_index=True)
-
-        # remaining dataframes contain stats per leg
-        for leg in range(self.task.no_legs):
-            dfs.append(pd.DataFrame(columns=categories))
-            for flight in self.flights:
-
-                # only append when not outlanded
-                if leg < len(flight.performance.leg):
-                    performance_data = {}
-                    performance_data.update(flight.performance.leg[leg])
-                    performance_data.update(flight.df_dict)
-                    dfs[-1] = dfs[-1].append(performance_data, ignore_index=True)
-
-        return dfs
 
     def analyze_flights(self, soaring_spot_info, analysis_progress):
         flights_analyzed = 0

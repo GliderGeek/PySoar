@@ -4,4 +4,3 @@ mechanize==0.2.5
 beautifulsoup==3.2.1
 pyinstaller==3.2
 pygeodesy==17.6.23
-pandas==0.20.2
