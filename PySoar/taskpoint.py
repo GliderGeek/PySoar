@@ -121,9 +121,9 @@ class Taskpoint(object):  # startpoint, turnpoints and finish
             print 'Calling crossed_line on a sector!'
             exit(1)
         else:
-            if distance2 > self.r_max or distance1 > self.r_max:
+            if distance2 > self.r_max and distance1 > self.r_max:
                 return False
-            else:
+            else:  # either both within circle or only one, leading to small amount of false positives
                 bearing1 = det_bearing(self.LCU_line, fix1, 'tsk', 'pnt')
                 bearing2 = det_bearing(self.LCU_line, fix2, 'tsk', 'pnt')
 
