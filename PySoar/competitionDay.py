@@ -1,9 +1,10 @@
+import copy
+
 from generalFunctions import get_date
 from settingsClass import Settings
 from race_task import RaceTask
 from aat import AAT
 from flightClass import Flight
-import copy
 
 settings = Settings()
 
@@ -17,6 +18,7 @@ class CompetitionDay(object):
         self.task = None
         self.utc_diff = None
         self.date = None
+        self.analyzed = False
 
         self.read_flights(soaring_spot_info)
         self.load_task_information()
@@ -30,13 +32,15 @@ class CompetitionDay(object):
     def analyze_flights(self, soaring_spot_info, analysis_progress):
         flights_analyzed = 0
         for flight in self.flights:
-            flight.analyze(self)
+            flight.analyze(self.task)
 
             flights_analyzed += 1
             if analysis_progress is not None:
                 analysis_progress.configure(text='Analyzed: %s/%s' %
                                                  (str(flights_analyzed), str(len(soaring_spot_info.file_names))))
                 analysis_progress.update()
+
+        self.analyzed = True
 
     def read_flights(self, soaring_spot_info):
         for ii in range(len(soaring_spot_info.file_names)):
@@ -46,9 +50,8 @@ class CompetitionDay(object):
             self.flights.append(Flight(soaring_spot_info.igc_directory, file_name, ranking))
             self.flights[-1].read_igc(soaring_spot_info)
 
-    def load_task_information(self):  # new task implementation for AAT
+    def load_task_information(self):
 
-        # task part
         task_info = None
         for flight in self.flights:
             new_task_info = flight.get_task_information()

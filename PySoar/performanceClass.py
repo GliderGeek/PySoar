@@ -2,6 +2,11 @@ from generalFunctions import det_height, calculate_distance, det_local_time
 
 
 class Performance(object):
+
+    df_categories = ['t_start', 't_finish', 'h_start', 'h_finish', 's_flown_task', 'vario_gem', 'v_glide_avg',
+                              'v_turn_avg', 'LD_avg', 'turn_percentage', 'h_loss_turn', 's_glide_avg', 'dh_cruise_avg',
+                              's_extra', 'tsk_v']
+
     def __init__(self, task, trip, phases, trace, trace_settings):
 
         self.all = None
@@ -82,6 +87,9 @@ class Performance(object):
                              "s_flown_task": s_flown_task_leg})
 
     def store_perf(self, leg, key, value):
+        if key not in self.df_categories:
+            raise ValueError('This performance category is not supported')
+
         if leg == -1:
             self.all[key] = value
         else:

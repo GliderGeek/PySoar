@@ -1,3 +1,5 @@
+import re
+
 from generalFunctions import hhmmss2ss, get_date, det_height
 from settingsClass import Settings
 from phasesClass import FlightPhases
@@ -8,6 +10,9 @@ settings = Settings()
 
 
 class Flight(object):
+
+    df_categories = ['ranking', 'airplane', 'compID']
+
     def __init__(self, folder_path, file_name, ranking):
         self.file_name = file_name
         self.folder_path = folder_path
@@ -26,14 +31,26 @@ class Flight(object):
         self.phases = None
         self.performance = None
 
-    def analyze(self, competition_day):
+    @property
+    def df_dict(self):
+
+        df_dict = {'ranking': self.ranking,
+                   'airplane': self.airplane,
+                   'compID': self.competition_id}
+
+        # check consistency with df_categories
+        assert sum(1 for key in df_dict if key not in self.df_categories) == 0
+
+        return df_dict
+
+    def analyze(self, task):
         print self.file_name
 
-        self.trip = Trip(competition_day.task, self.trace, self.trace_settings)
+        self.trip = Trip(task, self.trace, self.trace_settings)
 
         if len(self.trip.fixes) >= 1:  # competitor must have started
             self.phases = FlightPhases(self.trip, self.trace, self.trace_settings)
-            self.performance = Performance(competition_day.task, self.trip, self.phases, self.trace, self.trace_settings)
+            self.performance = Performance(task, self.trip, self.phases, self.trace, self.trace_settings)
 
     def read_igc(self, soaring_spot_info):
         # this is a candidate for and IGC reader class / aerofiles functionality
@@ -116,6 +133,11 @@ class Flight(object):
         # extract date from fist lcu line
         if len(task_information['lcu_lines']) != 0:
             task_information['date'] = get_date(task_information['lcu_lines'][0])
+
+        # fix error in task definition: e.g.: LSEEYOU OZ=-1,Style=2SpeedStyle=0,R1=5000m,A1=180,Line=1
+        # SpeedStyle=# is removed, where # is a number
+        for line_index, line in enumerate(task_information['lseeyou_lines']):
+            task_information['lseeyou_lines'][line_index] = re.sub(r"SpeedStyle=\d{1}", "", line)
 
         # fix wrong style definition on start and finish points
         task_information['lseeyou_lines'][0] = task_information['lseeyou_lines'][0].replace('Style=1', 'Style=2')

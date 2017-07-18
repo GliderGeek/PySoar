@@ -40,21 +40,21 @@ class ExcelExport(object):
                 self.best_parameters_leg[leg][perf_ind] = ""
                 self.worst_parameters_leg[leg][perf_ind] = ""
 
-    def initiate_best_worst(self, settings, competition_day):
+    def initiate_best_worst(self, settings, no_legs):
         self.fill_best_worst_bib(-1, settings)
-        for leg in range(competition_day.task.no_legs):
+        for leg in range(no_legs):
             self.best_parameters_leg.append({})
             self.worst_parameters_leg.append({})
 
             self.fill_best_worst_bib(leg, settings)
 
-    def __init__(self, settings, competition_day):
+    def __init__(self, settings, no_legs):
         self.file_name = settings.file_name
 
         self.wb = xlwt.Workbook(encoding='latin-1')  # initialize excel sheet
         self.ws_all = self.wb.add_sheet('Entire Flight', cell_overwrite_ok=True)
         self.ws_legs = []
-        for leg in range(competition_day.task.no_legs):
+        for leg in range(no_legs):
             self.ws_legs.append(self.wb.add_sheet("Leg " + str(leg+1), cell_overwrite_ok=True))
 
         self.style_dict = {}
@@ -69,7 +69,7 @@ class ExcelExport(object):
         self.best_parameters_leg = []
         self.worst_parameters_all = {}
         self.worst_parameters_leg = []
-        self.initiate_best_worst(settings, competition_day)
+        self.initiate_best_worst(settings, no_legs)
 
     def determine_best_worst(self, competition_day, settings):
         for perf_ind in settings.perf_indic_all:
@@ -164,8 +164,7 @@ class ExcelExport(object):
                         temp_worst = value
                         self.worst_parameters_leg[leg][perf_ind] = filename
 
-    def write_general_info(self, competition_day):
-        date = competition_day.date
+    def write_general_info(self, date):
         self.ws_all.write(0, 0, date.strftime('%d-%m-%y'))
 
     def write_cell(self, leg, row, col, content, style):
@@ -253,7 +252,7 @@ class ExcelExport(object):
 
             col += 1
 
-    def write_title(self, leg, settings, competition_day):
+    def write_title(self, leg, settings, taskpoints):
         row = 0
         col = 1
 
@@ -263,23 +262,21 @@ class ExcelExport(object):
             self.ws_all.write_merge(row, row, col, col+no_cols, title, self.style_dict['style_phase'])
         else:
             no_cols = settings.no_leg_indicators
-            name1 = competition_day.task.taskpoints[leg].name
-            name2 = competition_day.task.taskpoints[leg+1].name
-            title = "Leg " + str(leg+1) + ": " + name1 + " - " + name2
+            title = "Leg %s: %s - %s" % (leg + 1, taskpoints[leg].name, taskpoints[leg+1].name)
             self.ws_legs[leg].write_merge(row, row, col, col+no_cols, title, self.style_dict['style_phase'])
 
     def write_whole_flight(self, settings, competition_day):
-        self.write_title(-1, settings, competition_day)
+        self.write_title(-1, settings, competition_day.task.taskpoints)
         self.write_perf_indics(-1, settings, competition_day)
 
     def write_legs(self, settings, competition_day):
         for leg in range(competition_day.task.no_legs):
-            self.write_title(leg, settings, competition_day)
+            self.write_title(leg, settings, competition_day.task.taskpoints)
             self.write_perf_indics(leg, settings, competition_day)
 
     def write_file(self, competition_day, settings, soaring_spot_info):
 
-        self.write_general_info(competition_day)
+        self.write_general_info(competition_day.date)
         self.determine_best_worst(competition_day, settings)
         self.write_whole_flight(settings, competition_day)
         self.write_legs(settings, competition_day)

@@ -103,7 +103,9 @@ class Taskpoint(object):  # startpoint, turnpoints and finish
             print 'Calling inside_sector on a line!'
             exit(1)
         elif self.r_min is not None:
-            return self.r_min < distance < self.r_max and angle_wrt_orientation < self.angle_max
+            inside_outer_sector = self.r_min < distance < self.r_max and angle_wrt_orientation < self.angle_max
+            inside_inner_sector = distance < self.r_min and angle_wrt_orientation < self.angle_min
+            return inside_outer_sector or inside_inner_sector
         else:  # self.r_min is None
             return distance < self.r_max and (pi - angle_wrt_orientation) < self.angle_max
 
@@ -119,9 +121,9 @@ class Taskpoint(object):  # startpoint, turnpoints and finish
             print 'Calling crossed_line on a sector!'
             exit(1)
         else:
-            if distance2 > self.r_max or distance1 > self.r_max:
+            if distance2 > self.r_max and distance1 > self.r_max:
                 return False
-            else:
+            else:  # either both within circle or only one, leading to small amount of false positives
                 bearing1 = det_bearing(self.LCU_line, fix1, 'tsk', 'pnt')
                 bearing2 = det_bearing(self.LCU_line, fix2, 'tsk', 'pnt')
 
