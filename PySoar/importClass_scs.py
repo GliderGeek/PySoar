@@ -25,7 +25,7 @@ def load_scs(self, url_input):
     html = page.read()
     soup = BeautifulSoup(html)
 
-        # get competition, class and date
+    # get competition, class and date
     self.competition = soup.find('div', id="public_contest_info").find('span',id="ctl00_lblCompName").text
     self.plane_class=soup.find('div', { "class" : "h3a" }).find('span',id="ctl00_Content_lblCompClass").text
     self.date=soup.find('div', { "class" : "h3a" }).find('span',id="ctl00_Content_lblDate").text[0:10]        

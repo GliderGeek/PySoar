@@ -14,12 +14,6 @@ class SoaringSpotImport(object):
     def __init__(self, url, download_progress):
         self.url = url
 
-        self.competition, self.plane_class, self.date = self._get_competition_info(self.url)
-
-        # todo: check with windows version whether this can be simplified to os.path.join()
-        self.igc_directory = (settings.current_dir + '/bin/' + self.competition + '/' + self.plane_class + '/' +
-                              self.date + '/')
-
         self.flights_downloaded = 0
 
         self.baseUrl = "http://www.soaringspot.com"
@@ -33,7 +27,13 @@ class SoaringSpotImport(object):
         if (self.strepla):
             load_scs(self,url)
         else:
+            self.competition, self.plane_class, self.date = self._get_competition_info(self.url)
             self.load_website()
+           
+        # todo: check with windows version whether this can be simplified to os.path.join()
+        self.igc_directory = (settings.current_dir + '/bin/' + self.competition + '/' + self.plane_class + '/' +
+                              self.date + '/')
+            
 
         # make directory
         if not os.path.exists(self.igc_directory):
