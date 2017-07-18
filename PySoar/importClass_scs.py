@@ -66,7 +66,11 @@ def convert_task_scs(self,index):
     aat_time=[]
     start_time=[]
     base="LCU::C0000000N00000000E"
-
+    tkey=False
+    tcyl=False
+    fcyl=False
+    fline=False
+    
     # Get all task points and further task information
     for line in full_file:
         if line.startswith('LSCSDCID'):
@@ -78,8 +82,17 @@ def convert_task_scs(self,index):
             tp_in.append(line)
         if line.startswith('LSCSRSLINE'):
             sl_width=str((int((line.split(':'))[1]))/2)
+        if line.startswith('LSCSRTKEYHOLE'):
+            tkey=True
+        if line.startswith('LSCSRTCYLINDER'):
+            tcyl=True
+            tcyl_radius=str((int((line.split(':'))[1])))
         if line.startswith('LSCSRFCYLINDER'):
-            fc_radius=str((int((line.split(':'))[1])))
+            fcyl=True
+            fcyl_radius=str((int((line.split(':'))[1])))
+        if line.startswith('LSCSRFLINE'):
+            fline=True
+            fline_radius=str((int((line.split(':'))[1])))
         if line.startswith('LSCSA0'):
             aat_sector_radius.append((line.split(':'))[1])
             if int(((line.split(':'))[3])[0:-1]) == 0:
@@ -109,9 +122,16 @@ def convert_task_scs(self,index):
             if aat:
                 tp_sector.append("LSEEYOU OZ="+str(i)+",Style=1,R1="+aat_sector_radius[i]+"m,A1="+str(int(aat_sector_angle[i])/2))    
             else:
-                tp_sector.append("LSEEYOU OZ="+str(i)+",Style=1,R1=10000m,A1=45,R2=500m,A2=180")
+                if tkey:
+                    tp_sector.append("LSEEYOU OZ="+str(i)+",Style=1,R1=10000m,A1=45,R2=500m,A2=180")
+                elif tcyl:
+                    tp_sector.append("LSEEYOU OZ="+str(i)+",Style=1,R1="+tcyl_radius+"m,A1=180")         
         elif  i == (len(tp_in)-2):
-            tp_sector.append("LSEEYOU OZ="+str(i)+",Style=3,R1="+fc_radius+"m,A1=180,Reduce=1")       
+            if fcyl:
+                tp_sector.append("LSEEYOU OZ="+str(i)+",Style=3,R1="+fcyl_radius+"m,A1=180,Reduce=1")
+            elif fline:
+                tp_sector.append("LSEEYOU OZ="+str(i)+",Style=3,R1="+fline_radius+"m,A1=45,Line=1")
+            
         tp_split  = point.split(':')
   	tp_seeyou.append("LCU::C"+ ((tp_split[2])[1:] + (tp_split[2])[0]) + (((tp_split[3])[1:-1])+(tp_split[3])[0]) +tp_split[1] )
         i=i+1
@@ -131,4 +151,4 @@ def convert_task_scs(self,index):
         f.write("%s\n" % item)
 
     f.close()    
-
+ 
