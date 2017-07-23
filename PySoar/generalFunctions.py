@@ -103,6 +103,12 @@ def determine_destination(location_record, record_type, bearing, distance):
     return start_latlon.destination(distance, bearing)
 
 
+def calculate_destination(lat1, lon1, bearing, distance):
+    # convert radians into degrees for pygeodesy calculation
+    start_latlon = LatLon(degrees(lat1), degrees(lon1))
+    return start_latlon.destination(distance, bearing)
+
+
 def calculate_distance(location_record1, location_record2, record_type1, record_type2):
     loc1_lat, loc1_lon = det_lat_long(location_record1, record_type1, return_radians=False)
     loc1_lat_lon = LatLon(loc1_lat, loc1_lon)
@@ -115,6 +121,16 @@ def calculate_distance(location_record1, location_record2, record_type1, record_
         return 0
 
     return loc1_lat_lon.distanceTo(loc2_lat_lon)
+
+
+def calculate_distance2(lat1, lon1, lat2, lon2):
+    # pygeodesy raises exception when same locations are used
+    if isclose(lat1, lat2) and isclose(lon1, lon2):
+        return 0
+    else:
+        lat_lon1 = LatLon(degrees(lat1), degrees(lon1))
+        lat_lon2 = LatLon(degrees(lat2), degrees(lon2))
+        return lat_lon1.distanceTo(lat_lon2)
 
 
 def det_bearing(location_record1, location_record2, type1, type2):
@@ -133,9 +149,27 @@ def det_bearing(location_record1, location_record2, type1, type2):
     return bearing
 
 
+def calculate_bearing(lat1, lon1, lat2, lon2):
+
+    bearing = degrees(
+        atan2(
+            sin(lon2 - lon1) * cos(lat2),
+            cos(lat1) * sin(lat2)
+            - sin(lat1) * cos(lat2) * cos(lon2 - lon1)
+        ) % (2 * pi)
+    )
+
+    return bearing
+
+
 # normal det_bearing function calculates initial bearing
 def det_final_bearing(location_record1, location_record2, type1, type2):
     reversed_bearing = det_bearing(location_record2, location_record1, type2, type1)
+    return (reversed_bearing + 180) % 360
+
+
+def calculate_final_bearing(lat1, lon1, lat2, lon2):
+    reversed_bearing = calculate_bearing(lat2, lon2, lat1, lon1)
     return (reversed_bearing + 180) % 360
 
 
@@ -213,9 +247,9 @@ def task_url_from_daily(daily_url):
 
 
 def url_format_correct(url_string):
-    if (url_string[0:26] != "http://www.soaringspot.com" and url_string[0:21] != "http://www.strepla.de") :        
+    if (url_string[0:26] != "http://www.soaringspot.com" and url_string[0:21] != "http://www.strepla.de") :
         return 'Use SoaringSpot or Strepla URL'
-    elif (url_string[-5::] != 'daily' and url_string[33:41] != 'scoreDay'): 
+    elif (url_string[-5::] != 'daily' and url_string[33:41] != 'scoreDay'):
         return 'URL does not give daily results'
     else:
         return 'URL correct'
@@ -258,11 +292,13 @@ def determine_flown_task_distance(_leg, b_record, competition_day):
     for leg in range(_leg-1):
         task_distance += competition_day.task.distances[leg]
 
-    previous_tp = competition_day.task.taskpoints[_leg-1].LCU_line
-    next_tp = competition_day.task.taskpoints[_leg].LCU_line
+    previous_tp = competition_day.task.taskpoints[_leg-1]
+    next_tp = competition_day.task.taskpoints[_leg]
 
-    bearing1 = det_bearing(previous_tp, next_tp, 'tsk', 'tsk')
-    bearing2 = det_bearing(previous_tp, b_record, 'tsk', 'pnt')
+    b_record_lat, b_record_lon = det_lat_long(b_record, 'pnt')
+
+    bearing1 = calculate_bearing(previous_tp.lat, previous_tp.lon, next_tp.lat, next_tp.lon)
+    bearing2 = calculate_bearing(previous_tp.lat, previous_tp.lon, b_record_lat, b_record_lon)
     angle_task_point = det_bearing_change(bearing1, bearing2) * pi / 180
 
     temp_distance = calculate_distance(previous_tp, b_record, 'tsk', 'pnt')

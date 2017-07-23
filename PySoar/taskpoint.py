@@ -1,36 +1,42 @@
 from math import pi
 
 from generalFunctions import det_average_bearing
-from generalFunctions import calculate_distance, det_bearing, det_bearing_change
+from generalFunctions import calculate_distance2
+from generalFunctions import det_lat_long
+from generalFunctions import calculate_bearing
+from generalFunctions import det_bearing_change
 
 
 class Taskpoint(object):  # startpoint, turnpoints and finish
 
-    def __init__(self, LCU_line, LSEEYOU_line):
-        self.LCU_line = LCU_line
-        self.LSEEYOU_line = LSEEYOU_line
+    def __init__(self, name, lat, lon, r_min, angle_min, r_max, angle_max, orientation_angle,
+                 line, sector_orientation, distance_correction):
 
-        self.orientation_angle = None
-        self.r_max = None
-        self.angle_max = None
-        self.r_min = None
-        self.angle_min = None
+        self.name = name
 
-        self.name = LCU_line[23::]
-        self.line = 'Line=1\n' in self.LSEEYOU_line.split(',') or 'Line=1' in self.LSEEYOU_line.split(',')
-        self.sector_orientation = self.det_sector_orientation()  # fixed, symmetrical, next, previous, start
-        self.distance_correction = self.det_distance_correction()  # None, displace_tp, shorten_legs
-        self.det_sector_sizes()
+        self.lat = lat
+        self.lon = lon
 
-    def fixed_orientation_angle(self):
-        components = self.LSEEYOU_line.rstrip().split(",")
+        self.r_min = r_min
+        self.angle_min = angle_min
+        self.r_max = r_max
+        self.angle_max = angle_max
+        self.orientation_angle = orientation_angle
+
+        self.line = line
+        self.sector_orientation = sector_orientation  # fixed, symmetrical, next, previous, start
+        self.distance_correction = distance_correction  # None, displace_tp, shorten_legs
+
+    @staticmethod
+    def cuc_fixed_orientation_angle(LSEEYOU_line):
+        components = LSEEYOU_line.rstrip().split(",")
         for component in components:
             if component.startswith("A12="):
-                self.orientation_angle = float(component.split("=")[1])
-                break
+                return float(component.split("=")[1])
 
-    def det_sector_orientation(self):
-        components = self.LSEEYOU_line.rstrip().split(",")
+    @staticmethod
+    def cuc_sector_orientation(LSEEYOU_line):
+        components = LSEEYOU_line.rstrip().split(",")
         for component in components:
             if component.startswith("Style="):
                 style = int(component.split("=")[1])
@@ -48,8 +54,9 @@ class Taskpoint(object):  # startpoint, turnpoints and finish
                     print "Unknown taskpoint style! " + str(style)
                     return ""
 
-    def det_distance_correction(self):
-        components = self.LSEEYOU_line.rstrip().split(",")
+    @staticmethod
+    def cuc_distance_correction(LSEEYOU_line):
+        components = LSEEYOU_line.rstrip().split(",")
         reduce = False
         move = False
         for component in components:
@@ -68,9 +75,9 @@ class Taskpoint(object):  # startpoint, turnpoints and finish
             return None
 
     def set_orientation_angle(self, angle_start=None, angle_previous=None, angle_next=None):
-        if self.sector_orientation == "fixed":
-            self.fixed_orientation_angle()
-        elif self.sector_orientation == "symmetrical":
+        # Fixed orientation is skipped as that has already been set
+
+        if self.sector_orientation == "symmetrical":
             self.orientation_angle = det_average_bearing(angle_previous, angle_next)
         elif self.sector_orientation == "next":
             self.orientation_angle = angle_next
@@ -79,24 +86,33 @@ class Taskpoint(object):  # startpoint, turnpoints and finish
         elif self.sector_orientation == "start":
             self.orientation_angle = angle_start
         else:
-            print "Unknown sector orientation! " + str(self.sector_orientation)
+            raise ValueError("Unknown sector orientation: %s " % self.sector_orientation)
 
-    def det_sector_sizes(self):
-        components = self.LSEEYOU_line.rstrip().split(",")
+    @staticmethod
+    def cuc_sector_dimensions(LSEEYOU_line):
+        components = LSEEYOU_line.rstrip().split(",")
+        r_min = None
+        angle_min = None
+        r_max = None
+        angle_max = None
         for component in components:
             if component.startswith("R1="):
-                self.r_max = int(component.split("=")[1][:-1])
+                r_max = int(component.split("=")[1][:-1])
             elif component.startswith("A1="):
-                self.angle_max = int(component.split("=")[1])
+                angle_max = int(component.split("=")[1])
             elif component.startswith("R2="):
-                self.r_min = int(component.split("=")[1][:-1])
+                r_min = int(component.split("=")[1][:-1])
             elif component.startswith("A2="):
-                self.angle_min = int(component.split("=")[1])
+                angle_min = int(component.split("=")[1])
+        return r_min, angle_min, r_max, angle_max
 
     def inside_sector(self, fix):
 
-        distance = calculate_distance(fix, self.LCU_line, 'pnt', 'tsk')
-        bearing = det_bearing(self.LCU_line, fix, 'tsk', 'pnt')
+        fix_lat, fix_lon = det_lat_long(fix, 'pnt')
+
+        distance = calculate_distance2(fix_lat, fix_lon, self.lat, self.lon)
+        bearing = calculate_bearing(self.lat, self.lon, fix_lat, fix_lon)
+
         angle_wrt_orientation = abs(det_bearing_change(self.orientation_angle, bearing))
 
         if self.line:
@@ -114,8 +130,11 @@ class Taskpoint(object):  # startpoint, turnpoints and finish
 
     def crossed_line(self, fix1, fix2):
 
-        distance1 = calculate_distance(fix1, self.LCU_line, 'pnt', 'tsk')
-        distance2 = calculate_distance(fix2, self.LCU_line, 'pnt', 'tsk')
+        fix1_lat, fix1_lon = det_lat_long(fix1, 'pnt')
+        fix2_lat, fix2_lon = det_lat_long(fix2, 'pnt')
+
+        distance1 = calculate_distance2(fix1_lat, fix1_lon, self.lat, self.lon)
+        distance2 = calculate_distance2(fix2_lat, fix2_lon, self.lat, self.lon)
 
         if not self.line:
             print 'Calling crossed_line on a sector!'
@@ -124,8 +143,8 @@ class Taskpoint(object):  # startpoint, turnpoints and finish
             if distance2 > self.r_max and distance1 > self.r_max:
                 return False
             else:  # either both within circle or only one, leading to small amount of false positives
-                bearing1 = det_bearing(self.LCU_line, fix1, 'tsk', 'pnt')
-                bearing2 = det_bearing(self.LCU_line, fix2, 'tsk', 'pnt')
+                bearing1 = calculate_bearing(self.lat, self.lon, fix1_lat, fix1_lon)
+                bearing2 = calculate_bearing(self.lat, self.lon, fix2_lat, fix2_lon)
 
                 angle_wrt_orientation1 = abs(det_bearing_change(self.orientation_angle, bearing1))
                 angle_wrt_orientation2 = abs(det_bearing_change(self.orientation_angle, bearing2))
@@ -138,6 +157,29 @@ class Taskpoint(object):  # startpoint, turnpoints and finish
                     print "A line with this orientation is not implemented!"
                     exit(1)
 
+    @classmethod
+    def from_scs(cls):
+        return cls()
+
+    @classmethod
+    def from_cuc(cls, LCU_line, LSEEYOU_line):
+
+        name = LCU_line[23::]
+        lat, lon = det_lat_long(LCU_line, 'tsk')
+        r_min, angle_min, r_max, angle_max = cls.cuc_sector_dimensions(LSEEYOU_line)
+
+        sector_orientation = cls.cuc_sector_orientation(LSEEYOU_line)
+        if sector_orientation == 'fixed':
+            orientation_angle = cls.cuc_fixed_orientation_angle(LSEEYOU_line)
+        else:
+            orientation_angle = None
+
+        distance_correction = cls.cuc_distance_correction(LSEEYOU_line)
+
+        line = 'Line=1\n' in LSEEYOU_line.split(',') or 'Line=1' in LSEEYOU_line.split(',')
+
+        return cls(name, lat, lon, r_min, angle_min, r_max, angle_max, orientation_angle,
+                   line, sector_orientation, distance_correction)
 
 
 #############################  LICENSE  #####################################

@@ -1,7 +1,9 @@
+from math import degrees
+
 from task import Task
-from generalFunctions import calculate_distance
-from generalFunctions import determine_destination
-from generalFunctions import det_bearing
+from generalFunctions import calculate_distance2
+from generalFunctions import calculate_bearing
+from generalFunctions import calculate_destination
 from generalFunctions import det_time_difference
 from generalFunctions import enl_time_exceeded
 from generalFunctions import enl_value_exceeded
@@ -26,7 +28,7 @@ class AAT(Task):
             begin = self.taskpoints[leg]
             end = self.taskpoints[leg + 1]  # next is built in name
 
-            distance = calculate_distance(begin.LCU_line, end.LCU_line, 'tsk', 'tsk')
+            distance = calculate_distance2(begin.lat, begin.lon, end.lat, end.lon)
             self.nominal_distances.append(distance)
 
             # unfortunately calculating the minimum and maximum distances seem to be a separate optimization problem
@@ -188,12 +190,18 @@ class AAT(Task):
         # room for improvement:
         # by using LatLon objects instead of records, the switch case can be reduced
         # since pnt are now the same as tsk records
+
+        start_tp_lat, start_tp_lon = det_lat_long(start_tp_fix, 'pnt')
+        end_tp_lat, end_tp_lon = det_lat_long(end_tp_fix, 'pnt')
+
         if leg == 0:  # take start-point of task
-            distance = calculate_distance(self.taskpoints[0].LCU_line, end_tp_fix, 'tsk', 'pnt')
+            start = self.taskpoints[0]
+            distance = calculate_distance2(start.lat, start.lon, end_tp_lat, end_tp_lon)
         elif leg == self.no_legs - 1:  # take finish-point of task
-            distance = calculate_distance(start_tp_fix, self.taskpoints[-1].LCU_line, 'pnt', 'tsk')
+            finish = self.taskpoints[-1]
+            distance = calculate_distance2(start_tp_lat, start_tp_lon, finish.lat, finish.lon)
         else:
-            distance = calculate_distance(start_tp_fix, end_tp_fix, 'pnt', 'pnt')
+            distance = calculate_distance2(start_tp_lat, start_tp_lon, end_tp_lat, end_tp_lon)
 
         return distance
 
@@ -201,40 +209,38 @@ class AAT(Task):
         # room for improvement:
         # by using LatLon objects instead of records, the switch case can be reduced
         # since pnt are now the same as tsk records
+
+        outlanding_lat, outlanding_lon = det_lat_long(outlanding_fix, 'pnt')
+        start_tp_lat, start_tp_lon = det_lat_long(start_tp_fix, 'pnt')
+
         if leg == 0:
+            start = self.taskpoints[0]
             tp1 = self.taskpoints[leg + 1]
 
-            bearing = det_bearing(tp1.LCU_line, outlanding_fix, 'tsk', 'pnt')
-            closest_area_point = determine_destination(tp1.LCU_line, 'tsk', bearing,
-                                                       tp1.r_max)
+            bearing = calculate_bearing(tp1.lat, tp1.lon, outlanding_lat, outlanding_lon)
+            closest_area_point = calculate_destination(tp1.lat, tp1.lon, bearing, tp1.r_max)
 
-            lat, lon = det_lat_long(self.taskpoints[0].LCU_line, 'tsk', return_radians=False)
-            start_latlon = LatLon(lat, lon)
-
-            lat, lon = det_lat_long(outlanding_fix, 'pnt', return_radians=False)
-            outlanding_latlon = LatLon(lat, lon)
+            start_latlon = LatLon(degrees(start.lat), degrees(start.lon))
+            outlanding_latlon = LatLon(degrees(outlanding_lat), degrees(outlanding_lon))
 
             distance = start_latlon.distanceTo(closest_area_point)
             distance -= outlanding_latlon.distanceTo(closest_area_point)
 
         elif leg == self.no_legs - 1:  # take finish-point of task
-            distance = calculate_distance(start_tp_fix, self.taskpoints[leg + 1].LCU_line, 'pnt', 'tsk')
-            distance -= calculate_distance(self.taskpoints[leg + 1].LCU_line, outlanding_fix, 'tsk', 'pnt')
+
+            finish = self.taskpoints[leg + 1]
+
+            distance = calculate_distance2(start_tp_lat, start_tp_lon, finish.lat, finish.lon)
+            distance -= calculate_distance2(finish.lat, finish.lon, outlanding_lat, outlanding_lon)
         else:
             tp1 = self.taskpoints[leg + 1]
+            bearing = calculate_bearing(tp1.lat, tp1.lon, outlanding_lat, outlanding_lon)
 
-            bearing = det_bearing(tp1.LCU_line, outlanding_fix, 'tsk', 'pnt')
-            closest_area_point = determine_destination(tp1.LCU_line, 'tsk', bearing,
-                                                       tp1.r_max)
+            closest_area_point = calculate_destination(tp1.lat, tp1.lon, bearing, tp1.r_max)
 
-            lat, lon = det_lat_long(self.taskpoints[0].LCU_line, 'tsk', return_radians=False)
-            start_latlon = LatLon(lat, lon)
-
-            lat, lon = det_lat_long(start_tp_fix, 'pnt', return_radians=False)
-            startTp_latlon = LatLon(lat, lon)
-
-            lat, lon = det_lat_long(outlanding_fix, 'pnt', return_radians=False)
-            outlanding_latlon = LatLon(lat, lon)
+            start_latlon = LatLon(degrees(self.taskpoints[0].lat), degrees(self.taskpoints[0].lon))
+            startTp_latlon = LatLon(degrees(start_tp_lat), degrees(start_tp_lon))
+            outlanding_latlon = LatLon(degrees(outlanding_lat), degrees(outlanding_lon))
 
             if leg == 0:
                 distance = start_latlon.distanceTo(closest_area_point)
@@ -270,7 +276,7 @@ class AAT(Task):
         if outlanded and outside_sector_fixes:  # outlanding outside AAT sector
 
             leg = completed_legs
-            distances[leg + 1] = [[0, 0] for i in range(len(outside_sector_fixes))]
+            distances[leg + 1] = [[0, 0] for _ in range(len(outside_sector_fixes))]
             for fix2_index, fix2 in enumerate(outside_sector_fixes):
                 for fix1_index, fix1 in enumerate(sector_fixes[leg]):
 
@@ -370,18 +376,28 @@ class AAT(Task):
 
         # can this be replaced by call to self.calculate_distance_completed_leg?
         for fix1_index, fix1 in enumerate(trip.fixes[:-1]):
+
+            fix1_lat, fix1_lon = det_lat_long(fix1, 'pnt')
+
             if fix1_index == 0:
                 fix2 = trip.fixes[fix1_index + 1]
-                distance = calculate_distance(self.taskpoints[0].LCU_line, fix2, 'tsk', 'pnt')
-                if self.taskpoints[0].distance_correction == 'shorten_legs':
-                    distance -= self.taskpoints[0].r_max
+                fix2_lat, fix2_lon = det_lat_long(fix2, 'pnt')
+                start = self.taskpoints[0]
+
+                distance = calculate_distance2(start.lat, start.lon, fix2_lat, fix2_lon)
+
+                if start.distance_correction == 'shorten_legs':
+                    distance -= start.r_max
             elif fix1_index == self.no_legs-1:
-                distance = calculate_distance(fix1, self.taskpoints[-1].LCU_line, 'pnt', 'tsk')
-                if self.taskpoints[-1].distance_correction == 'shorten_legs':
-                    distance -= self.taskpoints[-1].r_max
+                taskpoint = self.taskpoints[-1]
+
+                distance = calculate_distance2(fix1_lat, fix1_lon, taskpoint.lat, taskpoint.lon)
+                if taskpoint.distance_correction == 'shorten_legs':
+                    distance -= taskpoint.r_max
             else:
                 fix2 = trip.fixes[fix1_index + 1]
-                distance = calculate_distance(fix1, fix2, 'pnt', 'pnt')
+                fix2_lat, fix2_lon = det_lat_long(fix2, 'pnt')
+                distance = calculate_distance2(fix1_lat, fix1_lon, fix2_lat, fix2_lon)
 
             trip.distances.append(distance)
 

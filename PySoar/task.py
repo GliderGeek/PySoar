@@ -1,6 +1,10 @@
 from taskpoint import Taskpoint
-from generalFunctions import det_final_bearing, calculate_distance, det_bearing, det_bearing_change, \
-    interpolate_b_records, det_local_time
+from generalFunctions import det_bearing_change
+from generalFunctions import interpolate_b_records
+from generalFunctions import det_local_time
+from generalFunctions import calculate_final_bearing
+from generalFunctions import calculate_bearing
+from generalFunctions import calculate_distance2
 
 
 class Task(object):
@@ -31,7 +35,8 @@ class Task(object):
             if index == 0 or index == 1 or index == len(self.lcu_lines)-1:  # omitting date, take-off and landing
                 continue
 
-            self.taskpoints.append(Taskpoint(self.lcu_lines[index], self.lseeyou_lines[index-2]))
+            taskpoint = Taskpoint.from_cuc(self.lcu_lines[index], self.lseeyou_lines[index-2])
+            self.taskpoints.append(taskpoint)
 
         self.set_orientation_angles()
 
@@ -40,26 +45,36 @@ class Task(object):
         for index in range(len(self.taskpoints)):
 
             if index == 0:  # necessary for index out of bounds
-                angle = det_final_bearing(self.taskpoints[index+1].LCU_line, self.taskpoints[index].LCU_line,
-                                          'tsk', 'tsk')
+                angle = calculate_final_bearing(
+                    self.taskpoints[index + 1].lat, self.taskpoints[index + 1].lon,
+                    self.taskpoints[index].lat, self.taskpoints[index].lon)
+
                 self.taskpoints[index].set_orientation_angle(angle_next=angle)
             elif index == len(self.taskpoints) - 1:  # necessary for index out of bounds
-                angle = det_final_bearing(self.taskpoints[index-1].LCU_line, self.taskpoints[index].LCU_line,
-                                          'tsk', 'tsk')
+                angle = calculate_final_bearing(
+                    self.taskpoints[index - 1].lat, self.taskpoints[index - 1].lon,
+                    self.taskpoints[index].lat, self.taskpoints[index].lon)
                 self.taskpoints[index].set_orientation_angle(angle_previous=angle)
             else:
-                angle_start = det_final_bearing(self.taskpoints[0].LCU_line, self.taskpoints[index].LCU_line,
-                                                'tsk', 'tsk')
-                angle_previous = det_final_bearing(self.taskpoints[index-1].LCU_line, self.taskpoints[index].LCU_line,
-                                                   'tsk', 'tsk')
-                angle_next = det_final_bearing(self.taskpoints[index+1].LCU_line, self.taskpoints[index].LCU_line,
-                                               'tsk', 'tsk')
+
+                angle_start = calculate_final_bearing(
+                    self.taskpoints[0].lat, self.taskpoints[0].lon,
+                    self.taskpoints[index].lat, self.taskpoints[index].lon)
+
+                angle_previous = calculate_final_bearing(
+                    self.taskpoints[index - 1].lat, self.taskpoints[index - 1].lon,
+                    self.taskpoints[index].lat, self.taskpoints[index].lon)
+
+                angle_next = calculate_final_bearing(
+                    self.taskpoints[index + 1].lat, self.taskpoints[index + 1].lon,
+                    self.taskpoints[index].lat, self.taskpoints[index].lon)
 
                 self.taskpoints[index].set_orientation_angle(angle_start=angle_start,
                                                              angle_previous=angle_previous,
                                                              angle_next=angle_next)
 
-    def distance_shortened_leg(self, distance, current, currentP1, shortened_point):
+    @staticmethod
+    def distance_shortened_leg(distance, current, currentP1, shortened_point):
         if shortened_point == "current":
             distance -= current.r_max if current.r_max is not None else current.r_min
             return distance
@@ -69,7 +84,8 @@ class Task(object):
         else:
             print "Shortened point is not recognized! " + shortened_point
 
-    def distance_moved_turnpoint(self, distance, begin, end, moved_point, move_direction='reduce'):
+    @staticmethod
+    def distance_moved_turnpoint(distance, begin, end, moved_point, move_direction='reduce'):
         from math import sqrt, cos, pi, acos
 
         if moved_point == "begin":
@@ -83,15 +99,17 @@ class Task(object):
         elif moved_point == "both_end":
             moved = end
             other = begin
-            original_distance = calculate_distance(begin.LCU_line, end.LCU_line, 'tsk', 'tsk')
+            original_distance = calculate_distance2(begin.lat, begin.lon, end.lat, end.lon)
+
             distance_moved_current = begin.r_max if begin.angle_max == 180 else begin.r_min
             angle_reduction = abs(acos((distance_moved_current ** 2 - distance ** 2 - original_distance ** 2) / (-2 * distance * original_distance))) * 180 / pi
         else:
-            print "Displaced point is not recognized! " + moved_point
+            raise ValueError("Displaced point is not recognized: %s" % moved_point)
 
         displacement_dist = moved.r_max if moved.angle_max == 180 else moved.r_min
         bearing1 = moved.orientation_angle
-        bearing2 = det_bearing(other.LCU_line, moved.LCU_line, 'tsk', 'tsk')
+        bearing2 = calculate_bearing(other.lat, other.lon, moved.lat, moved.lon)
+
         if move_direction == 'increase':
             angle = 180 - abs(det_bearing_change(bearing1, bearing2)) - angle_reduction
         else:

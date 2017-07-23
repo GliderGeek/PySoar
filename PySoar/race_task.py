@@ -1,6 +1,10 @@
 from task import Task
-from generalFunctions import calculate_distance, det_local_time, enl_value_exceeded, enl_time_exceeded, \
-    det_time_difference
+from generalFunctions import det_local_time
+from generalFunctions import enl_value_exceeded
+from generalFunctions import enl_time_exceeded
+from generalFunctions import det_time_difference
+from generalFunctions import calculate_distance2
+from generalFunctions import det_lat_long
 
 
 class RaceTask(Task):
@@ -17,7 +21,7 @@ class RaceTask(Task):
 
             begin = self.taskpoints[leg]
             end = self.taskpoints[leg+1]  # next is built in name
-            distance = calculate_distance(begin.LCU_line, end.LCU_line, 'tsk', 'tsk')
+            distance = calculate_distance2(begin.lat, begin.lon, end.lat, end.lon)
 
             if begin.distance_correction is "shorten_legs":
                 if end.distance_correction is "shorten_legs":
@@ -29,7 +33,7 @@ class RaceTask(Task):
                 elif end.distance_correction is None:
                     distance = self.distance_shortened_leg(distance, begin, end, "begin")
                 else:
-                    print "This distance correction does not exist! " + end.distance_correction
+                    raise ValueError("This distance correction does not exist: %s" % end.distance_correction)
 
             elif begin.distance_correction is "move_tp":
                 if end.distance_correction is "shorten_legs":
@@ -41,7 +45,7 @@ class RaceTask(Task):
                 elif end.distance_correction is None:
                     distance = self.distance_moved_turnpoint(distance, begin, end, "begin")
                 else:
-                    print "This distance correction does not exist! " + end.distance_correction
+                    raise ValueError("This distance correction does not exist: %s" % end.distance_correction)
 
             elif begin.distance_correction is None:
                 if end.distance_correction is "shorten_legs":
@@ -51,10 +55,10 @@ class RaceTask(Task):
                 elif end.distance_correction is None:
                     pass
                 else:
-                    print "This distance correction does not exist! " + end.distance_correction
+                    raise ValueError("This distance correction does not exist: %s" % end.distance_correction)
 
             else:
-                print "This distance correction does not exist! " + self.taskpoints[leg].distance_correction
+                raise ValueError("This distance correction does not exist: %s" % self.taskpoints[leg].distance_correction)
 
             self.distances.append(distance)
 
@@ -147,12 +151,14 @@ class RaceTask(Task):
 
     def determine_outlanding_distance(self, outlanding_leg, fix):
 
-        task_pointM1 = self.taskpoints[outlanding_leg].LCU_line
-        task_point = self.taskpoints[outlanding_leg + 1].LCU_line
+        task_pointM1 = self.taskpoints[outlanding_leg]
+        task_point = self.taskpoints[outlanding_leg + 1]
+
+        fix_lat, fix_lon = det_lat_long(fix, 'pnt')
 
         # outlanding distance = distance between tps minus distance from next tp to outlanding
-        outlanding_dist = calculate_distance(task_pointM1, task_point, 'tsk', 'tsk')
-        outlanding_dist -= calculate_distance(task_point, fix, 'tsk', 'pnt')
+        outlanding_dist = calculate_distance2(task_pointM1.lat, task_pointM1.lon, task_point.lat, task_point.lon)
+        outlanding_dist -= calculate_distance2(task_point.lat, task_point.lon, fix_lat, fix_lon)
 
         if outlanding_dist > 0:
             return outlanding_dist

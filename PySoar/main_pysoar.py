@@ -32,7 +32,7 @@ def start_gui():
         print "Analysis complete, excel produced"
 
     title = Label(root, text=' PySoar', font=("Helvetica", 30))
-    url_accompanying_text = Label(root, text='Give Soaringspot URL:')
+    url_accompanying_text = Label(root, text='Give Soaringspot/scoringStrepla URL:')
     url_entry = Entry(root, width=60)
     url_confirmation = Button(root, text='ok')
     url_confirmation.bind('<Button-1>', url_check)
