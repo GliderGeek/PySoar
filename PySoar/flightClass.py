@@ -52,9 +52,9 @@ class Flight(object):
             self.phases = FlightPhases(self.trip, self.trace, self.trace_settings)
             self.performance = Performance(task, self.trip, self.phases, self.trace, self.trace_settings)
 
-    def read_igc(self, soaring_spot_info):
+    def read_igc(self, igc_directory):
         # this is a candidate for and IGC reader class / aerofiles functionality
-        f = open(soaring_spot_info.igc_directory + self.file_name, "U")  # U extension is a necessity for cross compatibility!
+        f = open(igc_directory + self.file_name, "U")  # U extension is a necessity for cross compatibility!
         full_file = f.readlines()
         f.close()
 
@@ -137,7 +137,7 @@ class Flight(object):
         # fix error in task definition: e.g.: LSEEYOU OZ=-1,Style=2SpeedStyle=0,R1=5000m,A1=180,Line=1
         # SpeedStyle=# is removed, where # is a number
         for line_index, line in enumerate(task_information['lseeyou_lines']):
-            task_information['lseeyou_lines'][line_index] = re.sub(r"SpeedStyle=\d{1}", "", line)
+            task_information['lseeyou_lines'][line_index] = re.sub(r"SpeedStyle=\d", "", line)
 
         # fix wrong style definition on start and finish points
         task_information['lseeyou_lines'][0] = task_information['lseeyou_lines'][0].replace('Style=1', 'Style=2')

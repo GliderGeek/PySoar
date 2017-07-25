@@ -1,3 +1,4 @@
+from taskpoint import Taskpoint
 from task import Task
 from generalFunctions import det_local_time
 from generalFunctions import enl_value_exceeded
@@ -9,13 +10,16 @@ from generalFunctions import det_lat_long
 
 class RaceTask(Task):
 
-    def __init__(self, task_information):
-        super(RaceTask, self).__init__(task_information)
+    def __init__(self, taskpoints, multi_start, start_opening, utc_diff):
 
-        self.distances = []
-        self.set_task_distances()
+        aat = False
+        super(RaceTask, self).__init__(taskpoints, aat, multi_start, start_opening, utc_diff)
 
-    def set_task_distances(self):
+        self.distances = self.calculate_task_distances()
+
+    def calculate_task_distances(self):
+
+        distances = []
 
         for leg in range(self.no_legs):
 
@@ -25,33 +29,33 @@ class RaceTask(Task):
 
             if begin.distance_correction is "shorten_legs":
                 if end.distance_correction is "shorten_legs":
-                    distance = self.distance_shortened_leg(distance, begin, end, "begin")
-                    distance = self.distance_shortened_leg(distance, begin, end, "end")
+                    distance = Task.distance_shortened_leg(distance, begin, end, "begin")
+                    distance = Task.distance_shortened_leg(distance, begin, end, "end")
                 elif end.distance_correction is "move_tp":
-                    distance = self.distance_moved_turnpoint(distance, begin, end, "end")
-                    distance = self.distance_shortened_leg(distance, begin, end, "begin")
+                    distance = Task.distance_moved_turnpoint(distance, begin, end, "end")
+                    distance = Task.distance_shortened_leg(distance, begin, end, "begin")
                 elif end.distance_correction is None:
-                    distance = self.distance_shortened_leg(distance, begin, end, "begin")
+                    distance = Task.distance_shortened_leg(distance, begin, end, "begin")
                 else:
                     raise ValueError("This distance correction does not exist: %s" % end.distance_correction)
 
             elif begin.distance_correction is "move_tp":
                 if end.distance_correction is "shorten_legs":
-                    distance = self.distance_moved_turnpoint(distance, begin, end, "begin")
-                    distance = self.distance_shortened_leg(distance, begin, end, "end")
+                    distance = Task.distance_moved_turnpoint(distance, begin, end, "begin")
+                    distance = Task.distance_shortened_leg(distance, begin, end, "end")
                 elif end.distance_correction is "move_tp":
-                    distance = self.distance_moved_turnpoint(distance, begin, end, "begin")
-                    distance = self.distance_moved_turnpoint(distance, begin, end, "both_end")
+                    distance = Task.distance_moved_turnpoint(distance, begin, end, "begin")
+                    distance = Task.distance_moved_turnpoint(distance, begin, end, "both_end")
                 elif end.distance_correction is None:
-                    distance = self.distance_moved_turnpoint(distance, begin, end, "begin")
+                    distance = Task.distance_moved_turnpoint(distance, begin, end, "begin")
                 else:
                     raise ValueError("This distance correction does not exist: %s" % end.distance_correction)
 
             elif begin.distance_correction is None:
                 if end.distance_correction is "shorten_legs":
-                    distance = self.distance_shortened_leg(distance, begin, end, "end")
+                    distance = Task.distance_shortened_leg(distance, begin, end, "end")
                 elif end.distance_correction is "move_tp":
-                    distance = self.distance_moved_turnpoint(distance, begin, end, "end")
+                    distance = Task.distance_moved_turnpoint(distance, begin, end, "end")
                 elif end.distance_correction is None:
                     pass
                 else:
@@ -60,7 +64,9 @@ class RaceTask(Task):
             else:
                 raise ValueError("This distance correction does not exist: %s" % self.taskpoints[leg].distance_correction)
 
-            self.distances.append(distance)
+            distances.append(distance)
+
+        return distances
 
     def apply_rules(self, trace, trip, trace_settings):
 

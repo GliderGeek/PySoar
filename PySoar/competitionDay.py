@@ -1,5 +1,6 @@
 import copy
 
+from task import Task
 from generalFunctions import get_date
 from settingsClass import Settings
 from race_task import RaceTask
@@ -48,7 +49,7 @@ class CompetitionDay(object):
             ranking = soaring_spot_info.rankings[ii]
             self.file_paths.append(soaring_spot_info.igc_directory + file_name)
             self.flights.append(Flight(soaring_spot_info.igc_directory, file_name, ranking))
-            self.flights[-1].read_igc(soaring_spot_info)
+            self.flights[-1].read_igc(soaring_spot_info.igc_directory)
 
     def load_task_information(self):
 
@@ -81,10 +82,18 @@ class CompetitionDay(object):
                         task_info = new_task_info
                         print 'used new task info because old one did not have full task'  # uncertain if this happens
 
+        lcu_lines = task_info['lcu_lines']
+        lseeyou_lines = task_info['lseeyou_lines']
+        multi_start = task_info['multi_start']
+        start_opening = task_info['start_opening']
+        utc_diff = task_info['utc_diff']
+        taskpoints = Task.taskpoints_from_cuc(lcu_lines, lseeyou_lines)
+
         if task_info['aat']:
-            self.task = AAT(task_info)
+            t_min = task_info['t_min']
+            self.task = AAT(taskpoints, multi_start, start_opening, utc_diff, t_min)
         else:
-            self.task = RaceTask(task_info)
+            self.task = RaceTask(taskpoints, multi_start, start_opening, utc_diff)
 
         # utc difference and date
         self.date = task_info['date']

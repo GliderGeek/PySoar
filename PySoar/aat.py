@@ -13,10 +13,11 @@ from pygeodesy.ellipsoidalVincenty import LatLon
 
 
 class AAT(Task):
-    def __init__(self, task_information):
-        super(AAT, self).__init__(task_information)
+    def __init__(self, taskpoints, multi_start, start_opening, utc_diff, t_min):
+        aat = True
+        super(AAT, self).__init__(taskpoints, aat, multi_start, start_opening, utc_diff)
 
-        self.t_min = task_information['t_min']
+        self.t_min = t_min
         self.nominal_distances = []
         self.minimal_distances = []  # not yet filled
         self.maximum_distances = []  # not yet filled

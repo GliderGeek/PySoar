@@ -22,10 +22,10 @@ class SoaringSpotImport(object):
         self.rankings = []
         
         self.strepla = False
-        set_source(self,url)
+        set_source(self, url)
 
-        if (self.strepla):
-            load_scs(self,url)
+        if self.strepla:
+            load_scs(self, url)
         else:
             self.competition, self.plane_class, self.date = self._get_competition_info(self.url)
             self.load_website()

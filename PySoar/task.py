@@ -9,69 +9,73 @@ from generalFunctions import calculate_distance2
 
 class Task(object):
 
-    def __init__(self, task_information):
+    # todo: all separate inputs, also with taskpoints as inputs, ultimately remove lcu_lines and lseeyou_lines
+    def __init__(self, task_points, aat, multi_start, start_opening, utc_diff):
 
-        self.aat = task_information['aat']
-        self.multi_start = task_information['multi_start']
-        self.start_opening = task_information['start_opening']
-        self.lcu_lines = task_information['lcu_lines']
-        self.lseeyou_lines = task_information['lseeyou_lines']
-        self.utc_diff = task_information['utc_diff']
+        self.aat = aat
+        self.multi_start = multi_start
+        self.start_opening = start_opening
+        self.utc_diff = utc_diff
 
-        self.taskpoints = []
-        self.initialize_taskpoints()
-        self.no_tps = len(self.taskpoints) - 2  # excluding start and finish
-        self.no_legs = self.no_tps + 1
+        self.taskpoints = task_points
 
-    def initialize_taskpoints(self):
+    @property
+    def no_tps(self):
+        return len(self.taskpoints) - 2
+
+    @property
+    def no_legs(self):
+        return self.no_tps + 1
+
+    @staticmethod
+    def taskpoints_from_cuc(lcu_lines, lseeyou_lines):
 
         # check on sizes
-        if len(self.lcu_lines)-3 != len(self.lseeyou_lines):
-            print 'lcu_lines and lseeyou_lines do not have expected lengths!'
-            exit(1)
+        if len(lcu_lines) - 3 != len(lseeyou_lines):
+            raise ValueError('lcu_lines and lseeyou_lines do not have expected lengths!')
 
-        for index in range(len(self.lcu_lines)):
+        taskpoints = []
+        for lcu_line, lseeyou_line in zip(lcu_lines[2:-1], lseeyou_lines):
+            taskpoint = Taskpoint.from_cuc(lcu_line, lseeyou_line)
+            taskpoints.append(taskpoint)
 
-            if index == 0 or index == 1 or index == len(self.lcu_lines)-1:  # omitting date, take-off and landing
-                continue
+        Task.set_orientation_angles(taskpoints)
 
-            taskpoint = Taskpoint.from_cuc(self.lcu_lines[index], self.lseeyou_lines[index-2])
-            self.taskpoints.append(taskpoint)
+        return taskpoints
 
-        self.set_orientation_angles()
-
-    def set_orientation_angles(self):
+    @staticmethod
+    def set_orientation_angles(taskpoints):
         # sector orientations and angles
-        for index in range(len(self.taskpoints)):
+        for index in range(len(taskpoints)):
 
             if index == 0:  # necessary for index out of bounds
                 angle = calculate_final_bearing(
-                    self.taskpoints[index + 1].lat, self.taskpoints[index + 1].lon,
-                    self.taskpoints[index].lat, self.taskpoints[index].lon)
+                    taskpoints[index + 1].lat, taskpoints[index + 1].lon,
+                    taskpoints[index].lat, taskpoints[index].lon)
 
-                self.taskpoints[index].set_orientation_angle(angle_next=angle)
-            elif index == len(self.taskpoints) - 1:  # necessary for index out of bounds
+                taskpoints[index].set_orientation_angle(angle_next=angle)
+            elif index == len(taskpoints) - 1:  # necessary for index out of bounds
                 angle = calculate_final_bearing(
-                    self.taskpoints[index - 1].lat, self.taskpoints[index - 1].lon,
-                    self.taskpoints[index].lat, self.taskpoints[index].lon)
-                self.taskpoints[index].set_orientation_angle(angle_previous=angle)
+                    taskpoints[index - 1].lat, taskpoints[index - 1].lon,
+                    taskpoints[index].lat, taskpoints[index].lon)
+                taskpoints[index].set_orientation_angle(angle_previous=angle)
             else:
 
                 angle_start = calculate_final_bearing(
-                    self.taskpoints[0].lat, self.taskpoints[0].lon,
-                    self.taskpoints[index].lat, self.taskpoints[index].lon)
+                    taskpoints[0].lat, taskpoints[0].lon,
+                    taskpoints[index].lat, taskpoints[index].lon)
 
                 angle_previous = calculate_final_bearing(
-                    self.taskpoints[index - 1].lat, self.taskpoints[index - 1].lon,
-                    self.taskpoints[index].lat, self.taskpoints[index].lon)
+                    taskpoints[index - 1].lat, taskpoints[index - 1].lon,
+                    taskpoints[index].lat, taskpoints[index].lon)
 
                 angle_next = calculate_final_bearing(
-                    self.taskpoints[index + 1].lat, self.taskpoints[index + 1].lon,
-                    self.taskpoints[index].lat, self.taskpoints[index].lon)
+                    taskpoints[index + 1].lat, taskpoints[index + 1].lon,
+                    taskpoints[index].lat, taskpoints[index].lon)
 
-                self.taskpoints[index].set_orientation_angle(angle_start=angle_start,
-                                                             angle_previous=angle_previous,
-                                                             angle_next=angle_next)
+                taskpoints[index].set_orientation_angle(angle_start=angle_start,
+                                                        angle_previous=angle_previous,
+                                                        angle_next=angle_next)
 
     @staticmethod
     def distance_shortened_leg(distance, current, currentP1, shortened_point):

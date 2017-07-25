@@ -1,18 +1,19 @@
 import os
 from mechanize import Browser
 from BeautifulSoup import BeautifulSoup
-import urllib
 from settingsClass import Settings
 import time
 
 
 settings = Settings()
 
-def set_source(self,url):
-    if ( 'strepla' in url):
+
+def set_source(self, url):
+    if 'strepla' in url:
         self.strepla = True
         self.baseUrl = "http://www.strepla.de/scs/Public/"
         self.plane = []
+
 
 def load_scs(self, url_input):
     
