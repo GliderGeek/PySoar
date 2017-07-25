@@ -159,7 +159,7 @@ class Taskpoint(object):  # startpoint, turnpoints and finish
 
     @classmethod
     def from_scs(cls):
-        return cls()
+        raise NotImplementedError()
 
     @classmethod
     def from_cuc(cls, LCU_line, LSEEYOU_line):

@@ -1,6 +1,3 @@
-import re
-
-from generalFunctions import hhmmss2ss, get_date, det_height
 from settingsClass import Settings
 from phasesClass import FlightPhases
 from performanceClass import Performance
@@ -13,21 +10,18 @@ class Flight(object):
 
     df_categories = ['ranking', 'airplane', 'compID']
 
-    def __init__(self, folder_path, file_name, ranking):
+    def __init__(self, file_name, competition_id, airplane, ranking, trace, trace_settings):
         self.file_name = file_name
-        self.folder_path = folder_path
 
-        self.airplane = None
-        self.competition_id = None
+        self.airplane = airplane
+        self.competition_id = competition_id
         self.ranking = ranking
 
-        self.trace = []
-        self.trace_settings = {
-            'gps_altitude': True,
-            'enl_indices': None
-        }
-        self.trip = None
+        self.trace = trace
+        self.trace_settings = trace_settings
 
+        # to be setup during analyze
+        self.trip = None
         self.phases = None
         self.performance = None
 
@@ -44,106 +38,13 @@ class Flight(object):
         return df_dict
 
     def analyze(self, task):
-        print self.file_name
+        print self.competition_id
 
         self.trip = Trip(task, self.trace, self.trace_settings)
 
         if len(self.trip.fixes) >= 1:  # competitor must have started
             self.phases = FlightPhases(self.trip, self.trace, self.trace_settings)
             self.performance = Performance(task, self.trip, self.phases, self.trace, self.trace_settings)
-
-    def read_igc(self, igc_directory):
-        # this is a candidate for and IGC reader class / aerofiles functionality
-        f = open(igc_directory + self.file_name, "U")  # U extension is a necessity for cross compatibility!
-        full_file = f.readlines()
-        f.close()
-
-        for line in full_file:
-
-            if line.startswith('B'):
-
-                # put gps_altitude to False when nonzero pressure altitude is found
-                if self.trace_settings['gps_altitude'] is True and det_height(line, gps_altitude=False) != 0:
-                    self.trace_settings['gps_altitude'] = False
-
-                if len(self.trace) == 0 or (len(self.trace) > 0 and self.trace[-1][0:7] != line[0:7]):
-                    self.trace.append(line)
-                    continue
-
-            if line.startswith('I'):
-                no_extensions = int(line[1:3])
-                i_record_byte = 3
-                for extension_number in range(no_extensions):
-                    extension_name = line[i_record_byte+4: i_record_byte+7]
-                    extension_start_byte = int(line[i_record_byte:i_record_byte+2])
-                    extension_end_byte = int(line[i_record_byte+2:i_record_byte+4])
-                    i_record_byte += 7
-
-                    if extension_name == 'ENL':
-                        self.trace_settings['enl_indices'] = [extension_start_byte, extension_end_byte]
-
-            if line.startswith('LCU::HPGTYGLIDERTYPE:'):
-                self.airplane = line[21:-1]
-                continue
-
-            if line.startswith('LCU::HPCIDCOMPETITIONID:'):
-                self.competition_id = line[24:-1]
-                continue
-
-    def get_task_information(self):
-        # this is a candidate for and IGC reader class / aerofiles functionality
-
-        task_information = {
-            't_min': None,
-            'date': None,
-            'start_opening': hhmmss2ss("09:00:00", 0),
-            'multi_start': False,
-            'aat': False,
-            'lcu_lines': [],
-            'lseeyou_lines': [],
-            'utc_diff': None
-        }
-
-        f = open(self.folder_path + self.file_name, "U")  # U extension is a necessity for cross compatibility!
-        full_file = f.readlines()
-        f.close()
-
-        for line in full_file:
-
-            if line.startswith('LSEEYOU TSK'):
-
-                tsk_split = line.split(',')
-                for task_element in tsk_split:
-                    if task_element.startswith('TaskTime'):
-                        task_information['t_min'] = hhmmss2ss(task_element[9::], 0)  # assuming no UTC offset
-                        task_information['aat'] = True
-                    if task_element.startswith('NoStart'):
-                        task_information['start_opening'] = hhmmss2ss(task_element[8::], 0)  # time in local time, not UTC
-                    if task_element.startswith('MultiStart=True'):
-                        task_information['multi_start'] = True
-                continue
-
-            if line.startswith('LCU::C'):
-                task_information['lcu_lines'].append(line)
-            if line.startswith('LSEEYOU OZ='):
-                task_information['lseeyou_lines'].append(line)
-            if line.startswith('LCU::HPTZNTIMEZONE:'):
-                task_information['utc_diff'] = int(line[19:-1])
-
-        # extract date from fist lcu line
-        if len(task_information['lcu_lines']) != 0:
-            task_information['date'] = get_date(task_information['lcu_lines'][0])
-
-        # fix error in task definition: e.g.: LSEEYOU OZ=-1,Style=2SpeedStyle=0,R1=5000m,A1=180,Line=1
-        # SpeedStyle=# is removed, where # is a number
-        for line_index, line in enumerate(task_information['lseeyou_lines']):
-            task_information['lseeyou_lines'][line_index] = re.sub(r"SpeedStyle=\d", "", line)
-
-        # fix wrong style definition on start and finish points
-        task_information['lseeyou_lines'][0] = task_information['lseeyou_lines'][0].replace('Style=1', 'Style=2')
-        task_information['lseeyou_lines'][-1] = task_information['lseeyou_lines'][-1].replace('Style=1', 'Style=3')
-
-        return task_information
 
 #############################  LICENSE  #####################################
 

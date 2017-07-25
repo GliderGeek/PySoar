@@ -9,7 +9,6 @@ from generalFunctions import calculate_distance2
 
 class Task(object):
 
-    # todo: all separate inputs, also with taskpoints as inputs, ultimately remove lcu_lines and lseeyou_lines
     def __init__(self, task_points, aat, multi_start, start_opening, utc_diff):
 
         self.aat = aat
@@ -18,6 +17,7 @@ class Task(object):
         self.utc_diff = utc_diff
 
         self.taskpoints = task_points
+        self.set_orientation_angles(self.taskpoints)
 
     @property
     def no_tps(self):
@@ -39,9 +39,12 @@ class Task(object):
             taskpoint = Taskpoint.from_cuc(lcu_line, lseeyou_line)
             taskpoints.append(taskpoint)
 
-        Task.set_orientation_angles(taskpoints)
-
         return taskpoints
+
+    @staticmethod
+    def taskpoints_from_scs():
+        # use Taskpoint.from_scs()
+        raise NotImplementedError()
 
     @staticmethod
     def set_orientation_angles(taskpoints):

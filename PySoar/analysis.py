@@ -11,7 +11,7 @@ def run(url, url_status=None, download_progress=None, analysis_progress=None):
     soaring_spot_info = SoaringSpotImport(url, download_progress)
     competition_day = CompetitionDay(soaring_spot_info, url_status)
 
-    competition_day.analyze_flights(soaring_spot_info, analysis_progress)
+    competition_day.analyze_flights(analysis_progress)
 
     excel_sheet = ExcelExport(settings, competition_day.task.no_legs)
     excel_sheet.write_file(competition_day, settings, soaring_spot_info)
