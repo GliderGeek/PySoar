@@ -274,7 +274,7 @@ class ExcelExport(object):
             self.write_title(leg, settings, competition_day.task.taskpoints)
             self.write_perf_indics(leg, settings, competition_day)
 
-    def write_file(self, competition_day, settings, soaring_spot_info):
+    def write_file(self, competition_day, settings, igc_directory):
 
         self.write_general_info(competition_day.date)
         self.determine_best_worst(competition_day, settings)
@@ -282,7 +282,7 @@ class ExcelExport(object):
         self.write_legs(settings, competition_day)
 
         self.wb.save(self.file_name)
-        self.wb.save(soaring_spot_info.igc_directory + self.file_name.split('/')[-1])
+        self.wb.save(igc_directory + self.file_name.split('/')[-1])
 
 
 #############################  LICENSE  #####################################

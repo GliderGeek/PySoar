@@ -247,9 +247,9 @@ def task_url_from_daily(daily_url):
 
 
 def url_format_correct(url_string):
-    if (url_string[0:26] != "http://www.soaringspot.com" and url_string[0:21] != "http://www.strepla.de") :
+    if 'soaringspot.com' not in url_string and 'strepla.de' not in url_string:
         return 'Use SoaringSpot or Strepla URL'
-    elif (url_string[-5::] != 'daily' and url_string[33:41] != 'scoreDay'):
+    elif url_string[-5::] != 'daily' and url_string[33:41] != 'scoreDay':
         return 'URL does not give daily results'
     else:
         return 'URL correct'
@@ -422,6 +422,15 @@ def get_date(lcu_line):
     day = int(date_raw[0:2])
 
     return date(year, month, day)
+
+
+def get_url_source(url):
+    if 'soaringspot.com' in url:
+        return 'cuc'
+    elif 'strepla.de' in url:
+        return 'scs'
+    else:
+        raise ValueError('Unknown source')
 
 #############################  LICENSE  #####################################
 

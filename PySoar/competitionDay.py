@@ -1,4 +1,5 @@
 import copy
+import os
 import re
 
 from task import Task
@@ -13,14 +14,13 @@ settings = Settings()
 
 class CompetitionDay(object):
 
-    def __init__(self, soaring_spot_info, url_status):
+    def __init__(self, url_status, source, igc_directory, file_names, rankings):
 
-        self.source = 'scs' if soaring_spot_info.strepla else 'cuc'
-
+        self.source = source
         self.analyzed = False
 
         self.flights, task_infos = self.process_files(
-            soaring_spot_info.igc_directory, soaring_spot_info.file_names, soaring_spot_info.rankings)
+            igc_directory, file_names, rankings)
 
         self.task, self.date, self.utc_diff = self.get_task(task_infos)
 
@@ -59,7 +59,7 @@ class CompetitionDay(object):
     def read_igc(folder_path, file_name):
         # this is a candidate for and IGC reader class / aerofiles functionality
 
-        with open(folder_path + file_name, "U") as f:  # U extension is a necessity for cross compatibility!
+        with open(os.path.join(folder_path, file_name), "U") as f:  # U extension for cross compatibility!
             full_file = f.readlines()
         
         trace_settings = {
@@ -135,6 +135,8 @@ class CompetitionDay(object):
             elif line.startswith('LCU::HPTZNTIMEZONE:'):
                 task_information['utc_diff'] = int(line[19:-1])
 
+            # add strepla task information lines here
+
         # extract date from fist lcu line
         if len(task_information['lcu_lines']) != 0:
             task_information['date'] = get_date(task_information['lcu_lines'][0])
@@ -147,8 +149,6 @@ class CompetitionDay(object):
         # fix wrong style definition on start and finish points
         task_information['lseeyou_lines'][0] = task_information['lseeyou_lines'][0].replace('Style=1', 'Style=2')
         task_information['lseeyou_lines'][-1] = task_information['lseeyou_lines'][-1].replace('Style=1', 'Style=3')
-
-        # add strepla task information lines here
 
         return trace, trace_settings, airplane, competition_id, task_information
 
