@@ -1,5 +1,4 @@
 import os
-
 from BeautifulSoup import BeautifulSoup
 from mechanize import Browser
 from settingsClass import Settings

@@ -23,6 +23,10 @@ class DailyResultsPage:
     def set_igc_directory(self, start_dir, competition_name, plane_class, date):
         self.igc_directory = os.path.join(start_dir, competition_name, plane_class, date)
 
+        # make directory
+        if not os.path.exists(self.igc_directory):
+            os.makedirs(self.igc_directory) 
+        
     def download_flights(self, download_progress):
         flights_downloaded = 0
 
