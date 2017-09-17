@@ -12,7 +12,7 @@ class StreplaDaily(DailyResultsPage):
         DailyResultsPage.__init__(self, url)
 
         self.baseUrl = "http://www.strepla.de/scs/Public/"
-
+        
         self.load_website()
         self.set_igc_directory(os.path.join(settings.current_dir, 'bin'), self.competition, self.plane_class, self.date)
                 
@@ -41,7 +41,7 @@ class StreplaDaily(DailyResultsPage):
                 self.rankings.append(int(comp.findAll('span')[0].text))
                 self.file_urls.append(self.baseUrl + comp.findAll('a')[0].get('href'))
                 self.file_names.append((comp.findAll('span')[1].text) + '.igc')
-                #self.plane.append((comp.findAll('span')[3].text))
+                self.plane.append((comp.findAll('span')[3].text))
             
 
         print "Analyzing %s, %s %s" % (self.competition, self.plane_class, self.date)   

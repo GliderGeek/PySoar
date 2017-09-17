@@ -14,14 +14,15 @@ settings = Settings()
 
 class CompetitionDay(object):
 
-    def __init__(self, url_status, source, igc_directory, file_names, rankings):
+    def __init__(self, url_status, source, igc_directory, file_names, rankings,plane):
 
         self.source = source
         self.analyzed = False
+        
+        self.flights, task_infos = self.process_files(igc_directory, file_names, rankings)
 
-        self.flights, task_infos = self.process_files(
-            igc_directory, file_names, rankings)
-
+        exit()
+        
         self.task, self.date, self.utc_diff = self.get_task(task_infos)
 
         # shortcoming of PySoar
@@ -55,10 +56,9 @@ class CompetitionDay(object):
 
         return flights, task_infos
 
-    @staticmethod
-    def read_igc(folder_path, file_name):
+    def read_igc(self,folder_path, file_name):
         # this is a candidate for and IGC reader class / aerofiles functionality
-
+        
         with open(os.path.join(folder_path, file_name), "U") as f:  # U extension for cross compatibility!
             full_file = f.readlines()
         
@@ -75,8 +75,9 @@ class CompetitionDay(object):
             'aat': False,
             'lcu_lines': [],
             'lseeyou_lines': [],
-            'utc_diff': None
-            # add strepla task lines here
+            'utc_diff': None,
+            'scs_taskpoints':[],
+            'scs_start_finish':[]
         }
 
         trace = list()
@@ -106,49 +107,75 @@ class CompetitionDay(object):
                     if extension_name == 'ENL':
                         trace_settings['enl_indices'] = [extension_start_byte, extension_end_byte]
 
-            elif line.startswith('LCU::HPGTYGLIDERTYPE:'):
-                airplane = line[21:-1]
-                continue
+            if self.source == 'cuc':          
+                if line.startswith('LCU::HPGTYGLIDERTYPE:'):
+                    airplane = line[21:-1]
+                    continue    
 
-            elif line.startswith('LCU::HPCIDCOMPETITIONID:'):
-                competition_id = line[24:-1]
-                continue
+                elif line.startswith('LCU::HPCIDCOMPETITIONID:'):
+                    competition_id = line[24:-1]
+                    continue
 
-            elif line.startswith('LSEEYOU TSK'):
+                elif line.startswith('LSEEYOU TSK'):
 
-                tsk_split = line.split(',')
-                for task_element in tsk_split:
-                    if task_element.startswith('TaskTime'):
-                        task_information['t_min'] = hhmmss2ss(task_element[9::], 0)  # assuming no UTC offset
-                        task_information['aat'] = True
-                    if task_element.startswith('NoStart'):
-                        task_information['start_opening'] = hhmmss2ss(task_element[8::],
-                                                                      0)  # time in local time, not UTC
-                    if task_element.startswith('MultiStart=True'):
-                        task_information['multi_start'] = True
-                continue
+                    tsk_split = line.split(',')
+                    for task_element in tsk_split:
+                        if task_element.startswith('TaskTime'):
+                            task_information['t_min'] = hhmmss2ss(task_element[9::], 0)  # assuming no UTC offset
+                            task_information['aat'] = True
+                        if task_element.startswith('NoStart'):
+                            task_information['start_opening'] = hhmmss2ss(task_element[8::],
+                                                                          0)  # time in local time, not UTC
+                        if task_element.startswith('MultiStart=True'):
+                            task_information['multi_start'] = True
+                    continue
 
-            elif line.startswith('LCU::C'):
-                task_information['lcu_lines'].append(line)
-            elif line.startswith('LSEEYOU OZ='):
-                task_information['lseeyou_lines'].append(line)
-            elif line.startswith('LCU::HPTZNTIMEZONE:'):
-                task_information['utc_diff'] = int(line[19:-1])
+                elif line.startswith('LCU::C'):
+                    task_information['lcu_lines'].append(line)
+                elif line.startswith('LSEEYOU OZ='):
+                    task_information['lseeyou_lines'].append(line)
+                elif line.startswith('LCU::HPTZNTIMEZONE:'):
+                    task_information['utc_diff'] = int(line[19:-1])
 
-            # add strepla task information lines here
+                # extract date from fist lcu line
+                if len(task_information['lcu_lines']) != 0:
+                    task_information['date'] = get_date(task_information['lcu_lines'][0])
 
-        # extract date from fist lcu line
-        if len(task_information['lcu_lines']) != 0:
-            task_information['date'] = get_date(task_information['lcu_lines'][0])
 
-        # fix error in task definition: e.g.: LSEEYOU OZ=-1,Style=2SpeedStyle=0,R1=5000m,A1=180,Line=1
-        # SpeedStyle=# is removed, where # is a number
-        for line_index, line in enumerate(task_information['lseeyou_lines']):
-            task_information['lseeyou_lines'][line_index] = re.sub(r"SpeedStyle=\d", "", line)
+                # fix error in task definition: e.g.: LSEEYOU OZ=-1,Style=2SpeedStyle=0,R1=5000m,A1=180,Line=1
+                # SpeedStyle=# is removed, where # is a number
+                for line_index, line in enumerate(task_information['lseeyou_lines']):
+                    task_information['lseeyou_lines'][line_index] = re.sub(r"SpeedStyle=\d", "", line)
 
-        # fix wrong style definition on start and finish points
-        task_information['lseeyou_lines'][0] = task_information['lseeyou_lines'][0].replace('Style=1', 'Style=2')
-        task_information['lseeyou_lines'][-1] = task_information['lseeyou_lines'][-1].replace('Style=1', 'Style=3')
+                # fix wrong style definition on start and finish points
+                    task_information['lseeyou_lines'][0] = task_information['lseeyou_lines'][0].replace('Style=1', 'Style=2')
+                    task_information['lseeyou_lines'][-1] = task_information['lseeyou_lines'][-1].replace('Style=1', 'Style=3')
+
+            elif self.source == 'scs':
+                
+                # all times are UTC, so utc_diff=0
+                task_information['utc_diff'] = 0
+
+                if line.startswith('LSCS'):
+                
+                    # is task AAT
+                    if line.startswith('LSCSDCID:'):
+                        competition_id = line[9:-1]
+                        continue
+
+                    if line.startswith('LSCSDGate open'):
+                        task_information['start_opening'] = hhmmss2ss( ((line.split(':'))[1]+":"+((line.split(':'))[2])[0:-1]+":00"),0)
+                        
+                    if line.startswith('LSCSDTime window:'):
+                        task_information['t_min'] = hhmmss2ss( ((line.split(':'))[1]+":"+((line.split(':'))[2])[0:-1]+":00"),0 )
+                        if task_information['t_min'] > 0:
+                            task_information['aat'] = True
+
+                    if line.startswith('LSCSC'):
+                        task_information['scs_taskpoints'].append(line)
+
+                    if line.startswith('LSCSR'):
+                        task_information['scs_start_finish'].append(line)
 
         return trace, trace_settings, airplane, competition_id, task_information
 

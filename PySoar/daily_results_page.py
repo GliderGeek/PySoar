@@ -20,6 +20,9 @@ class DailyResultsPage:
         self.file_urls = list()
         self.file_names = list()
 
+        # needed for scoringStrepla as no information of airplane type is available
+        self.plane = list()
+
     def set_igc_directory(self, start_dir, competition_name, plane_class, date):
         self.igc_directory = os.path.join(start_dir, competition_name, plane_class, date)
 
