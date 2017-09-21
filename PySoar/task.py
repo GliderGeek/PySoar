@@ -35,16 +35,34 @@ class Task(object):
             raise ValueError('lcu_lines and lseeyou_lines do not have expected lengths!')
 
         taskpoints = []
-        for lcu_line, lseeyou_line in zip(lcu_lines[2:-1], lseeyou_lines):
-            taskpoint = Taskpoint.from_cuc(lcu_line, lseeyou_line)
+        for lcu_lines, lseeyou_line in zip(lcu_lines[2:-1], lseeyou_lines):
+            taskpoint = Taskpoint.from_cuc(lcu_lines, lseeyou_line)
             taskpoints.append(taskpoint)
-
+            
         return taskpoints
 
     @staticmethod
-    def taskpoints_from_scs():
-        # use Taskpoint.from_scs()
-        raise NotImplementedError()
+    def taskpoints_from_scs(lscs_lines,lscs_lines_tp):
+        
+        taskpoints = []
+        scs_tps = []
+
+        # get task information
+        task_info = Taskpoint.scs_task_info(lscs_lines)
+
+        # create turnpoints
+        n_tp=len(lscs_lines_tp)
+        n=0
+        for tp in lscs_lines_tp:
+            scs_tp = Taskpoint.scs_tp_create(task_info,n,n_tp)
+            scs_tps.append(scs_tp)
+            n=n+1
+
+        for lscs_lines_tp,scs_tps in zip(lscs_lines_tp,scs_tps):
+            taskpoint = Taskpoint.from_scs(lscs_lines_tp,scs_tps)
+            taskpoints.append(taskpoint)
+
+        return taskpoints
 
     @staticmethod
     def set_orientation_angles(taskpoints):

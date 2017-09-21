@@ -158,8 +158,25 @@ class Taskpoint(object):  # startpoint, turnpoints and finish
                     exit(1)
 
     @classmethod
-    def from_scs(cls):
-        raise NotImplementedError()
+    def from_scs(cls,lscs_lines_tp,scs_tps):
+
+        lscs_lines_split=lscs_lines_tp.split(':')
+        
+        name=lscs_lines_split[1]
+        lat, lon =  det_lat_long((lscs_lines_split[2])[1:]+(lscs_lines_split[2])[0]+(lscs_lines_split[3])[1:-1]+(lscs_lines_split[3])[0], 'tsk_scs')
+
+        r_min = scs_tps['r_min']
+        angle_min = scs_tps['angle_min']
+        r_max = scs_tps['r_max']
+        angle_max = scs_tps['angle_max']
+        orientation_angle = scs_tps['orientation_angle']
+        line = scs_tps['line']
+        sector_orientation = scs_tps['sector_orientation']
+        distance_correction = scs_tps['distance_correction']
+        
+
+        return cls(name, lat, lon, r_min, angle_min, r_max, angle_max, orientation_angle,
+                   line, sector_orientation, distance_correction)
 
     @classmethod
     def from_cuc(cls, LCU_line, LSEEYOU_line):
@@ -181,7 +198,105 @@ class Taskpoint(object):  # startpoint, turnpoints and finish
         return cls(name, lat, lon, r_min, angle_min, r_max, angle_max, orientation_angle,
                    line, sector_orientation, distance_correction)
 
+    @staticmethod
+    def scs_task_info(lscs_lines):
 
+        task_info = {
+            's_line_rad': None,
+            'tp_key': False,
+            'tp_key_dim': [],
+            'tp_cyl': False,
+            'tp_cyl_rad' : None,
+            'f_line': False,
+            'f_line_rad' : None,
+            'f_cyl': False,
+            'f_cyl_rad' : None,
+            'tp_aat_rad' : [],
+            'tp_aat_angle' : [],
+            'aat': False
+        }
+
+        for line in lscs_lines:
+            if line.startswith('LSCSRSLINE'):
+                task_info['s_line_rad'] = int((line.split(':'))[1])/2
+            if line.startswith('LSCSRTKEYHOLE'):
+                task_info['tp_key'] = True
+                task_info['tp_key_dim'].append(int((line.split(':'))[1]))
+                task_info['tp_key_dim'].append(int((line.split(':'))[2]))
+                task_info['tp_key_dim'].append(int((line.split(':'))[3]))
+            if line.startswith('LSCSRTCYLINDER'):
+                task_info['tp_cyl'] = True
+                task_info['tp_cyl_rad'] = int((line.split(':'))[1])
+            if line.startswith('LSCSRFCYLINDER'):
+                task_info['f_cyl'] = True
+                task_info['f_cyl_rad'] = int((line.split(':'))[1])
+            if line.startswith('LSCSRFLINE'):
+                task_info['f_line'] = True
+                task_info['f_line_rad'] = int((line.split(':'))[1])
+            if line.startswith('LSCSA0'):
+                task_info['tp_aat_rad'].append(int((line.split(':'))[1]))
+                if int(((line.split(':'))[3])[0:-1]) == 0:
+                    task_info['tp_aat_angle'].append(360)
+                else:
+                    task_info['tp_aat_angle'].append(int(((line.split(':'))[3])[0:-1]))
+                task_info['aat'] = True
+                         
+        return task_info
+
+    @staticmethod
+    def scs_tp_create(task_info,n,n_tp):
+
+        tp_out = {
+            'r_min': None,
+            'r_max': None,
+            'angle_min': None,
+            'angle_max': None,
+            'orientation_angle': None,
+            'line': False,
+            'sector_orientation': None,
+            'distance_correction' : None
+        }
+
+        if n==0 :
+            tp_out['line'] = True
+            tp_out['sector_orientation'] = "next"
+            tp_out['r_max'] = task_info['s_line_rad']
+            tp_out['angle_max'] = 90
+        elif (n > 0 and n < (n_tp-1)) :
+            tp_out['sector_orientation'] = "symmetrical"
+
+            if task_info['aat']:
+                tp_out['angle_max'] = (task_info['tp_aat_angle'])[n-1]/2
+                tp_out['r_max'] = (task_info['tp_aat_rad'])[n-1]
+                tp_out['sector_orientation'] = "previous"
+            else:
+                # turnpoint is DAEC keyhole
+                if task_info['tp_key']:
+                    tp_out['r_max'] = (task_info['tp_key_dim'])[1]
+                    tp_out['angle_max'] = ((task_info['tp_key_dim'])[2])/2
+                    tp_out['r_min'] = (task_info['tp_key_dim'])[0]
+                    tp_out['angle_min'] = 180
+
+                # turnpoint is cylinder
+                elif task_info['tp_cyl']:
+                    tp_out['r_max'] = task_info['tp_cyl_rad']
+                    tp_out['angle_max'] = 180
+            
+        elif  n == (n_tp-1) :
+            tp_out['sector_orientation'] = "previous"
+
+            # finish is cylinder
+            if task_info['f_cyl']:
+                tp_out['r_max'] = task_info['f_cyl_rad']
+                tp_out['angle_max'] = 180
+
+            # finish is line
+            elif task_info['f_line']:
+                tp_out['r_max'] = task_info['f_line_rad']
+                tp_out['angle_max'] = 90
+                tp_out['line'] = True
+            
+        return tp_out    
 #############################  LICENSE  #####################################
 
 #   PySoar - Automating gliding competition analysis

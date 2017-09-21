@@ -3,7 +3,7 @@ import os
 import re
 
 from task import Task
-from generalFunctions import get_date, det_height, hhmmss2ss
+from generalFunctions import get_date_cuc, get_date_scs, det_height, hhmmss2ss
 from settingsClass import Settings
 from race_task import RaceTask
 from aat import AAT
@@ -14,14 +14,12 @@ settings = Settings()
 
 class CompetitionDay(object):
 
-    def __init__(self, url_status, source, igc_directory, file_names, rankings,plane):
+    def __init__(self, url_status, source, igc_directory, file_names, rankings, plane, date):
 
         self.source = source
         self.analyzed = False
         
-        self.flights, task_infos = self.process_files(igc_directory, file_names, rankings)
-
-        exit()
+        self.flights, task_infos = self.process_files(igc_directory, file_names, rankings, plane, date)
         
         self.task, self.date, self.utc_diff = self.get_task(task_infos)
 
@@ -44,19 +42,28 @@ class CompetitionDay(object):
 
         self.analyzed = True
 
-    def process_files(self, igc_directory, file_names, rankings):
+    def process_files(self, igc_directory, file_names, rankings,plane, date):
         flights = list()
         task_infos = list()
-        for file_name, ranking in zip(file_names, rankings):
 
-            trace, trace_settings, airplane, competition_id, task_information = self.read_igc(igc_directory, file_name)
+        if self.source == 'cuc':
+            for file_name, ranking in zip(file_names, rankings):
 
-            flights.append(Flight(file_name, competition_id, airplane, ranking, trace, trace_settings))
-            task_infos.append(task_information)
+                trace, trace_settings, airplane, competition_id, task_information = self.read_igc(igc_directory, file_name,None,None)
 
+                flights.append(Flight(file_name, competition_id, airplane, ranking, trace, trace_settings))
+                task_infos.append(task_information)
+        elif self.source == 'scs':
+            for file_name, ranking, plane in zip(file_names, rankings, plane):
+
+                trace, trace_settings, airplane, competition_id, task_information = self.read_igc(igc_directory, file_name, plane, date)
+
+                flights.append(Flight(file_name, competition_id, airplane, ranking, trace, trace_settings))
+                task_infos.append(task_information)
+            
         return flights, task_infos
 
-    def read_igc(self,folder_path, file_name):
+    def read_igc(self,folder_path, file_name, plane, date):
         # this is a candidate for and IGC reader class / aerofiles functionality
         
         with open(os.path.join(folder_path, file_name), "U") as f:  # U extension for cross compatibility!
@@ -76,8 +83,8 @@ class CompetitionDay(object):
             'lcu_lines': [],
             'lseeyou_lines': [],
             'utc_diff': None,
-            'scs_taskpoints':[],
-            'scs_start_finish':[]
+            'lscs_lines':[],
+            'lscs_lines_tp':[]
         }
 
         trace = list()
@@ -139,7 +146,7 @@ class CompetitionDay(object):
 
                 # extract date from fist lcu line
                 if len(task_information['lcu_lines']) != 0:
-                    task_information['date'] = get_date(task_information['lcu_lines'][0])
+                    task_information['date'] = get_date_cuc(task_information['lcu_lines'][0])
 
 
                 # fix error in task definition: e.g.: LSEEYOU OZ=-1,Style=2SpeedStyle=0,R1=5000m,A1=180,Line=1
@@ -172,17 +179,20 @@ class CompetitionDay(object):
                             task_information['aat'] = True
 
                     if line.startswith('LSCSC'):
-                        task_information['scs_taskpoints'].append(line)
+                        task_information['lscs_lines_tp'].append(line)
+                        
+                    if line.startswith('LSCS'):
+                        task_information['lscs_lines'].append(line)
 
-                    if line.startswith('LSCSR'):
-                        task_information['scs_start_finish'].append(line)
-
+                    task_information['date'] = get_date_scs(date)
+                    airplane = plane
+                    
         return trace, trace_settings, airplane, competition_id, task_information
 
     @staticmethod
     def check_dates_in_cuc_task_info(task_info1, task_info2):
-        current_task_date = get_date(task_info1['lcu_lines'][0])
-        new_task_date = get_date(task_info2['lcu_lines'][0])
+        current_task_date = get_date_cuc(task_info1['lcu_lines'][0])
+        new_task_date = get_date_cuc(task_info2['lcu_lines'][0])
         if new_task_date != current_task_date:
             print('different task date present in igc files')
             # issue #65
@@ -235,16 +245,20 @@ class CompetitionDay(object):
             lseeyou_lines = task_info['lseeyou_lines']
             taskpoints = Task.taskpoints_from_cuc(lcu_lines, lseeyou_lines)
         elif self.source == 'scs':
-            taskpoints = Task.taskpoints_from_scs()
+            lscs_lines_tp = task_info['lscs_lines_tp']
+            lscs_lines = task_info['lscs_lines']
+            taskpoints = Task.taskpoints_from_scs(lscs_lines,lscs_lines_tp)
         else:
             raise ValueError('Source not implemented: %s' % self.source)
 
+        
         if task_info['aat']:
             t_min = task_info['t_min']
+            print(t_min)
             task = AAT(taskpoints, multi_start, start_opening, utc_diff, t_min)
         else:
             task = RaceTask(taskpoints, multi_start, start_opening, utc_diff)
-
+            
         # utc difference and date
         date = task_info['date']
         utc_diff = task_info['utc_diff']

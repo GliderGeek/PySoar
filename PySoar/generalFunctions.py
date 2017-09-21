@@ -73,23 +73,27 @@ def det_velocity(location_record1, location_record2, record_type1, record_type2)
 
     return dist/delta_t
 
-
 def det_lat_long(location_record, record_type, return_radians=True):
 
     pnt_lat = 7
     pnt_long = 15
     tsk_lat = 6
     tsk_long = 14
-
+    tsk_scs_lat = 0
+    tsk_scs_long = 8
+    
     if record_type == 'pnt':
         latitude_dms = location_record[pnt_lat:pnt_lat+8]
         longitude_dms = location_record[pnt_long:pnt_long+8]
     elif record_type == 'tsk':
         latitude_dms = location_record[tsk_lat:tsk_lat+8]
         longitude_dms = location_record[tsk_long:tsk_long+8]
+    elif record_type == 'tsk_scs':
+        latitude_dms = location_record[tsk_scs_lat:tsk_scs_lat+8]
+        longitude_dms = location_record[tsk_scs_long:tsk_scs_long+8]        
     else:
         raise ValueError('Unsupported record_type')
-
+    
     if return_radians:
         return radians(dms2dd(latitude_dms)), radians(dms2dd(longitude_dms))
     else:
@@ -413,7 +417,7 @@ def interpolate_b_records(b_record1, b_record2):
     return b_records
 
 
-def get_date(lcu_line):
+def get_date_cuc(lcu_line):
     date_raw = lcu_line[6:12]
 
     year = int(date_raw[4::])
@@ -423,6 +427,14 @@ def get_date(lcu_line):
 
     return date(year, month, day)
 
+
+def get_date_scs(date_scs):
+
+    day=int(date_scs.split('.')[0])
+    month=int(date_scs.split('.')[1])
+    year=int(date_scs.split('.')[2])
+    
+    return date(year, month, day)
 
 def get_url_source(url):
     if 'soaringspot.com' in url:
