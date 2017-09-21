@@ -46,8 +46,12 @@ class SoaringSpotDaily(DailyResultsPage):
     @staticmethod
     def _get_competition_info(url):
 
-        if url.startswith('http://'):
+        print(url)
+
+        if url.startswith('https://'):
             _, _, _, _, competition, _, plane_class, date_description, _ = url.split('/')
+        elif url.startswith('http://'):
+            _, _, _, _, competition, _, plane_class, date_description, _ = url.split('/')            
         else:
             _, _, competition, _, plane_class, date_description, _ = url.split('/')
 

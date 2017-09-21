@@ -8,7 +8,10 @@ class DailyResultsPage:
     def __init__(self, url):
 
         if not url.startswith('http://'):
-            self.url = 'http://%s' % url
+            if url.startswith('https://'):
+                self.url = url
+            else:
+                self.url = 'http://%s' % url
         else:
             self.url = url
 
