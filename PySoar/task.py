@@ -42,24 +42,17 @@ class Task(object):
         return taskpoints
 
     @staticmethod
-    def taskpoints_from_scs(lscs_lines,lscs_lines_tp):
-        
+    def taskpoints_from_scs(lscs_lines, lscs_lines_tp):
+
         taskpoints = []
-        scs_tps = []
 
         # get task information
         task_info = Taskpoint.scs_task_info(lscs_lines)
 
         # create turnpoints
-        n_tp=len(lscs_lines_tp)
-        n=0
-        for tp in lscs_lines_tp:
-            scs_tp = Taskpoint.scs_tp_create(task_info,n,n_tp)
-            scs_tps.append(scs_tp)
-            n=n+1
-
-        for lscs_lines_tp,scs_tps in zip(lscs_lines_tp,scs_tps):
-            taskpoint = Taskpoint.from_scs(lscs_lines_tp,scs_tps)
+        for n, lscs_line_tp in enumerate(lscs_lines_tp):
+            scs_tp = Taskpoint.scs_tp_create(task_info, n, len(lscs_lines_tp))
+            taskpoint = Taskpoint.from_scs(lscs_line_tp, scs_tp)
             taskpoints.append(taskpoint)
 
         return taskpoints

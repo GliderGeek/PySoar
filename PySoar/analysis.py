@@ -20,7 +20,7 @@ def run(url, source, url_status=None, download_progress=None, analysis_progress=
 
     competition_day = CompetitionDay(url_status, source, daily_result_page.igc_directory,
                                      daily_result_page.file_names, daily_result_page.rankings,
-                                     daily_result_page.plane, daily_result_page.date)
+                                     daily_result_page.planes, daily_result_page.date)
 
     competition_day.analyze_flights(analysis_progress)
 

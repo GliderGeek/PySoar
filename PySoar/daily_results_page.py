@@ -7,13 +7,10 @@ class DailyResultsPage:
 
     def __init__(self, url):
 
-        if not url.startswith('http://'):
-            if url.startswith('https://'):
-                self.url = url
-            else:
-                self.url = 'http://%s' % url
-        else:
+        if url.startswith('http://') or url.startswith('https://'):
             self.url = url
+        else:
+            self.url = 'http://%s' % url
 
         # set by set_igc_directory method
         self.igc_directory = None
@@ -22,9 +19,12 @@ class DailyResultsPage:
         self.rankings = list()
         self.file_urls = list()
         self.file_names = list()
+        self.competition = None
+        self.plane_class = None
+        self.date = None
 
-        # needed for scoringStrepla as no information of airplane type is available
-        self.plane = list()
+        # needed for scoringStrepla as no information of airplane type is available in the IGC files
+        self.planes = list()
 
     def set_igc_directory(self, start_dir, competition_name, plane_class, date):
         self.igc_directory = os.path.join(start_dir, competition_name, plane_class, date)

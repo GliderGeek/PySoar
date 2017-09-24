@@ -63,7 +63,7 @@ class CompetitionDay(object):
             
         return flights, task_infos
 
-    def read_igc(self,folder_path, file_name, plane, date):
+    def read_igc(self, folder_path, file_name, plane, date):
         # this is a candidate for and IGC reader class / aerofiles functionality
         
         with open(os.path.join(folder_path, file_name), "U") as f:  # U extension for cross compatibility!
@@ -83,8 +83,8 @@ class CompetitionDay(object):
             'lcu_lines': [],
             'lseeyou_lines': [],
             'utc_diff': None,
-            'lscs_lines':[],
-            'lscs_lines_tp':[]
+            'lscs_lines': [],
+            'lscs_lines_tp': []
         }
 
         trace = list()
@@ -117,7 +117,7 @@ class CompetitionDay(object):
             if self.source == 'cuc':          
                 if line.startswith('LCU::HPGTYGLIDERTYPE:'):
                     airplane = line[21:-1]
-                    continue    
+                    continue
 
                 elif line.startswith('LCU::HPCIDCOMPETITIONID:'):
                     competition_id = line[24:-1]
@@ -144,48 +144,48 @@ class CompetitionDay(object):
                 elif line.startswith('LCU::HPTZNTIMEZONE:'):
                     task_information['utc_diff'] = int(line[19:-1])
 
-                # extract date from fist lcu line
-                if len(task_information['lcu_lines']) != 0:
-                    task_information['date'] = get_date_cuc(task_information['lcu_lines'][0])
-
-
-                # fix error in task definition: e.g.: LSEEYOU OZ=-1,Style=2SpeedStyle=0,R1=5000m,A1=180,Line=1
-                # SpeedStyle=# is removed, where # is a number
-                for line_index, line in enumerate(task_information['lseeyou_lines']):
-                    task_information['lseeyou_lines'][line_index] = re.sub(r"SpeedStyle=\d", "", line)
-
-                # fix wrong style definition on start and finish points
-                    task_information['lseeyou_lines'][0] = task_information['lseeyou_lines'][0].replace('Style=1', 'Style=2')
-                    task_information['lseeyou_lines'][-1] = task_information['lseeyou_lines'][-1].replace('Style=1', 'Style=3')
-
             elif self.source == 'scs':
                 
                 # all times are UTC, so utc_diff=0
                 task_information['utc_diff'] = 0
 
                 if line.startswith('LSCS'):
+                    task_information['lscs_lines'].append(line)
                 
                     # is task AAT
                     if line.startswith('LSCSDCID:'):
                         competition_id = line[9:-1]
-                        continue
-
-                    if line.startswith('LSCSDGate open'):
-                        task_information['start_opening'] = hhmmss2ss( ((line.split(':'))[1]+":"+((line.split(':'))[2])[0:-1]+":00"),0)
-                        
-                    if line.startswith('LSCSDTime window:'):
-                        task_information['t_min'] = hhmmss2ss( ((line.split(':'))[1]+":"+((line.split(':'))[2])[0:-1]+":00"),0 )
+                    elif line.startswith('LSCSDGate open'):
+                        _, hh, mm = line.strip().split(':')
+                        time_string = '%s:%s:00' % (hh, mm)
+                        task_information['start_opening'] = hhmmss2ss(time_string, 0)
+                    elif line.startswith('LSCSDTime window:'):
+                        _, hh, mm = line.strip().split(':')
+                        time_string = '%s:%s:00' % (hh, mm)
+                        task_information['t_min'] = hhmmss2ss(time_string, 0)
                         if task_information['t_min'] > 0:
                             task_information['aat'] = True
-
-                    if line.startswith('LSCSC'):
+                    elif line.startswith('LSCSC'):
                         task_information['lscs_lines_tp'].append(line)
-                        
-                    if line.startswith('LSCS'):
-                        task_information['lscs_lines'].append(line)
 
-                    task_information['date'] = get_date_scs(date)
-                    airplane = plane
+        if self.source == 'cuc':
+            # extract date from fist lcu line
+            if len(task_information['lcu_lines']) != 0:
+                task_information['date'] = get_date_cuc(task_information['lcu_lines'][0])
+
+            # fix error in task definition: e.g.: LSEEYOU OZ=-1,Style=2SpeedStyle=0,R1=5000m,A1=180,Line=1
+            # SpeedStyle=# is removed, where # is a number
+            for line_index, lseeyou_line in enumerate(task_information['lseeyou_lines']):
+                task_information['lseeyou_lines'][line_index] = re.sub(r"SpeedStyle=\d", "", lseeyou_line)
+
+                # fix wrong style definition on start and finish points
+                task_information['lseeyou_lines'][0] = task_information['lseeyou_lines'][0].replace('Style=1',
+                                                                                                    'Style=2')
+                task_information['lseeyou_lines'][-1] = task_information['lseeyou_lines'][-1].replace('Style=1',
+                                                                                                      'Style=3')
+        elif self.source == 'scs':
+            task_information['date'] = get_date_scs(date)
+            airplane = plane
                     
         return trace, trace_settings, airplane, competition_id, task_information
 
@@ -247,14 +247,12 @@ class CompetitionDay(object):
         elif self.source == 'scs':
             lscs_lines_tp = task_info['lscs_lines_tp']
             lscs_lines = task_info['lscs_lines']
-            taskpoints = Task.taskpoints_from_scs(lscs_lines,lscs_lines_tp)
+            taskpoints = Task.taskpoints_from_scs(lscs_lines, lscs_lines_tp)
         else:
             raise ValueError('Source not implemented: %s' % self.source)
 
-        
         if task_info['aat']:
             t_min = task_info['t_min']
-            print(t_min)
             task = AAT(taskpoints, multi_start, start_opening, utc_diff, t_min)
         else:
             task = RaceTask(taskpoints, multi_start, start_opening, utc_diff)

@@ -73,6 +73,7 @@ def det_velocity(location_record1, location_record2, record_type1, record_type2)
 
     return dist/delta_t
 
+
 def det_lat_long(location_record, record_type, return_radians=True):
 
     pnt_lat = 7
@@ -429,12 +430,9 @@ def get_date_cuc(lcu_line):
 
 
 def get_date_scs(date_scs):
-
-    day=int(date_scs.split('.')[0])
-    month=int(date_scs.split('.')[1])
-    year=int(date_scs.split('.')[2])
-    
+    day, month, year = [int(part) for part in date_scs.split('-')]
     return date(year, month, day)
+
 
 def get_url_source(url):
     if 'soaringspot.com' in url:

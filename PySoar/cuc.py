@@ -48,10 +48,8 @@ class SoaringSpotDaily(DailyResultsPage):
 
         print(url)
 
-        if url.startswith('https://'):
+        if url.startswith('https://') or url.startswith('http://'):
             _, _, _, _, competition, _, plane_class, date_description, _ = url.split('/')
-        elif url.startswith('http://'):
-            _, _, _, _, competition, _, plane_class, date_description, _ = url.split('/')            
         else:
             _, _, competition, _, plane_class, date_description, _ = url.split('/')
 

@@ -1,4 +1,3 @@
-from taskpoint import Taskpoint
 from task import Task
 from generalFunctions import det_local_time
 from generalFunctions import enl_value_exceeded
