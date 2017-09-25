@@ -247,7 +247,7 @@ class CompetitionDay(object):
         elif self.source == 'scs':
             lscs_lines_tp = task_info['lscs_lines_tp']
             lscs_lines = task_info['lscs_lines']
-            taskpoints = Task.taskpoints_from_scs(lscs_lines, lscs_lines_tp)
+            taskpoints = Task.taskpoints_from_scs(lscs_lines)
         else:
             raise ValueError('Source not implemented: %s' % self.source)
 

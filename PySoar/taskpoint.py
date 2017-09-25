@@ -200,6 +200,7 @@ class Taskpoint(object):  # startpoint, turnpoints and finish
     def scs_task_info(lscs_lines):
 
         task_info = {
+            'tp': [],
             's_line_rad': None,
             'tp_key': False,
             'tp_key_dim': None,
@@ -215,7 +216,9 @@ class Taskpoint(object):  # startpoint, turnpoints and finish
         }
 
         for line in lscs_lines:
-            if line.startswith('LSCSRSLINE'):
+            if line.startswith('LSCSC'):
+                task_info['tp'].append(line)
+            elif line.startswith('LSCSRSLINE'):
                 task_info['s_line_rad'] = int((line.split(':'))[1])/2
             elif line.startswith('LSCSRFLINE'):
                 task_info['f_line'] = True
@@ -236,7 +239,7 @@ class Taskpoint(object):  # startpoint, turnpoints and finish
                 else:
                     task_info['tp_aat_angle'].append(int(((line.split(':'))[3])[0:-1]))
                 task_info['aat'] = True
-                         
+
         return task_info
 
     @staticmethod
