@@ -287,6 +287,7 @@ class Taskpoint(object):  # startpoint, turnpoints and finish
             # finish is cylinder
             if task_info['f_cyl']:
                 tp_out['r_max'] = task_info['f_cyl_rad']
+                tp_out['distance_correction'] = "shorten_legs"
                 tp_out['angle_max'] = 180
 
             # finish is line
