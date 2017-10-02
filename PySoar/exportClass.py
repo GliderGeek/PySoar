@@ -282,7 +282,7 @@ class ExcelExport(object):
         self.write_legs(settings, competition_day)
 
         self.wb.save(self.file_name)
-        self.wb.save(igc_directory + self.file_name.split('/')[-1])
+        self.wb.save(igc_directory +('/')+self.file_name.split('/')[-1])
 
 
 #############################  LICENSE  #####################################
