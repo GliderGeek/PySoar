@@ -35,7 +35,7 @@ class SoaringSpotDaily(DailyResultsPage):
             if row.findAll('td')[0].text not in ["DNS", "DNF", "HC"]:
                 self.rankings.append(int(row.findAll('td')[0].text[0:-1]))
                 for link in row.findAll('a'):
-                    if link.get('href').startswith("http://"):
+                    if link.get('href').startswith("http://") or link.get('href').startswith("https://"):
                         self.file_urls.append(link.get('href'))
                     elif link.get('href').split('/')[2] == "download-contest-flight":
                         self.file_urls.append(self.baseUrl + link.get('href'))
