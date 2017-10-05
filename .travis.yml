@@ -16,11 +16,11 @@ install:
   - pip install -r requirements.txt
 
 script:
-  - python PySoar/main_pysoar.py http://www.soaringspot.com/en/sallandse-tweedaagse-2014/results/club/task-1-on-2014-06-21/daily
+  - python PySoar/main_pysoar.py "http://www.soaringspot.com/en/sallandse-tweedaagse-2014/results/club/task-1-on-2014-06-21/daily"
   - sha512sum -c ci/Analysis_PySoar_race.xls.sha512
-  - python PySoar/main_pysoar.py http://www.soaringspot.com/en_gb/cae-nls-nederlandse-kampioenschappen-zweefvliegen-2012/results/club/task-10-on-2012-05-26/daily
+  - python PySoar/main_pysoar.py "http://www.soaringspot.com/en_gb/cae-nls-nederlandse-kampioenschappen-zweefvliegen-2012/results/club/task-10-on-2012-05-26/daily"
   - sha512sum -c ci/Analysis_PySoar_aat.xls.sha512
-  - python PySoar/main_pysoar.py http://www.strepla.de/scs/public/scoreDay.aspx?cId=222&idDay=2388
+  - python PySoar/main_pysoar.py "http://www.strepla.de/scs/public/scoreDay.aspx?cId=222&idDay=2388"
   - sha512sum -c ci/Analysis_PySoar_race_scs.xls.sha512
   - pyinstaller -F PySoar/main_pysoar.py
   - cd  docs/manual/EN/ && pdflatex PySoar-manual.tex && cd ../../../
