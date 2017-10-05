@@ -1,5 +1,5 @@
 from Tkinter import Label, Tk, Button, Entry, W, E
-from generalFunctions import open_analysis_file, url_format_correct, go_bugform
+from generalFunctions import open_analysis_file, url_format_correct, go_bugform, get_url_source
 from analysis import run
 from functools import partial
 from settingsClass import Settings
@@ -25,14 +25,16 @@ def start_gui():
 
     def start_analysis():
 
-        run(url_entry.get(), url_status, download_progress, analysis_progress)
+        url = url_entry.get()
+        source = get_url_source(url)
+        run(url, source, url_status, download_progress, analysis_progress)
 
         analysis_done = Button(root, text='Excel produced', command=open_analysis_file)
         analysis_done.grid(row=6, column=0, pady=5)
         print "Analysis complete, excel produced"
 
     title = Label(root, text=' PySoar', font=("Helvetica", 30))
-    url_accompanying_text = Label(root, text='Give Soaringspot URL:')
+    url_accompanying_text = Label(root, text='Give Soaringspot/scoringStrepla URL:')
     url_entry = Entry(root, width=60)
     url_confirmation = Button(root, text='ok')
     url_confirmation.bind('<Button-1>', url_check)
@@ -69,7 +71,10 @@ elif len(sys.argv) == 2:
     if sys.argv[1] == '--help':
         print_help()
     else:
-        run(sys.argv[1])
+        url = sys.argv[1]
+        if url_format_correct(url) == 'URL correct':
+            source = get_url_source(url)
+            run(url, source)
 else:
     print_help()
 

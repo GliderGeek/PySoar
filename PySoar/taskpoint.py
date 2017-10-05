@@ -1,36 +1,42 @@
 from math import pi
 
 from generalFunctions import det_average_bearing
-from generalFunctions import calculate_distance, det_bearing, det_bearing_change
+from generalFunctions import calculate_distance2
+from generalFunctions import det_lat_long
+from generalFunctions import calculate_bearing
+from generalFunctions import det_bearing_change
 
 
 class Taskpoint(object):  # startpoint, turnpoints and finish
 
-    def __init__(self, LCU_line, LSEEYOU_line):
-        self.LCU_line = LCU_line
-        self.LSEEYOU_line = LSEEYOU_line
+    def __init__(self, name, lat, lon, r_min, angle_min, r_max, angle_max, orientation_angle,
+                 line, sector_orientation, distance_correction):
 
-        self.orientation_angle = None
-        self.r_max = None
-        self.angle_max = None
-        self.r_min = None
-        self.angle_min = None
+        self.name = name
 
-        self.name = LCU_line[23::]
-        self.line = 'Line=1\n' in self.LSEEYOU_line.split(',') or 'Line=1' in self.LSEEYOU_line.split(',')
-        self.sector_orientation = self.det_sector_orientation()  # fixed, symmetrical, next, previous, start
-        self.distance_correction = self.det_distance_correction()  # None, displace_tp, shorten_legs
-        self.det_sector_sizes()
+        self.lat = lat
+        self.lon = lon
 
-    def fixed_orientation_angle(self):
-        components = self.LSEEYOU_line.rstrip().split(",")
+        self.r_min = r_min
+        self.angle_min = angle_min
+        self.r_max = r_max
+        self.angle_max = angle_max
+        self.orientation_angle = orientation_angle
+
+        self.line = line
+        self.sector_orientation = sector_orientation  # fixed, symmetrical, next, previous, start
+        self.distance_correction = distance_correction  # None, displace_tp, shorten_legs
+
+    @staticmethod
+    def cuc_fixed_orientation_angle(LSEEYOU_line):
+        components = LSEEYOU_line.rstrip().split(",")
         for component in components:
             if component.startswith("A12="):
-                self.orientation_angle = float(component.split("=")[1])
-                break
+                return float(component.split("=")[1])
 
-    def det_sector_orientation(self):
-        components = self.LSEEYOU_line.rstrip().split(",")
+    @staticmethod
+    def cuc_sector_orientation(LSEEYOU_line):
+        components = LSEEYOU_line.rstrip().split(",")
         for component in components:
             if component.startswith("Style="):
                 style = int(component.split("=")[1])
@@ -48,8 +54,9 @@ class Taskpoint(object):  # startpoint, turnpoints and finish
                     print "Unknown taskpoint style! " + str(style)
                     return ""
 
-    def det_distance_correction(self):
-        components = self.LSEEYOU_line.rstrip().split(",")
+    @staticmethod
+    def cuc_distance_correction(LSEEYOU_line):
+        components = LSEEYOU_line.rstrip().split(",")
         reduce = False
         move = False
         for component in components:
@@ -68,9 +75,9 @@ class Taskpoint(object):  # startpoint, turnpoints and finish
             return None
 
     def set_orientation_angle(self, angle_start=None, angle_previous=None, angle_next=None):
-        if self.sector_orientation == "fixed":
-            self.fixed_orientation_angle()
-        elif self.sector_orientation == "symmetrical":
+        # Fixed orientation is skipped as that has already been set
+
+        if self.sector_orientation == "symmetrical":
             self.orientation_angle = det_average_bearing(angle_previous, angle_next)
         elif self.sector_orientation == "next":
             self.orientation_angle = angle_next
@@ -79,24 +86,33 @@ class Taskpoint(object):  # startpoint, turnpoints and finish
         elif self.sector_orientation == "start":
             self.orientation_angle = angle_start
         else:
-            print "Unknown sector orientation! " + str(self.sector_orientation)
+            raise ValueError("Unknown sector orientation: %s " % self.sector_orientation)
 
-    def det_sector_sizes(self):
-        components = self.LSEEYOU_line.rstrip().split(",")
+    @staticmethod
+    def cuc_sector_dimensions(LSEEYOU_line):
+        components = LSEEYOU_line.rstrip().split(",")
+        r_min = None
+        angle_min = None
+        r_max = None
+        angle_max = None
         for component in components:
             if component.startswith("R1="):
-                self.r_max = int(component.split("=")[1][:-1])
+                r_max = int(component.split("=")[1][:-1])
             elif component.startswith("A1="):
-                self.angle_max = int(component.split("=")[1])
+                angle_max = int(component.split("=")[1])
             elif component.startswith("R2="):
-                self.r_min = int(component.split("=")[1][:-1])
+                r_min = int(component.split("=")[1][:-1])
             elif component.startswith("A2="):
-                self.angle_min = int(component.split("=")[1])
+                angle_min = int(component.split("=")[1])
+        return r_min, angle_min, r_max, angle_max
 
     def inside_sector(self, fix):
 
-        distance = calculate_distance(fix, self.LCU_line, 'pnt', 'tsk')
-        bearing = det_bearing(self.LCU_line, fix, 'tsk', 'pnt')
+        fix_lat, fix_lon = det_lat_long(fix, 'pnt')
+
+        distance = calculate_distance2(fix_lat, fix_lon, self.lat, self.lon)
+        bearing = calculate_bearing(self.lat, self.lon, fix_lat, fix_lon)
+
         angle_wrt_orientation = abs(det_bearing_change(self.orientation_angle, bearing))
 
         if self.line:
@@ -114,8 +130,11 @@ class Taskpoint(object):  # startpoint, turnpoints and finish
 
     def crossed_line(self, fix1, fix2):
 
-        distance1 = calculate_distance(fix1, self.LCU_line, 'pnt', 'tsk')
-        distance2 = calculate_distance(fix2, self.LCU_line, 'pnt', 'tsk')
+        fix1_lat, fix1_lon = det_lat_long(fix1, 'pnt')
+        fix2_lat, fix2_lon = det_lat_long(fix2, 'pnt')
+
+        distance1 = calculate_distance2(fix1_lat, fix1_lon, self.lat, self.lon)
+        distance2 = calculate_distance2(fix2_lat, fix2_lon, self.lat, self.lon)
 
         if not self.line:
             print 'Calling crossed_line on a sector!'
@@ -124,8 +143,8 @@ class Taskpoint(object):  # startpoint, turnpoints and finish
             if distance2 > self.r_max and distance1 > self.r_max:
                 return False
             else:  # either both within circle or only one, leading to small amount of false positives
-                bearing1 = det_bearing(self.LCU_line, fix1, 'tsk', 'pnt')
-                bearing2 = det_bearing(self.LCU_line, fix2, 'tsk', 'pnt')
+                bearing1 = calculate_bearing(self.lat, self.lon, fix1_lat, fix1_lon)
+                bearing2 = calculate_bearing(self.lat, self.lon, fix2_lat, fix2_lon)
 
                 angle_wrt_orientation1 = abs(det_bearing_change(self.orientation_angle, bearing1))
                 angle_wrt_orientation2 = abs(det_bearing_change(self.orientation_angle, bearing2))
@@ -138,8 +157,146 @@ class Taskpoint(object):  # startpoint, turnpoints and finish
                     print "A line with this orientation is not implemented!"
                     exit(1)
 
+    @classmethod
+    def from_scs(cls, lscs_lines_tp, scs_tps):
 
+        _, name, lat, lon = lscs_lines_tp.split(':')
+        location_record = '%s%s%s%s' % (lat[1:], lat[0], lon[1:], lon[0])
+        lat, lon = det_lat_long(location_record, 'tsk_scs')
 
+        r_min = scs_tps['r_min']
+        angle_min = scs_tps['angle_min']
+        r_max = scs_tps['r_max']
+        angle_max = scs_tps['angle_max']
+        orientation_angle = scs_tps['orientation_angle']
+        line = scs_tps['line']
+        sector_orientation = scs_tps['sector_orientation']
+        distance_correction = scs_tps['distance_correction']
+
+        return cls(name, lat, lon, r_min, angle_min, r_max, angle_max, orientation_angle,
+                   line, sector_orientation, distance_correction)
+
+    @classmethod
+    def from_cuc(cls, LCU_line, LSEEYOU_line):
+
+        name = LCU_line[23::]
+        lat, lon = det_lat_long(LCU_line, 'tsk')
+        r_min, angle_min, r_max, angle_max = cls.cuc_sector_dimensions(LSEEYOU_line)
+
+        sector_orientation = cls.cuc_sector_orientation(LSEEYOU_line)
+        if sector_orientation == 'fixed':
+            orientation_angle = cls.cuc_fixed_orientation_angle(LSEEYOU_line)
+        else:
+            orientation_angle = None
+
+        distance_correction = cls.cuc_distance_correction(LSEEYOU_line)
+
+        line = 'Line=1\n' in LSEEYOU_line.split(',') or 'Line=1' in LSEEYOU_line.split(',')
+
+        return cls(name, lat, lon, r_min, angle_min, r_max, angle_max, orientation_angle,
+                   line, sector_orientation, distance_correction)
+
+    @staticmethod
+    def scs_task_info(lscs_lines):
+
+        task_info = {
+            'tp': [],
+            's_line_rad': None,
+            'tp_key': False,
+            'tp_key_dim': None,
+            'tp_cyl': False,
+            'tp_cyl_rad': None,
+            'f_line': False,
+            'f_line_rad': None,
+            'f_cyl': False,
+            'f_cyl_rad': None,
+            'tp_aat_rad': [],
+            'tp_aat_angle': [],
+            'aat': False
+        }
+
+        for line in lscs_lines:
+            if line.startswith('LSCSC'):
+                task_info['tp'].append(line)
+            elif line.startswith('LSCSRSLINE'):
+                task_info['s_line_rad'] = int((line.split(':'))[1])/2
+            elif line.startswith('LSCSRFLINE'):
+                task_info['f_line'] = True
+                task_info['f_line_rad'] = int((line.split(':'))[1])
+            elif line.startswith('LSCSRTKEYHOLE'):
+                task_info['tp_key'] = True
+                task_info['tp_key_dim'] = [int(part) for part in line.split(':')[1::]]
+            elif line.startswith('LSCSRTCYLINDER'):
+                task_info['tp_cyl'] = True
+                task_info['tp_cyl_rad'] = int((line.split(':'))[1])
+            elif line.startswith('LSCSRFCYLINDER'):
+                task_info['f_cyl'] = True
+                task_info['f_cyl_rad'] = int((line.split(':'))[1])
+            elif line.startswith('LSCSA0'):
+                task_info['tp_aat_rad'].append(int((line.split(':'))[1]))
+                if int(((line.split(':'))[3])[0:-1]) == 0:
+                    task_info['tp_aat_angle'].append(360)
+                else:
+                    task_info['tp_aat_angle'].append(int(((line.split(':'))[3])[0:-1]))
+                task_info['aat'] = True
+
+        return task_info
+
+    @staticmethod
+    def scs_tp_create(task_info, n, n_tp):
+
+        tp_out = {
+            'r_min': None,
+            'r_max': None,
+            'angle_min': None,
+            'angle_max': None,
+            'orientation_angle': None,
+            'line': False,
+            'sector_orientation': None,
+            'distance_correction': None
+        }
+
+        if n == 0:
+            tp_out['line'] = True
+            tp_out['sector_orientation'] = "next"
+            tp_out['r_max'] = task_info['s_line_rad']
+            tp_out['angle_max'] = 90
+        elif 0 < n < (n_tp-1):
+            tp_out['sector_orientation'] = "symmetrical"
+
+            if task_info['aat']:
+                tp_out['angle_max'] = (task_info['tp_aat_angle'])[n-1]/2
+                tp_out['r_max'] = (task_info['tp_aat_rad'])[n-1]
+                tp_out['sector_orientation'] = "previous"
+            else:
+                # turnpoint is DAEC keyhole
+                if task_info['tp_key']:
+                    tp_out['r_max'] = (task_info['tp_key_dim'])[1]
+                    tp_out['angle_max'] = ((task_info['tp_key_dim'])[2])/2
+                    tp_out['r_min'] = (task_info['tp_key_dim'])[0]
+                    tp_out['angle_min'] = 180
+
+                # turnpoint is cylinder
+                elif task_info['tp_cyl']:
+                    tp_out['r_max'] = task_info['tp_cyl_rad']
+                    tp_out['angle_max'] = 180
+            
+        elif n == n_tp - 1:
+            tp_out['sector_orientation'] = "previous"
+
+            # finish is cylinder
+            if task_info['f_cyl']:
+                tp_out['r_max'] = task_info['f_cyl_rad']
+                tp_out['distance_correction'] = "shorten_legs"
+                tp_out['angle_max'] = 180
+
+            # finish is line
+            elif task_info['f_line']:
+                tp_out['r_max'] = task_info['f_line_rad']
+                tp_out['angle_max'] = 90
+                tp_out['line'] = True
+            
+        return tp_out    
 #############################  LICENSE  #####################################
 
 #   PySoar - Automating gliding competition analysis

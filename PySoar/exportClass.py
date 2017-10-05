@@ -51,7 +51,7 @@ class ExcelExport(object):
     def __init__(self, settings, no_legs):
         self.file_name = settings.file_name
 
-        self.wb = xlwt.Workbook()  # initialize excel sheet
+        self.wb = xlwt.Workbook(encoding='latin-1')  # initialize excel sheet
         self.ws_all = self.wb.add_sheet('Entire Flight', cell_overwrite_ok=True)
         self.ws_legs = []
         for leg in range(no_legs):
@@ -274,7 +274,7 @@ class ExcelExport(object):
             self.write_title(leg, settings, competition_day.task.taskpoints)
             self.write_perf_indics(leg, settings, competition_day)
 
-    def write_file(self, competition_day, settings, soaring_spot_info):
+    def write_file(self, competition_day, settings, igc_directory):
 
         self.write_general_info(competition_day.date)
         self.determine_best_worst(competition_day, settings)
@@ -282,7 +282,7 @@ class ExcelExport(object):
         self.write_legs(settings, competition_day)
 
         self.wb.save(self.file_name)
-        self.wb.save(soaring_spot_info.igc_directory + self.file_name.split('/')[-1])
+        self.wb.save(igc_directory +('/')+self.file_name.split('/')[-1])
 
 
 #############################  LICENSE  #####################################
