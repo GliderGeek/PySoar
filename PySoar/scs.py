@@ -30,6 +30,11 @@ class StreplaDaily(DailyResultsPage):
         # get competition, class and date
         self.competition = soup.find('div', id="public_contest_info").find('span', id="ctl00_lblCompName").text
         self.plane_class = soup.find('div', {"class": "h3a"}).find('span', id="ctl00_Content_lblCompClass").text
+
+        # remove spaces in names
+        self.competition = self.competition.replace(' ', '_')
+        self.plane_class = self.plane_class.replace(' ', '_')
+
         raw_date = soup.find('div', {"class": "h3a"}).find('span', id="ctl00_Content_lblDate").text[0:10]
         dd, mm, yyyy = str(raw_date).split('.')
         self.date = '%s-%s-%s' % (dd, mm, yyyy)
