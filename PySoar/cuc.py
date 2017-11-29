@@ -12,7 +12,7 @@ class SoaringSpotDaily(DailyResultsPage):
     def __init__(self, url):
         DailyResultsPage.__init__(self, url)
 
-        self.baseUrl = "http://www.soaringspot.com"
+        self.baseUrl = "https://www.soaringspot.com"
 
         self.competition, self.plane_class, self.date = self._get_competition_info(self.url)
 
