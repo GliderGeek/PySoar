@@ -1,6 +1,4 @@
 import os
-from BeautifulSoup import BeautifulSoup
-from mechanize import Browser
 from settingsClass import Settings
 from daily_results_page import DailyResultsPage
 
@@ -20,14 +18,8 @@ class SoaringSpotDaily(DailyResultsPage):
         self.set_igc_directory(os.path.join(settings.current_dir, 'bin'), self.competition, self.plane_class, self.date)
 
     def load_website(self):
+        soup = self._get_html_soup()
 
-        # Get entire html site
-        mech = Browser()
-        mech.set_handle_robots(False)
-
-        page = mech.open(self.url)
-        html = page.read()
-        soup = BeautifulSoup(html)
         table = soup.find("table")
 
         # Get file URLs, rankings and file names

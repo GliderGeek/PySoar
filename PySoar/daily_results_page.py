@@ -1,6 +1,9 @@
 import os
 import urllib
+import urllib2
+
 import time
+from BeautifulSoup import BeautifulSoup
 
 
 class DailyResultsPage:
@@ -32,7 +35,25 @@ class DailyResultsPage:
         # make directory
         if not os.path.exists(self.igc_directory):
             os.makedirs(self.igc_directory) 
-        
+
+    def _get_html_soup(self):
+        # fix problem with SSL certificates
+        # https://stackoverflow.com/questions/30551400/disable-ssl-certificate-validation-in-mechanize#35960702
+        import ssl
+        try:
+            _create_unverified_https_context = ssl._create_unverified_context
+        except AttributeError:
+            # Legacy Python that doesn't verify HTTPS certificates by default
+            pass
+        else:
+            # Handle target environment that doesn't support HTTPS verification
+            ssl._create_default_https_context = _create_unverified_https_context
+
+        # get entire html of page
+        html = urllib2.urlopen(self.url).read()
+
+        return BeautifulSoup(html)
+
     def download_flights(self, download_progress):
         flights_downloaded = 0
 

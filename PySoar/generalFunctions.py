@@ -2,8 +2,6 @@ import platform
 import os
 import subprocess
 
-from mechanize import Browser
-from BeautifulSoup import BeautifulSoup
 from settingsClass import Settings
 from datetime import date
 from math import radians, degrees, sin, cos, atan2, pi
@@ -224,31 +222,6 @@ def ss2hhmmss(time_ss, colon=True):
         return "%02d:%02d:%02d" % (hours, minutes, seconds)
     else:
         return "%02d%02d%02d" % (hours, minutes, seconds)
-
-
-def url_is_aat(url):
-    mech = Browser()
-    mech.set_handle_robots(False)
-    page = mech.open(url)
-    html = page.read()
-    soup = BeautifulSoup(html)
-    spans = soup.findAll("span")
-
-    for span in spans:
-        if span.text == 'Task duration:':
-            return True
-    return False
-
-
-def task_url_from_daily(daily_url):
-    split_daily = daily_url.split("/")
-    split_daily.remove("daily")
-    for index, item in enumerate(split_daily):
-        if item == "results":
-            split_daily[index] = "tasks"
-
-    task_url = "/".join(split_daily)
-    return task_url
 
 
 def url_format_correct(url_string):

@@ -1,6 +1,4 @@
 import os
-from BeautifulSoup import BeautifulSoup
-from mechanize import Browser
 from settingsClass import Settings
 from daily_results_page import DailyResultsPage
 
@@ -18,14 +16,7 @@ class StreplaDaily(DailyResultsPage):
         self.set_igc_directory(os.path.join(settings.current_dir, 'bin'), self.competition, self.plane_class, self.date)
                 
     def load_website(self):
-
-        # Get entire html site
-        mech = Browser()
-        mech.set_handle_robots(False)
-
-        page = mech.open(self.url)
-        html = page.read()
-        soup = BeautifulSoup(html)
+        soup = self._get_html_soup()
 
         # get competition, class and date
         self.competition = soup.find('div', id="public_contest_info").find('span', id="ctl00_lblCompName").text
