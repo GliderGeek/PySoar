@@ -85,6 +85,9 @@ class Taskpoint(object):  # startpoint, turnpoints and finish
             self.orientation_angle = angle_previous
         elif self.sector_orientation == "start":
             self.orientation_angle = angle_start
+        elif self.sector_orientation == "fixed":
+            if self.orientation_angle is None:
+                raise ValueError("Orientation angle should have been set")
         else:
             raise ValueError("Unknown sector orientation: %s " % self.sector_orientation)
 
@@ -123,7 +126,7 @@ class Taskpoint(object):  # startpoint, turnpoints and finish
             inside_inner_sector = distance < self.r_min and angle_wrt_orientation < self.angle_min
             return inside_outer_sector or inside_inner_sector
         else:  # self.r_min is None
-            return distance < self.r_max and (pi - angle_wrt_orientation) < self.angle_max
+            return distance < self.r_max and (180 - angle_wrt_orientation) < self.angle_max
 
     def outside_sector(self, fix):
         return not self.inside_sector(fix)
