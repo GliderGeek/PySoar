@@ -1,11 +1,57 @@
-from Tkinter import Label, Tk, Button, Entry, W, E
-from generalFunctions import open_analysis_file, url_format_correct, go_bugform, get_url_source
-from analysis import run
+from tkinter import Label, Tk, Button, Entry, W, E
+
+import subprocess
+
+import os
+
+from PySoar.analysis import run
 from functools import partial
-from settingsClass import Settings
+from PySoar.settingsClass import Settings
 import sys
 
 settings = Settings()
+
+
+def url_format_correct(url_string):
+    if 'soaringspot.com' not in url_string and 'strepla.de' not in url_string:
+        return 'Use SoaringSpot or Strepla URL'
+    elif url_string[-5::] != 'daily' and url_string[33:41] != 'scoreDay':
+        return 'URL does not give daily results'
+    else:
+        return 'URL correct'
+
+
+def go_bugform(url_entry, event):
+    import webbrowser
+
+    form_url = settings.debug_form_url
+    versionID = settings.pysoar_version_formID
+    urlID = settings.competition_url_formID
+    pysoar_version = settings.version
+
+    comp_url = url_entry.get()
+
+    complete_url = '%s?entry.%s=%s&entry.%s=%s' % (form_url, versionID, pysoar_version, urlID, comp_url)
+    webbrowser.open(complete_url)
+
+
+def open_analysis_file():
+
+    if sys.platform.system() == "Darwin":
+        subprocess.call(["open", settings.file_name])
+    elif sys.platform.system() == "Linux":
+        subprocess.call(["xdg-open", settings.file_name])
+    elif sys.platform.system() == "Windows":
+        os.startfile(settings.file_name)
+
+
+def get_url_source(url):
+    if 'soaringspot.com' in url:
+        return 'cuc'
+    elif 'strepla.de' in url:
+        return 'scs'
+    else:
+        raise ValueError('Unknown source')
 
 
 def start_gui():
@@ -31,7 +77,7 @@ def start_gui():
 
         analysis_done = Button(root, text='Excel produced', command=open_analysis_file)
         analysis_done.grid(row=6, column=0, pady=5)
-        print "Analysis complete, excel produced"
+        print("Analysis complete, excel produced")
 
     title = Label(root, text=' PySoar', font=("Helvetica", 30))
     url_accompanying_text = Label(root, text='Give Soaringspot/scoringStrepla URL:')

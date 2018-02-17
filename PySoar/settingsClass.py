@@ -59,21 +59,10 @@ class Settings(object):
             if self.perf_dict[pi]["visible_on_leg"]:
                 self.no_leg_indicators += 1
 
-    # thresholds while in cruise
-    cruise_threshold_bearingRate = 4 #degr/s
-    cruise_threshold_bearingTot = 225 #degr
-
-    # thresholds while in thermal
-    thermal_threshold_distance = 1000 #m
-    thermal_threshold_bearingRateAvg = 2 #degr/s
-    thermal_threshold_bearingRate = 4 #degr/s
-
     perf_indic_all = ["ranking", "airplane", "compID", "s_flown_task", "t_start", "t_finish", "h_start", "h_finish",
                       "vario_gem", "v_glide_avg", "v_turn_avg", "s_glide_avg", "dh_cruise_avg", "LD_avg", "s_extra", "tsk_v",
                       "turn_percentage", "h_loss_turn"]
 
-    ENL_value_threshold = 500  # above which it is seen as engine noise
-    ENL_time_threshold = 30  # seconds
 
 #############################  LICENSE  #####################################
 

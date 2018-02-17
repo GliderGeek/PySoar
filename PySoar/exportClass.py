@@ -1,5 +1,18 @@
 import xlwt
-from generalFunctions import ss2hhmmss
+
+
+def ss2hhmmss(time_ss, colon=True):
+    if time_ss is None:
+        return None
+
+    seconds = (time_ss % 3600) % 60
+    minutes = ((time_ss % 3600) - seconds) / 60
+    hours = (time_ss - (time_ss % 3600)) / 3600
+
+    if colon:
+        return "%02d:%02d:%02d" % (hours, minutes, seconds)
+    else:
+        return "%02d%02d%02d" % (hours, minutes, seconds)
 
 
 class ExcelExport(object):

@@ -1,4 +1,72 @@
-from generalFunctions import det_height, calculate_distance, det_local_time
+from numpy import isclose, radians
+from pygeodesy.ellipsoidalVincenty import LatLon
+
+
+def dms2dd(dms):
+    cardinal = dms[-1]
+    if cardinal in ('N', 'S'):
+        dd = float(dms[0:2]) + ((float(dms[2:4]) + (float(dms[4:7]) / 1000.0)) / 60.0)
+    else:
+        dd = float(dms[0:3]) + ((float(dms[3:5]) + (float(dms[5:8]) / 1000.0)) / 60.0)
+    if cardinal in ('S', 'W'):
+        dd *= -1
+    return dd
+
+
+def det_lat_long(location_record, record_type, return_radians=True):
+    pnt_lat = 7
+    pnt_long = 15
+    tsk_lat = 6
+    tsk_long = 14
+    tsk_scs_lat = 0
+    tsk_scs_long = 8
+
+    if record_type == 'pnt':
+        latitude_dms = location_record[pnt_lat:pnt_lat + 8]
+        longitude_dms = location_record[pnt_long:pnt_long + 8]
+    elif record_type == 'tsk':
+        latitude_dms = location_record[tsk_lat:tsk_lat + 8]
+        longitude_dms = location_record[tsk_long:tsk_long + 8]
+    elif record_type == 'tsk_scs':
+        latitude_dms = location_record[tsk_scs_lat:tsk_scs_lat + 8]
+        longitude_dms = location_record[tsk_scs_long:tsk_scs_long + 8]
+    else:
+        raise ValueError('Unsupported record_type')
+
+    if return_radians:
+        return radians(dms2dd(latitude_dms)), radians(dms2dd(longitude_dms))
+    else:
+        return dms2dd(latitude_dms), dms2dd(longitude_dms)
+
+
+def det_height(b_record, gps_altitude):
+    return int(b_record[30:35]) if gps_altitude else int(b_record[25:30])
+
+
+def calculate_distance(location_record1, location_record2, record_type1, record_type2):
+    loc1_lat, loc1_lon = det_lat_long(location_record1, record_type1, return_radians=False)
+    loc1_lat_lon = LatLon(loc1_lat, loc1_lon)
+
+    loc2_lat, loc2_lon = det_lat_long(location_record2, record_type2, return_radians=False)
+    loc2_lat_lon = LatLon(loc2_lat, loc2_lon)
+
+    # pygeodesy raises exception when same locations are used
+    if isclose(loc1_lat, loc2_lat) and isclose(loc1_lon, loc2_lon):
+        return 0
+
+    return loc1_lat_lon.distanceTo(loc2_lat_lon)
+
+
+
+def hhmmss2ss(time_string, utc_to_local):
+    return (
+        int(time_string[0:2]) + int(utc_to_local)) * 3600+\
+        int(time_string[3:5]) * 60 +\
+        int(time_string[6:8])
+
+
+def det_local_time(b_record, utc_to_local):
+    return hhmmss2ss(b_record[1:3] + ':' + b_record[3:5] + ':' + b_record[5:7], utc_to_local)
 
 
 class Performance(object):
