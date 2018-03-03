@@ -1,79 +1,10 @@
-from numpy import isclose, radians
-from pygeodesy.ellipsoidalVincenty import LatLon
-
-
-def dms2dd(dms):
-    cardinal = dms[-1]
-    if cardinal in ('N', 'S'):
-        dd = float(dms[0:2]) + ((float(dms[2:4]) + (float(dms[4:7]) / 1000.0)) / 60.0)
-    else:
-        dd = float(dms[0:3]) + ((float(dms[3:5]) + (float(dms[5:8]) / 1000.0)) / 60.0)
-    if cardinal in ('S', 'W'):
-        dd *= -1
-    return dd
-
-
-def det_lat_long(location_record, record_type, return_radians=True):
-    pnt_lat = 7
-    pnt_long = 15
-    tsk_lat = 6
-    tsk_long = 14
-    tsk_scs_lat = 0
-    tsk_scs_long = 8
-
-    if record_type == 'pnt':
-        latitude_dms = location_record[pnt_lat:pnt_lat + 8]
-        longitude_dms = location_record[pnt_long:pnt_long + 8]
-    elif record_type == 'tsk':
-        latitude_dms = location_record[tsk_lat:tsk_lat + 8]
-        longitude_dms = location_record[tsk_long:tsk_long + 8]
-    elif record_type == 'tsk_scs':
-        latitude_dms = location_record[tsk_scs_lat:tsk_scs_lat + 8]
-        longitude_dms = location_record[tsk_scs_long:tsk_scs_long + 8]
-    else:
-        raise ValueError('Unsupported record_type')
-
-    if return_radians:
-        return radians(dms2dd(latitude_dms)), radians(dms2dd(longitude_dms))
-    else:
-        return dms2dd(latitude_dms), dms2dd(longitude_dms)
-
-
-def det_height(b_record, gps_altitude):
-    return int(b_record[30:35]) if gps_altitude else int(b_record[25:30])
-
-
-def calculate_distance(location_record1, location_record2, record_type1, record_type2):
-    loc1_lat, loc1_lon = det_lat_long(location_record1, record_type1, return_radians=False)
-    loc1_lat_lon = LatLon(loc1_lat, loc1_lon)
-
-    loc2_lat, loc2_lon = det_lat_long(location_record2, record_type2, return_radians=False)
-    loc2_lat_lon = LatLon(loc2_lat, loc2_lon)
-
-    # pygeodesy raises exception when same locations are used
-    if isclose(loc1_lat, loc2_lat) and isclose(loc1_lon, loc2_lon):
-        return 0
-
-    return loc1_lat_lon.distanceTo(loc2_lat_lon)
-
-
-
-def hhmmss2ss(time_string, utc_to_local):
-    return (
-        int(time_string[0:2]) + int(utc_to_local)) * 3600+\
-        int(time_string[3:5]) * 60 +\
-        int(time_string[6:8])
-
-
-def det_local_time(b_record, utc_to_local):
-    return hhmmss2ss(b_record[1:3] + ':' + b_record[3:5] + ':' + b_record[5:7], utc_to_local)
+from opensoar.utilities.helper_functions import calculate_distance
 
 
 class Performance(object):
-
     df_categories = ['t_start', 't_finish', 'h_start', 'h_finish', 's_flown_task', 'vario_gem', 'v_glide_avg',
-                              'v_turn_avg', 'LD_avg', 'turn_percentage', 'h_loss_turn', 's_glide_avg', 'dh_cruise_avg',
-                              's_extra', 'tsk_v']
+                     'v_turn_avg', 'LD_avg', 'turn_percentage', 'h_loss_turn', 's_glide_avg', 'dh_cruise_avg',
+                     's_extra', 'tsk_v']
 
     def __init__(self, task, trip, phases, trace, trace_settings):
 
@@ -90,14 +21,15 @@ class Performance(object):
         self.no_thermals_leg = phases.thermals_leg
 
         # should be possible to ditch trace as it is already in phases
-        self.init_all(trip, trace, trace_settings)
-        self.init_leg(trip, trace, trace_settings)
+        gps_altitude = trace_settings['gps_altitude']
+        self.init_all(trip, trace, gps_altitude)
+        self.init_leg(trip, trace, gps_altitude)
 
         self.determine_performance(task, trip, phases, trace)
 
-    def init_all(self, trip, trace, trace_settings):
+    def init_all(self, trip, trace, gps_altitude):
         start_i = trace.index(trip.fixes[0])
-        start_h = det_height(trace[start_i], trace_settings['gps_altitude'])
+        start_h = trace[start_i]['gps_alt'] if gps_altitude else trace[start_i]['pressure_alt']
         start_t = trip.refined_start_time
 
         if len(trip.fixes) == 1:
@@ -105,8 +37,8 @@ class Performance(object):
             finish_t = None
         else:
             last_tp_i = trace.index(trip.fixes[-1])
-            finish_h = det_height(trace[last_tp_i], trace_settings['gps_altitude'])
-            finish_t = det_local_time(trace[last_tp_i], 0)
+            finish_h = trace[last_tp_i]['gps_alt'] if gps_altitude else trace[last_tp_i]['pressure_alt']
+            finish_t = trace[last_tp_i]['time']
 
         s_flown_task_all = sum(trip.distances) / 1000
 
@@ -116,14 +48,14 @@ class Performance(object):
                     "h_finish": finish_h,
                     "s_flown_task": s_flown_task_all}
 
-    def init_leg(self, trip, trace, trace_settings):
+    def init_leg(self, trip, trace, gps_altitude):
         self.leg = []
 
         for leg in range(len(trip.distances)):
             if trip.outlanding_fix is not None and leg == trip.outlanding_leg():
                 start_i = trace.index(trip.fixes[leg])
-                start_h = det_height(trace[start_i], trace_settings['gps_altitude'])
-                start_t = trip.refined_start_time if leg == 0 else det_local_time(trace[start_i], 0)
+                start_h = trace[start_i]['gps_alt'] if gps_altitude else trace[start_i]['pressure_alt']
+                start_t = trip.refined_start_time if leg == 0 else trace[start_i]['time']
 
                 finish_t = 0
                 finish_h = 0
@@ -139,12 +71,12 @@ class Performance(object):
                 s_flown_task_leg = 0
             else:
                 start_i = trace.index(trip.fixes[leg])
-                start_h = det_height(trace[start_i], trace_settings['gps_altitude'])
-                start_t = trip.refined_start_time if leg == 0 else det_local_time(trace[start_i], 0)
+                start_h = trace[start_i]['gps_alt'] if gps_altitude else trace[start_i]['pressure_alt']
+                start_t = trip.refined_start_time if leg == 0 else trace[start_i]['time']
 
                 finish_i = trace.index(trip.fixes[leg+1])
-                finish_t = det_local_time(trace[finish_i], 0)
-                finish_h = det_height(trace[finish_i], trace_settings['gps_altitude'])
+                finish_t = trace[finish_i]['time']
+                finish_h = trace[finish_i]['gps_alt'] if gps_altitude else trace[finish_i]['pressure_alt']
 
                 s_flown_task_leg = trip.distances[leg] / 1000
 
@@ -173,7 +105,7 @@ class Performance(object):
     def det_v_glide_avg(self, leg, cruise_distance, cruise_time):
         # returns the average speed during cruise in kmh
         if cruise_time == 0:
-            v_glide_avg = 42
+            v_glide_avg = None
         else:
             v_glide_avg = float(cruise_distance) / cruise_time
         self.store_perf(leg, "v_glide_avg", v_glide_avg * 3.6)
@@ -188,7 +120,7 @@ class Performance(object):
 
     def det_LD_avg(self, leg, cruise_distance, cruise_height_diff):
         if cruise_height_diff == 0:
-            LD_avg = 42
+            LD_avg = None
         else:
             LD_avg = float(cruise_distance) / -cruise_height_diff
         self.store_perf(leg, "LD_avg", LD_avg)
@@ -203,7 +135,7 @@ class Performance(object):
 
     def det_h_loss_turn(self, leg, thermal_altitude_loss, thermal_altitude_gain):
         if (abs(thermal_altitude_loss) + abs(thermal_altitude_gain)) == 0:
-            h_loss_turn = 42
+            h_loss_turn = None
         else:
             h_loss_turn = float(abs(thermal_altitude_loss)) / (abs(thermal_altitude_loss) + abs(thermal_altitude_gain))
             h_loss_turn *= 100
@@ -212,7 +144,7 @@ class Performance(object):
     def det_s_glide_avg(self, leg, cruise_distance, no_cruises):
         # return the average cruise distance in kms
         if no_cruises == 0:
-            s_glide_avg = 42
+            s_glide_avg = None
         else:
             s_glide_avg = float(cruise_distance) / no_cruises
         self.store_perf(leg, "s_glide_avg", s_glide_avg / 1000)
@@ -235,7 +167,7 @@ class Performance(object):
     def det_tsk_v(self, leg, task_distance, task_time):
         # return the cross country speed in kmh
         if task_time == 0:
-            tsk_v = 42
+            tsk_v = None
         else:
             tsk_v = float(task_distance) / task_time
         self.store_perf(leg, "tsk_v", tsk_v * 3.6)
@@ -310,7 +242,7 @@ class Performance(object):
                 if entry["phase"] == "thermal":
                     i_st = entry["i_start"]
                     i_end = entry["i_end"]
-                    thermal_drift += calculate_distance(trace[i_st], trace[i_end], 'pnt', 'pnt')
+                    thermal_drift += calculate_distance(trace[i_st], trace[i_end])
 
             # write to total performance values
             thermal_altitude_gain_tot += thermal_altitude_gain

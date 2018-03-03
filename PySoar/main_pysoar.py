@@ -73,7 +73,7 @@ def start_gui():
 
         url = url_entry.get()
         source = get_url_source(url)
-        run(url, source, url_status, download_progress, analysis_progress)
+        run(url, source, download_progress_label, analysis_progress_label, url_status)
 
         analysis_done = Button(root, text='Excel produced', command=open_analysis_file)
         analysis_done.grid(row=6, column=0, pady=5)
@@ -85,8 +85,8 @@ def start_gui():
     url_confirmation = Button(root, text='ok')
     url_confirmation.bind('<Button-1>', url_check)
     url_status = Label(root, text='', foreground='red')
-    download_progress = Label(root, text='Downloaded: ')
-    analysis_progress = Label(root, text='Analyzed: ')
+    download_progress_label = Label(root, text='Downloaded: ')
+    analysis_progress_label = Label(root, text='Analyzed: ')
     report_problem = Button(root, text='Report problem')
     report_problem.bind('<Button-1>', partial(go_bugform, url_entry))
     root.bind('<Return>', url_check)
@@ -97,8 +97,8 @@ def start_gui():
     url_entry.grid(row=2, column=0)
     url_confirmation.grid(row=2, column=1)
     url_status.grid(row=3, column=0)
-    download_progress.grid(row=4, column=0, pady=5)
-    analysis_progress.grid(row=5, column=0, pady=5)
+    download_progress_label.grid(row=4, column=0, pady=5)
+    analysis_progress_label.grid(row=5, column=0, pady=5)
     report_problem.grid(row=7, column=0, sticky=W)
     version.grid(row=7, column=1, sticky=E)
 
