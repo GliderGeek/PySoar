@@ -73,7 +73,7 @@ def start_gui():
 
         url = url_entry.get()
         source = get_url_source(url)
-        run(url, source, download_progress_label, analysis_progress_label, url_status)
+        run(url, source, url_status, download_progress_label, analysis_progress_label)
 
         analysis_done = Button(root, text='Excel produced', command=open_analysis_file)
         analysis_done.grid(row=6, column=0, pady=5)

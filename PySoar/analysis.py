@@ -1,9 +1,11 @@
+import operator
 import os
 
 from aerofiles.igc import Reader
 from opensoar.competition.strepla import StreplaDaily
-from opensoar.competition.soaringspot import SoaringSpotDaily, get_info_from_comment_lines
+from opensoar.competition.soaringspot import SoaringSpotDaily, get_task_from_igc
 from PySoar.exportClass import ExcelExport
+from PySoar.performanceClass import Performance
 from PySoar.settingsClass import Settings
 
 settings = Settings()
@@ -13,7 +15,7 @@ def get_analysis_progress_function(analysis_progress_label):
     analysis_progress = None
     if analysis_progress_label is not None:
         def analysis_progress(analyzed, total_number_of_flights):
-            analysis_progress_label.configure(text=f'Downloaded: {analyzed}/{total_number_of_flights}')
+            analysis_progress_label.configure(text=f'Analyzed: {analyzed}/{total_number_of_flights}')
             analysis_progress_label.update()
 
     return analysis_progress
@@ -30,7 +32,15 @@ def get_download_progress_function(download_progress_label):
 
 
 def run(url, source, url_status=None, download_progress_label=None, analysis_progress_label=None):
-    # todo: re-implement url_status
+    # todo: check if next check is performed
+    # fix error in task definition: e.g.: LSEEYOU OZ=-1,Style=2SpeedStyle=0,R1=5000m,A1=180,Line=1
+    # SpeedStyle=# is removed, where # is a number
+
+    # todo: check if next check is performed
+    # fix wrong style definition on start and finish points
+    # task_information['lseeyou_lines'][0] = task_information['lseeyou_lines'][0].replace('Style=1', 'Style=2')
+
+    # todo: check strepla
 
     start_directory = os.path.join(settings.current_dir, 'bin')
     if source == 'cuc':
@@ -47,18 +57,25 @@ def run(url, source, url_status=None, download_progress_label=None, analysis_pro
 
     competition_day = daily_result_page.competition_day
 
-    # assign traces to competitors
-    competition_info_list = list()
+    tasks = list()
+    tasks_rules = list()
+    number_of_times_present = list()
     for competitor in competition_day.competitors:
 
-        with open(competitor.igc_path, 'r') as f:
+        with open(competitor.file_path, 'r') as f:
             parsed_igc_file = Reader().read(f)
 
-        competition_info = get_info_from_comment_lines(parsed_igc_file)
-        competition_info_list.append(competition_info)
+        task, task_rules = get_task_from_igc(parsed_igc_file)
+
+        if task in tasks:
+            index = tasks.index(task)
+            number_of_times_present[index] += 1
+        else:
+            tasks.append(task)
+            number_of_times_present.append(1)
+            tasks_rules.append(task_rules)
 
         # is this covered for both strepla and soaringspot? not same information present in igc file
-
         header_errors, headers = parsed_igc_file['header']
         competitor.plane = headers['glider_model']
 
@@ -66,11 +83,24 @@ def run(url, source, url_status=None, download_progress_label=None, analysis_pro
         if len(trace_errors) == 0:
             competitor.trace = trace
 
-    # todo: determine which task to be taken and assign to competition_day
-    competition_day.task = None
-    competition_day.analyse_flights(analysis_progress)
+    max_index, max_value = max(enumerate(number_of_times_present), key=operator.itemgetter(1))
 
-    # todo: add performance to competitors
+    task = tasks[max_index]
+    task_rules = tasks_rules[max_index]
+
+    multi_start = task_rules.get('multi_start', False)
+    if url_status is not None and multi_start:
+        url_status.configure(text="Multiple starting points not implemented!", foreground='red')
+        url_status.update()
+        return
+
+    competition_day.task = task
+    classification_method = 'pysoar'
+    competition_day.analyse_flights(classification_method, analysis_progress)
+
+    for competitor in competition_day.competitors:
+        competitor.performance = Performance(competition_day.task, competitor.trip, competitor.phases,
+                                             competitor.trace)
 
     excel_sheet = ExcelExport(settings, competition_day.task.no_legs)
     excel_sheet.write_file(competition_day, settings, daily_result_page.igc_directory)

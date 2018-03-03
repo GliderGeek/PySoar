@@ -6,7 +6,12 @@ class Performance(object):
                      'v_turn_avg', 'LD_avg', 'turn_percentage', 'h_loss_turn', 's_glide_avg', 'dh_cruise_avg',
                      's_extra', 'tsk_v']
 
-    def __init__(self, task, trip, phases, trace, trace_settings):
+    def __init__(self, task, trip, phases, trace):
+
+        gps_altitude = True  # put gps_altitude to False when nonzero pressure altitude is found
+        for fix in trace:
+            if fix['pressure_alt'] != 0:
+                gps_altitude = False
 
         self.all = None
         self.leg = None
@@ -21,7 +26,6 @@ class Performance(object):
         self.no_thermals_leg = phases.thermals_leg
 
         # should be possible to ditch trace as it is already in phases
-        gps_altitude = trace_settings['gps_altitude']
         self.init_all(trip, trace, gps_altitude)
         self.init_leg(trip, trace, gps_altitude)
 
