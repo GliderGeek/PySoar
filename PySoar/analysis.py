@@ -89,7 +89,6 @@ def run(url, source, url_status=None, download_progress_label=None, analysis_pro
     task_rules = tasks_rules[max_index]
 
     multi_start = task_rules.get('multi_start', False)
-    utc_diff = task_rules.get('multi_start', False)
     if url_status is not None and multi_start:
         url_status.configure(text="Multiple starting points not implemented!", foreground='red')
         url_status.update()
