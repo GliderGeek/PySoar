@@ -1,4 +1,6 @@
+import datetime
 import xlwt
+from opensoar.utilities.helper_functions import add_times
 
 
 def ss2hhmmss(time_ss, colon=True):
@@ -107,7 +109,7 @@ class ExcelExport(object):
                     continue
 
                 value = competitor.performance.all[perf_ind]
-                filename = competitor.file_name
+                filename = competitor.competition_id
 
                 # initiate values
                 if (order == 'high' or order == 'low') and temp_best == 0:
@@ -140,7 +142,7 @@ class ExcelExport(object):
                 temp_best = 0
                 temp_worst = 0
 
-                for competitor in competition_day.flights:
+                for competitor in competition_day.competitors:
 
                     if competitor.trip.outlanded() and competitor.trip.outlanding_leg() < leg:
                         continue
@@ -153,29 +155,31 @@ class ExcelExport(object):
                         continue
 
                     value = competitor.performance.leg[leg][perf_ind]
-                    filename = competitor.file_name
+                    filename = competitor.competition_id
 
                     if (order == 'high' or order == 'low') and temp_best == 0:
-                        temp_best = value
-                        temp_worst = value
+                        temp_best = value if value is not None else 0
+                        temp_worst = value if value is not None else 0
                         self.best_parameters_leg[leg][perf_ind] = filename
                         self.worst_parameters_leg[leg][perf_ind] = filename
 
                     # check for best value
-                    if order == "high" and (value > temp_best or (value < 0 and value < temp_best)):
-                        temp_best = value
-                        self.best_parameters_leg[leg][perf_ind] = filename
-                    elif order == "low" and value < temp_best:
-                        temp_best = value
-                        self.best_parameters_leg[leg][perf_ind] = filename
 
-                    # check for worst value
-                    if order == 'high' and 0 < value < temp_worst:
-                        temp_worst = value
-                        self.worst_parameters_leg[leg][perf_ind] = filename
-                    elif order == "low" and value > temp_worst:
-                        temp_worst = value
-                        self.worst_parameters_leg[leg][perf_ind] = filename
+                    if value is not None:
+                        if order == "high" and (value > temp_best or (value < 0 and value < temp_best)):
+                            temp_best = value
+                            self.best_parameters_leg[leg][perf_ind] = filename
+                        elif order == "low" and value < temp_best:
+                            temp_best = value
+                            self.best_parameters_leg[leg][perf_ind] = filename
+
+                        # check for worst value
+                        if order == 'high' and 0 < value < temp_worst:
+                            temp_worst = value
+                            self.worst_parameters_leg[leg][perf_ind] = filename
+                        elif order == "low" and value > temp_worst:
+                            temp_worst = value
+                            self.worst_parameters_leg[leg][perf_ind] = filename
 
     def write_general_info(self, date):
         self.ws_all.write(0, 0, date.strftime('%d-%m-%y'))
@@ -258,9 +262,10 @@ class ExcelExport(object):
                             content = competitor.performance.leg[leg][perf_ind]
 
                 if perf_ind in ['t_start', 't_finish']:
-                    content = ss2hhmmss(content+competition_day.task.utc_diff*3600)
+                    content = add_times(content, datetime.time(hour=competition_day.task.timezone))
+                    content = content.strftime('%H:%M:%S')
 
-                style = self.style_dict[perf_format + self.style_addition(leg, perf_ind, competitor.file_name)]
+                style = self.style_dict[perf_format + self.style_addition(leg, perf_ind, competitor.competition_id)]
                 self.write_cell(leg, row, col, content, style)
 
             col += 1
@@ -284,7 +289,7 @@ class ExcelExport(object):
 
     def write_legs(self, settings, competition_day):
         for leg in range(competition_day.task.no_legs):
-            self.write_title(leg, settings, competition_day.task.taskpoints)
+            self.write_title(leg, settings, competition_day.task.waypoints)
             self.write_perf_indics(leg, settings, competition_day)
 
     def write_file(self, competition_day, settings, igc_directory):

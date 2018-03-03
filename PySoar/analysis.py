@@ -32,11 +32,11 @@ def get_download_progress_function(download_progress_label):
 
 
 def run(url, source, url_status=None, download_progress_label=None, analysis_progress_label=None):
-    # todo: check if next check is performed
+    # todo: is next check performed?
     # fix error in task definition: e.g.: LSEEYOU OZ=-1,Style=2SpeedStyle=0,R1=5000m,A1=180,Line=1
     # SpeedStyle=# is removed, where # is a number
 
-    # todo: check if next check is performed
+    # todo: is next check performed?
     # fix wrong style definition on start and finish points
     # task_information['lseeyou_lines'][0] = task_information['lseeyou_lines'][0].replace('Style=1', 'Style=2')
 
@@ -89,6 +89,7 @@ def run(url, source, url_status=None, download_progress_label=None, analysis_pro
     task_rules = tasks_rules[max_index]
 
     multi_start = task_rules.get('multi_start', False)
+    utc_diff = task_rules.get('multi_start', False)
     if url_status is not None and multi_start:
         url_status.configure(text="Multiple starting points not implemented!", foreground='red')
         url_status.update()
@@ -99,8 +100,15 @@ def run(url, source, url_status=None, download_progress_label=None, analysis_pro
     competition_day.analyse_flights(classification_method, analysis_progress)
 
     for competitor in competition_day.competitors:
+
+        # put gps_altitude to False when nonzero pressure altitude is found
+        gps_altitude = True
+        for fix in competitor.trace:
+            if fix['pressure_alt'] != 0:
+                gps_altitude = False
+
         competitor.performance = Performance(competition_day.task, competitor.trip, competitor.phases,
-                                             competitor.trace)
+                                             gps_altitude)
 
     excel_sheet = ExcelExport(settings, competition_day.task.no_legs)
     excel_sheet.write_file(competition_day, settings, daily_result_page.igc_directory)

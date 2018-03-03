@@ -37,11 +37,11 @@ def go_bugform(url_entry, event):
 
 def open_analysis_file():
 
-    if sys.platform.system() == "Darwin":
+    if sys.platform.startswith("darwin"):
         subprocess.call(["open", settings.file_name])
-    elif sys.platform.system() == "Linux":
+    elif sys.platform.startswith('linux'):
         subprocess.call(["xdg-open", settings.file_name])
-    elif sys.platform.system() == "Windows":
+    elif sys.platform.startswith('win32'):
         os.startfile(settings.file_name)
 
 
