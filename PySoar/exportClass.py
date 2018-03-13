@@ -241,7 +241,7 @@ class ExcelExport(object):
                         if perf_ind == 'ranking':
                             content = competitor.ranking
                         elif perf_ind == 'airplane':
-                            content = competitor.airplane
+                            content = competitor.plane_model
                         elif perf_ind == 'compID':
                             content = competitor.competition_id
                         else:
@@ -255,7 +255,7 @@ class ExcelExport(object):
                         if perf_ind == 'ranking':
                             content = competitor.ranking
                         elif perf_ind == 'airplane':
-                            content = competitor.airplane
+                            content = competitor.plane_model
                         elif perf_ind == 'compID':
                             content = competitor.competition_id
                         else:

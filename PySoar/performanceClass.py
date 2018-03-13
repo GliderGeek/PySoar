@@ -1,6 +1,7 @@
 from opensoar.task.aat import AAT
 from opensoar.utilities.helper_functions import calculate_distance, \
-    seconds_time_difference_fixes, total_distance_travelled, height_difference_fixes, altitude_gain_and_loss
+    seconds_time_difference_fixes, total_distance_travelled, height_difference_fixes, altitude_gain_and_loss, \
+    seconds_time_difference
 
 
 class Performance(object):
@@ -222,10 +223,17 @@ class Performance(object):
             cruise_height_diff = 0
             task_time = 0
 
-            for phase in phases.all_phases(leg):
+            for i, phase in enumerate(phases.all_phases(leg)):
 
-                phase_duration = seconds_time_difference_fixes(phase.fixes[0], phase.fixes[-1])
+                # take refined start
+                if leg == 0 and i == 0:
+                    phase_duration = seconds_time_difference(trip.refined_start_time, phase.fixes[-1]['time'])
+                else:
+                    phase_duration = seconds_time_difference_fixes(phase.fixes[0], phase.fixes[-1])
+
                 phase_distance_traveled = total_distance_travelled(phase.fixes)
+
+                task_time += phase_duration
                 if phase.is_cruise:
                     cruise_time += phase_duration
                     cruise_distance += phase_distance_traveled
@@ -247,7 +255,6 @@ class Performance(object):
             cruise_time_tot += cruise_time
             cruise_distance_tot += cruise_distance
             cruise_height_diff_tot += cruise_height_diff
-            task_time = cruise_time + thermal_time
             task_time_tot += task_time
 
             self.write_perfs(leg,
