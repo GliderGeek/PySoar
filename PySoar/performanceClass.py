@@ -18,12 +18,11 @@ class Performance(object):
         self.tsk_distance_leg = trip.distances
 
         # why not use phases directly? pass in functions as argument?
-        self.no_cruises = len(phases.cruises())
         self.no_cruises_leg = [len(phases.cruises(leg)) for leg in range(trip.started_legs())]
-        self.no_thermals = len(phases.thermals())
+        self.no_cruises = len(phases.cruises(leg='all'))
         self.no_thermals_leg = [len(phases.thermals(leg)) for leg in range(trip.started_legs())]
+        self.no_thermals = len(phases.thermals(leg='all'))
 
-        # should be possible to ditch trace as it is already in phases
         self.init_all(trip, gps_altitude)
         self.init_leg(trip, gps_altitude)
 
@@ -98,7 +97,7 @@ class Performance(object):
         if thermal_time == 0:
             vario_gem = 0
         else:
-            vario_gem = float(thermal_altitude_loss + thermal_altitude_gain) / thermal_time
+            vario_gem = float(thermal_altitude_gain - thermal_altitude_loss) / thermal_time
         self.store_perf(leg, "vario_gem", vario_gem)
 
     def det_v_glide_avg(self, leg, cruise_distance, cruise_time):
