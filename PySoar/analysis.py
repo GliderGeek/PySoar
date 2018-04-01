@@ -38,8 +38,6 @@ def run(url, source, url_status=None, download_progress_label=None, analysis_pro
     # fix wrong style definition on start and finish points
     # task_information['lseeyou_lines'][0] = task_information['lseeyou_lines'][0].replace('Style=1', 'Style=2')
 
-    # todo: fix perf indicators salland race
-
     target_directory = os.path.join(settings.current_dir, 'bin')
     if source == 'cuc':
         daily_result_page = SoaringSpotDaily(url)
