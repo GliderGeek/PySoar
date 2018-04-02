@@ -1,11 +1,57 @@
-from Tkinter import Label, Tk, Button, Entry, W, E
-from generalFunctions import open_analysis_file, url_format_correct, go_bugform, get_url_source
-from analysis import run
+from tkinter import Label, Tk, Button, Entry, W, E
+
+import subprocess
+
+import os
+
+from PySoar.analysis import run
 from functools import partial
-from settingsClass import Settings
+from PySoar.settingsClass import Settings
 import sys
 
 settings = Settings()
+
+
+def url_format_correct(url_string):
+    if 'soaringspot.com' not in url_string and 'strepla.de' not in url_string:
+        return 'Use SoaringSpot or Strepla URL'
+    elif url_string[-5::] != 'daily' and url_string[33:41] != 'scoreDay':
+        return 'URL does not give daily results'
+    else:
+        return 'URL correct'
+
+
+def go_bugform(url_entry, event):
+    import webbrowser
+
+    form_url = settings.debug_form_url
+    versionID = settings.pysoar_version_formID
+    urlID = settings.competition_url_formID
+    pysoar_version = settings.version
+
+    comp_url = url_entry.get()
+
+    complete_url = '%s?entry.%s=%s&entry.%s=%s' % (form_url, versionID, pysoar_version, urlID, comp_url)
+    webbrowser.open(complete_url)
+
+
+def open_analysis_file():
+
+    if sys.platform.startswith("darwin"):
+        subprocess.call(["open", settings.file_name])
+    elif sys.platform.startswith('linux'):
+        subprocess.call(["xdg-open", settings.file_name])
+    elif sys.platform.startswith('win32'):
+        os.startfile(settings.file_name)
+
+
+def get_url_source(url):
+    if 'soaringspot.com' in url:
+        return 'cuc'
+    elif 'strepla.de' in url:
+        return 'scs'
+    else:
+        raise ValueError('Unknown source')
 
 
 def start_gui():
@@ -27,11 +73,11 @@ def start_gui():
 
         url = url_entry.get()
         source = get_url_source(url)
-        run(url, source, url_status, download_progress, analysis_progress)
+        run(url, source, url_status, download_progress_label, analysis_progress_label)
 
         analysis_done = Button(root, text='Excel produced', command=open_analysis_file)
         analysis_done.grid(row=6, column=0, pady=5)
-        print "Analysis complete, excel produced"
+        print("Analysis complete, excel produced")
 
     title = Label(root, text=' PySoar', font=("Helvetica", 30))
     url_accompanying_text = Label(root, text='Give Soaringspot/scoringStrepla URL:')
@@ -39,8 +85,8 @@ def start_gui():
     url_confirmation = Button(root, text='ok')
     url_confirmation.bind('<Button-1>', url_check)
     url_status = Label(root, text='', foreground='red')
-    download_progress = Label(root, text='Downloaded: ')
-    analysis_progress = Label(root, text='Analyzed: ')
+    download_progress_label = Label(root, text='Downloaded: ')
+    analysis_progress_label = Label(root, text='Analyzed: ')
     report_problem = Button(root, text='Report problem')
     report_problem.bind('<Button-1>', partial(go_bugform, url_entry))
     root.bind('<Return>', url_check)
@@ -51,8 +97,8 @@ def start_gui():
     url_entry.grid(row=2, column=0)
     url_confirmation.grid(row=2, column=1)
     url_status.grid(row=3, column=0)
-    download_progress.grid(row=4, column=0, pady=5)
-    analysis_progress.grid(row=5, column=0, pady=5)
+    download_progress_label.grid(row=4, column=0, pady=5)
+    analysis_progress_label.grid(row=5, column=0, pady=5)
     report_problem.grid(row=7, column=0, sticky=W)
     version.grid(row=7, column=1, sticky=E)
 

@@ -1,11 +1,9 @@
-import sys
 import os
 import platform
 import shutil
 
-sys.path.append('../')
-from settingsClass import Settings
-from Tkinter import Label, Tk, Button, Entry, W, E
+from PySoar.settingsClass import Settings
+from tkinter import Label, Tk, Button, W, E
 import subprocess
 from contextlib import contextmanager
 
@@ -31,7 +29,7 @@ def cd(newdir):
 
 
 def correct_version():
-    print 'Build process continues with version %s' % version
+    print('Build process continues with version %s' % version)
 
     # # create pdf of manual
     # with cd(manual_location):
@@ -98,7 +96,7 @@ def correct_version():
 
 
 def incorrect_version():
-    print 'Build process is cancelled because of incorrect version number'
+    print('Build process is cancelled because of incorrect version number')
     root.quit()
 
 
