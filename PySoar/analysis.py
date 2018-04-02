@@ -10,23 +10,31 @@ settings = Settings()
 
 
 def get_analysis_progress_function(analysis_progress_label):
-    analysis_progress = None
-    if analysis_progress_label is not None:
+    if analysis_progress_label is None:
+        def analysis_progress(analyzed, total_number_of_flights):
+            print(f'Analyzed: {analyzed}/{total_number_of_flights}')
+
+        return analysis_progress
+    else:  # analysis_progress_label is not None:
         def analysis_progress(analyzed, total_number_of_flights):
             analysis_progress_label.configure(text=f'Analyzed: {analyzed}/{total_number_of_flights}')
             analysis_progress_label.update()
 
-    return analysis_progress
+        return analysis_progress
 
 
 def get_download_progress_function(download_progress_label):
-    download_progress = None
-    if download_progress_label is not None:
+    if download_progress_label is None:
+        def download_progress(downloads, total_number_of_flights):
+            print(f'Downloaded: {downloads}/{total_number_of_flights}')
+
+        return download_progress
+    else:  # download_progress_label is not None
         def download_progress(downloads, total_number_of_flights):
             download_progress_label.configure(text=f'Downloaded: {downloads}/{total_number_of_flights}')
             download_progress_label.update()
 
-    return download_progress
+        return download_progress
 
 
 def run(url, source, url_status=None, download_progress_label=None, analysis_progress_label=None):
@@ -66,7 +74,6 @@ def run(url, source, url_status=None, download_progress_label=None, analysis_pro
         for fix in competitor.trace:
             if fix['pressure_alt'] != 0:
                 gps_altitude = False
-        print(f'starting performance for {competitor.competition_id}')
 
         competitor.performance = Performance(competition_day.task, competitor.trip, competitor.phases,
                                              gps_altitude)
