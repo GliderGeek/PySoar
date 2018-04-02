@@ -1,5 +1,5 @@
 Master
-- Use opensoar and aerofiles functionalities
+- Use opensoar and aerofiles functionalities (#100, #123)
 
 v0.56.3
 - Fix aat with fixed sector orientation
