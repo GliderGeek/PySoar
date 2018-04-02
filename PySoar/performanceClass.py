@@ -260,8 +260,8 @@ class Performance(object):
                              thermal_altitude_gain, thermal_altitude_loss, thermal_time, thermal_distance, thermal_drift,
                              cruise_time, cruise_distance, cruise_height_diff, task_time)
 
-        if isinstance(task, AAT) and task_time_tot < task.t_min:
-            task_time_tot = task.t_min
+        if isinstance(task, AAT) and task_time_tot < task.t_min.total_seconds():
+            task_time_tot = task.t_min.total_seconds()
 
         self.write_perfs(-1,
                          thermal_altitude_gain_tot, thermal_altitude_loss_tot, thermal_time_tot, thermal_distance_tot, thermal_drift_tot,

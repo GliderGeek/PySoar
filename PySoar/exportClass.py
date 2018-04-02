@@ -262,7 +262,7 @@ class ExcelExport(object):
                             content = competitor.performance.leg[leg][perf_ind]
 
                 if perf_ind in ['t_start', 't_finish']:
-                    content = add_times(content, datetime.time(hour=competition_day.task.timezone))
+                    content = add_times(content, datetime.timedelta(hours=competition_day.task.timezone))
                     content = content.strftime('%H:%M:%S')
 
                 style = self.style_dict[perf_format + self.style_addition(leg, perf_ind, competitor.competition_id)]
