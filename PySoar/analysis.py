@@ -38,14 +38,6 @@ def get_download_progress_function(download_progress_label):
 
 
 def run(url, source, url_status=None, download_progress_label=None, analysis_progress_label=None):
-    # todo: is next check performed?
-    # fix error in task definition: e.g.: LSEEYOU OZ=-1,Style=2SpeedStyle=0,R1=5000m,A1=180,Line=1
-    # SpeedStyle=# is removed, where # is a number
-
-    # todo: is next check performed?
-    # fix wrong style definition on start and finish points
-    # task_information['lseeyou_lines'][0] = task_information['lseeyou_lines'][0].replace('Style=1', 'Style=2')
-
     target_directory = os.path.join(settings.current_dir, 'bin')
     if source == 'cuc':
         daily_result_page = SoaringSpotDaily(url)
