@@ -13,12 +13,30 @@ settings = Settings()
 
 
 def url_format_correct(url_string):
-    if 'soaringspot.com' not in url_string and 'strepla.de' not in url_string:
+
+    if 'soaringspot.com' in url_string:
+        daily_results = _is_daily_soaringspot_url(url_string)
+    elif 'strepla.de' in url_string:
+        daily_results = _is_daily_strepla_url(url_string)
+    else:
         return 'Use SoaringSpot or Strepla URL'
-    elif url_string[-5::] != 'daily' and url_string[33:41] != 'scoreDay':
+
+    if not daily_results:
         return 'URL does not give daily results'
     else:
         return 'URL correct'
+
+
+def _is_daily_strepla_url(strepla_url):
+    """e.g. https://www.strepla.de/scs/public/scoreDay.aspx?cID=472&className=Std&dateScoring=20180427"""
+    score_day = strepla_url.split('/')[5]
+    return score_day.startswith('scoreDay')
+
+
+def _is_daily_soaringspot_url(soaringspot_url):
+    """e.g. https://www.soaringspot.com/en/sallandse-tweedaagse-2014/results/club/task-1-on-2014-06-21/daily"""
+    results = soaringspot_url.split('/')[-1]
+    return results == 'daily'
 
 
 def go_bugform(url_entry, event):
