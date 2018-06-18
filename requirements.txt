@@ -1,5 +1,5 @@
 xlwt==1.3.0
 numpy==1.12.0b1
 pyinstaller==3.2
-git+https://github.com/Turbo87/aerofiles.git
-git+https://github.com/glidergeek/opensoar
+aerofiles==0.4.1
+opensoar==0.1.0
