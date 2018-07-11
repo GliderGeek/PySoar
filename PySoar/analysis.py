@@ -57,7 +57,13 @@ def run(url, source, url_status=None, download_progress_label=None, analysis_pro
         return
 
     classification_method = 'pysoar'
-    competition_day.analyse_flights(classification_method, analysis_progress)
+    failed_comp_ids = competition_day.analyse_flights(classification_method, analysis_progress,
+                                                      skip_failed_analyses=True)
+
+    # remove failed competitors for which the analysis failed
+    for competitor in competition_day.competitors:
+        if competitor.competition_id in failed_comp_ids:
+            competition_day.competitors.remove(competitor)
 
     for competitor in competition_day.competitors:
 
