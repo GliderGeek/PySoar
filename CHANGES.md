@@ -1,7 +1,10 @@
 Master
+
+v0.57
 - Use opensoar and aerofiles functionalities (#100, #123)
 - Do not skip HC contestants
 - Skip contestant for which analysis fails
+- several bugfixes
 
 v0.56.3
 - Fix aat with fixed sector orientation
