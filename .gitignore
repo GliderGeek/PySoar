@@ -18,3 +18,4 @@ PySoar-manual.dvi
 PySoar/*.pyc
 
 env
+venv
