@@ -1,6 +1,9 @@
 Master
 
-v0.57
+v0.57.1
+- update opensoar to 0.1.2
+
+v0.57.0
 - Use opensoar and aerofiles functionalities (#100, #123)
 - Do not skip HC contestants
 - Skip contestant for which analysis fails
@@ -14,4 +17,3 @@ v0.56.2
 
 v0.56
 - Strepla support
-
