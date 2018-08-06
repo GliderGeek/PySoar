@@ -1,5 +1,8 @@
 Master
 
+v0.57.2
+- try, except around performance creation
+
 v0.57.1
 - update opensoar to 0.1.2
 
