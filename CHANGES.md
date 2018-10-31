@@ -2,6 +2,7 @@ Master
 
 v0.57.2
 - try, except around performance creation
+- bump opensoar to v0.1.3
 
 v0.57.1
 - update opensoar to 0.1.2
