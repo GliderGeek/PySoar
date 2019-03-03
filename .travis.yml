@@ -1,20 +1,8 @@
-dist: trusty
-language: python
-
-addons:
-  apt:
-    packages:
-      - texlive
-      - texlive-latex-extra
-      - texlive-lang-english
-      - latex-xcolor
-      - texlive-science
+os: osx
 
 install:
-  - pip install --upgrade pip setuptools wheel
-  - pip install --only-binary=numpy,scipy numpy scipy
+  - brew install python
   - pip install -r requirements.txt
 
 script:
-  - pyinstaller -F PySoar/main_pysoar.py
-  - cd  docs/manual/EN/ && pdflatex PySoar-manual.tex && cd ../../../
+  - python3.6 -m PyInstaller --path=/usr/local/lib/python3.6/site-packages/pygeodesy/ --hidden-import xlwt --onefile --windowed PySoar/main_pysoar.py
