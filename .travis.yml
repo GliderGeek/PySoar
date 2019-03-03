@@ -1,7 +1,6 @@
 os: osx
 
 install:
-  - brew install python
   - pip install -r requirements.txt
 
 script:
