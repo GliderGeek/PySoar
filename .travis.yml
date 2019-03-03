@@ -1,7 +1,7 @@
 os: osx
 
 install:
-  - pip install -r requirements.txt
+  - pip3.6 install -r requirements.txt
 
 script:
-  - python3.6 -m PyInstaller --path=/usr/local/lib/python3.6/site-packages/pygeodesy/ --hidden-import xlwt --onefile --windowed PySoar/main_pysoar.py
+  - python3.6 -m PyInstaller --path=/usr/local/lib/python3.6/site-packages/pygeodesy/ --hidden-import xlwt --onefile --windowed PySoar/main_pysoar.pys
