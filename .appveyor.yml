@@ -1,2 +1,3 @@
 build-script:
-  - echo "Hello world"
+  - ps:
+    - echo "Hello world"
