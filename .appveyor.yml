@@ -1,3 +1,6 @@
+# example taken from:
+# https://github.com/ogrisel/python-appveyor-demo/blob/master/appveyor.yml
+
 environment:
   global:
     # SDK v7.0 MSVC Express 2008's SetEnv.cmd script will fail if the
@@ -57,7 +60,6 @@ build_script:
   - echo "Hello world, finished pyinstaller part"
   - ps: "ls dist/"
 
-# artifacts:
-#   # Archive the generated packages in the ci.appveyor.com build report.
-#   - path: dist\*
-#     $wc.UploadFile("https://ci.appveyor.com/api/testresults/junit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\nosetests.xml))
+artifacts:
+  # Archive the generated packages in the ci.appveyor.com build report.
+  - path: dist\*
