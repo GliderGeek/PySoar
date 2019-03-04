@@ -1,2 +1,7 @@
+install:
+  - python --version
+  - pip install -r requirements.txt
+
 build_script:
   - echo "Hello world"
+
