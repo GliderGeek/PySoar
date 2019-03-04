@@ -8,13 +8,13 @@ environment:
 install:
   # Install Python (from the official .msi of https://python.org) and pip when
   # not already installed.
-  - ps: if (-not(Test-Path($env:PYTHON))) { & appveyor\install.ps1 }
+  # - ps: if (-not(Test-Path($env:PYTHON))) { & appveyor\install.ps1 }
 
   # check python version
-  - python --version
+  - python3.6 --version
 
-  - pip install --upgrade pip
-  - pip install -r requirements.txt
+  # - pip install --upgrade pip
+  # - pip install -r requirements.txt
 
 build_script:
   - echo "Hello world"
