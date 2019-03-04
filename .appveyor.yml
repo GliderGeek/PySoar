@@ -23,7 +23,7 @@ install:
           throw "There are newer queued builds for this pull request, failing early." }
   - ECHO "Filesystem root:"
   - ps: "ls \"C:/\""
-
+  - ps: "ls \"C:/Python36-x64/\""
   - ps: "ls \"C:/Users/appveyor/\""
 
   # - ECHO "Installed SDKs:"
