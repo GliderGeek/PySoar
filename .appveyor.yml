@@ -1,1 +1,2 @@
-build: Script
+build-script:
+  - echo "Hello world"
