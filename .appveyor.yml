@@ -55,6 +55,7 @@ build_script:
   # - "%CMD_IN_ENV% python setup.py build"
   - "%CMD_IN_ENV% python -m PyInstaller -F --path=C:/Python36-x64/Lib/site-packages/pygeodesy --noconsole PySoar/main_pysoar.py"
   - echo "Hello world, finished pyinstaller part"
+  - ps: "ls PySoar/dist/"
 
 # artifacts:
 #   # Archive the generated packages in the ci.appveyor.com build report.
