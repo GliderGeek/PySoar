@@ -24,7 +24,7 @@ install:
   - ECHO "Filesystem root:"
   - ps: "ls \"C:/\""
 
-  - ps: "ls \"C:/Users/\""
+  - ps: "ls \"C:/Users/appveyor/\""
 
   # - ECHO "Installed SDKs:"
   # - ps: "ls \"C:/Program Files/Microsoft SDKs/Windows\""
