@@ -24,14 +24,16 @@ function setExecutables(){
 			}	
 		}
 
-		document.getElementById("exec_mac").innerHTML = executable_name + " mac";
-		document.getElementById("exec_mac").href = mac_url;
+		//mac latest cannot be built currently
+		document.getElementById("exec_mac").innerHTML = "v0.57.1 mac";
+		document.getElementById("exec_mac").href = "https://github.com/GliderGeek/PySoar/releases/download/v0.57.1/mac_v0.57.1.zip";
 
 		document.getElementById("exec_windows").innerHTML = executable_name + " windows";
 		document.getElementById("exec_windows").href = windows_url;
 
-		document.getElementById("exec_linux").innerHTML = executable_name + " linux";
-		document.getElementById("exec_linux").href = linux_url;
+		//linux latest cannot be built currently
+		document.getElementById("exec_linux").innerHTML = "v0.56.3 linux";
+		document.getElementById("exec_linux").href = "https://github.com/GliderGeek/PySoar/releases/download/v0.56.3/linux_v0.56.3.zip";
 
 	});
 }
