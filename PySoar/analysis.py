@@ -2,9 +2,9 @@ import os
 
 from opensoar.competition.strepla import StreplaDaily
 from opensoar.competition.soaringspot import SoaringSpotDaily
-from PySoar.exportClass import ExcelExport
-from PySoar.performanceClass import Performance
-from PySoar.settingsClass import Settings
+from exportClass import ExcelExport
+from performanceClass import Performance
+from settingsClass import Settings
 
 settings = Settings()
 
@@ -37,7 +37,7 @@ def get_download_progress_function(download_progress_label):
         return download_progress
 
 
-def run(url, source, url_status=None, download_progress_label=None, analysis_progress_label=None):
+def run(url, source, url_status=None, download_progress=None, analysis_progress=None):
     target_directory = os.path.join(settings.current_dir, 'bin')
     if source == 'cuc':
         daily_result_page = SoaringSpotDaily(url)
@@ -46,15 +46,11 @@ def run(url, source, url_status=None, download_progress_label=None, analysis_pro
     else:
         raise ValueError('This source is not supported: %s' % source)
 
-    analysis_progress = get_analysis_progress_function(analysis_progress_label)
-    download_progress = get_download_progress_function(download_progress_label)
-
     competition_day = daily_result_page.generate_competition_day(target_directory, download_progress)
 
     if url_status is not None and competition_day.task.multistart:
-        url_status.configure(text="Multiple starting points not implemented!", foreground='red')
-        url_status.update()
-        return
+        url_status(False, "Multiple starting points not implemented!")
+        return False
 
     classification_method = 'pysoar'
     failed_comp_ids = competition_day.analyse_flights(classification_method, analysis_progress,
@@ -84,3 +80,5 @@ def run(url, source, url_status=None, download_progress_label=None, analysis_pro
 
     excel_sheet = ExcelExport(settings, competition_day.task.no_legs)
     excel_sheet.write_file(competition_day, settings, daily_result_page.igc_directory)
+
+    return True
