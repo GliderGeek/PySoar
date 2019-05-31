@@ -1,6 +1,6 @@
 Master
 
-[unreleased]
+v0.58.0
 - use wxpython instead of tkinter for GUI
 
 v0.57.2

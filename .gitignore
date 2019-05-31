@@ -1,8 +1,3 @@
-PySoar/standalone/dist
-PySoar/standalone/build
-PySoar/standalone/linux
-PySoar/standalone/mac
-PySoar/standalone/windows64
 ch0_introduction.aux
 ch1_cruise_thermal_algorithm.aux
 ch2_performance_indicators.aux
@@ -21,3 +16,6 @@ env
 venv
 .idea
 *.DS_Store
+PySoar/build
+PySoar/dist
+*.spec
