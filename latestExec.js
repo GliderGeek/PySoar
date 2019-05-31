@@ -25,8 +25,8 @@ function setExecutables(){
 		}
 
 		//mac latest cannot be built currently
-		document.getElementById("exec_mac").innerHTML = "v0.57.1 mac";
-		document.getElementById("exec_mac").href = "https://github.com/GliderGeek/PySoar/releases/download/v0.57.1/mac_v0.57.1.zip";
+		document.getElementById("exec_mac").innerHTML = executable_name + " mac";
+		document.getElementById("exec_mac").href = mac_url;
 
 		document.getElementById("exec_windows").innerHTML = executable_name + " windows";
 		document.getElementById("exec_windows").href = windows_url;
