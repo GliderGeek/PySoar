@@ -1,5 +1,8 @@
 Master
 
+[unreleased]
+- check on version during startup
+
 v0.58.0
 - use wxpython instead of tkinter for GUI
 
