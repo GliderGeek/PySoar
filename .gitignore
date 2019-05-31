@@ -15,7 +15,9 @@ hidden
 PySoar/standalone/*.zip
 PySoar/standalone/windows
 PySoar-manual.dvi
-PySoar/*.pyc
-
+*.pyc
+PySoar/bin
 env
 venv
+.idea
+*.DS_Store
