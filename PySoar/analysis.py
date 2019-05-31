@@ -2,6 +2,7 @@ import os
 
 from opensoar.competition.strepla import StreplaDaily
 from opensoar.competition.soaringspot import SoaringSpotDaily
+
 from exportClass import ExcelExport
 from performanceClass import Performance
 from settingsClass import Settings
