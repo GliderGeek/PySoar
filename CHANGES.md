@@ -1,5 +1,8 @@
 Master
 
+[unreleased]
+- use wxpython instead of tkinter for GUI
+
 v0.57.2
 - try, except around performance creation
 - bump opensoar to v0.1.3
