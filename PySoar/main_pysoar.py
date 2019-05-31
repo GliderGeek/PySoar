@@ -1,6 +1,8 @@
 import subprocess
 import os
 import sys
+import json
+import requests
 
 import wx
 
@@ -50,16 +52,21 @@ def get_url_source(url):
 
 
 class MyFrame(wx.Frame):
-    def __init__(self):
-        super().__init__(parent=None, title='PySoar (%s)' % settings.version)
+    def __init__(self, current_version, latest_version):
+        super().__init__(parent=None, title='PySoar: %s' % current_version)
         panel = wx.Panel(self)
 
         complete_sizer = wx.BoxSizer(wx.VERTICAL)
 
+        if latest_version and latest_version.lstrip('v') != current_version:
+            version_status = wx.StaticText(panel, label="Latest version: %s" % latest_version)
+            version_status.SetForegroundColour((255, 0, 0))
+            complete_sizer.Add(version_status, 0, wx.CENTER)
+
         my_sizer = wx.BoxSizer(wx.VERTICAL)
 
         text = wx.StaticText(panel, label="Fill in URL:")
-        my_sizer.Add(text, 0, wx.ALL | wx.CENTER, 5)
+        my_sizer.Add(text, 0, wx.ALL, 5)
         self.url_input = wx.TextCtrl(panel)
         my_sizer.Add(self.url_input, 0, wx.ALL | wx.EXPAND, 5)
 
@@ -151,13 +158,25 @@ class MyFrame(wx.Frame):
                 self.open_spreadsheet.Enable()
 
 
-def start_gui():
+def get_latest_version():
+    github_user = "GliderGeek"
+    github_repo = "PySoar"
+    url_latest_version = "https://api.github.com/repos/%s/%s/releases" % (github_user, github_repo)
+
+    r = requests.get(url_latest_version)
+    parsed_json = json.loads(r.text)
+
+    latest_version = parsed_json[0]['tag_name']
+    return latest_version
+
+
+def start_gui(current_version, latest_version):
     app = wx.App()
-    frame = MyFrame()
+    MyFrame(current_version, latest_version)
     app.MainLoop()
 
 
-def run_commandline_program(sys_argv):
+def run_commandline_program(sys_argv, current_version, latest_version):
 
     def print_help():
         print('There are two options for running PySoar from the commandline:\n'
@@ -181,11 +200,14 @@ def run_commandline_program(sys_argv):
             analysis_str = 'Analyzed: %s' % new
         print(analysis_str)
 
-    if len(sys.argv) == 2:
-        if sys.argv[1] == '--help':
+    if latest_version and latest_version.lstrip('v') != current_version:
+        print('Latest version is %s! Current: %s' % (latest_version, current_version))
+
+    if len(sys_argv) == 2:
+        if sys_argv[1] == '--help':
             print_help()
         else:
-            url = sys.argv[1]
+            url = sys_argv[1]
             correct = url_format_correct(url, status_handle)
             if correct:
                 source = get_url_source(url)
@@ -195,10 +217,17 @@ def run_commandline_program(sys_argv):
 
 
 if __name__ == '__main__':
+
+    current_version = settings.version
+    try:
+        latest_version = get_latest_version()
+    except Exception:
+        latest_version = ''
+
     if len(sys.argv) == 1:
-        start_gui()
+        start_gui(current_version, latest_version)
     else:
-        run_commandline_program(sys.argv)
+        run_commandline_program(sys.argv, current_version, latest_version)
 
 #############################  LICENSE  #####################################
 
