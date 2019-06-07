@@ -1,6 +1,9 @@
 Master
 
 [unreleased]
+-
+
+v0.59.0
 - check on version during startup
 - bump opensoar to 0.1.4 to solve dev.soaringspot.com
 
