@@ -2,6 +2,7 @@ Master
 
 [unreleased]
 - check on version during startup
+- bump opensoar to 0.1.4 to solve dev.soaringspot.com
 
 v0.58.0
 - use wxpython instead of tkinter for GUI

@@ -19,3 +19,4 @@ venv
 PySoar/build
 PySoar/dist
 *.spec
+Analysis_PySoar.xls
