@@ -38,7 +38,7 @@ pip install -r requirements.txt
 This chapter explains how to create a pysoar executable
 
 Note: it is important to use the system python3.6
-- running inside virtualenv causes PyInstaller issues
+- running inside virtualenv causes wxpython issues
 - running python3.7 causes PyInstaller issues
 
 ### Patch pygeodesy
