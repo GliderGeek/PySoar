@@ -38,7 +38,7 @@ def get_download_progress_function(download_progress_label):
         return download_progress
 
 
-def run(url, source, url_status=None, download_progress=None, analysis_progress=None):
+def run(url, source, download_progress=None, analysis_progress=None, on_success=None, on_failure=None):
     target_directory = os.path.join(settings.current_dir, 'bin')
     if source == 'cuc':
         daily_result_page = SoaringSpotDaily(url)
@@ -49,9 +49,10 @@ def run(url, source, url_status=None, download_progress=None, analysis_progress=
 
     competition_day = daily_result_page.generate_competition_day(target_directory, download_progress)
 
-    if url_status is not None and competition_day.task.multistart:
-        url_status(False, "Multiple starting points not implemented!")
-        return False
+    if competition_day.task.multistart:
+        if on_failure is not None:
+            on_failure("Multiple starting points not implemented!")
+        return
 
     classification_method = 'pysoar'
     failed_comp_ids = competition_day.analyse_flights(classification_method, analysis_progress,
@@ -82,4 +83,4 @@ def run(url, source, url_status=None, download_progress=None, analysis_progress=
     excel_sheet = ExcelExport(settings, competition_day.task.no_legs)
     excel_sheet.write_file(competition_day, settings, daily_result_page.igc_directory)
 
-    return True
+    on_success()

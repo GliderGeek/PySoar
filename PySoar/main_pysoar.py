@@ -3,6 +3,7 @@ import os
 import sys
 import json
 import requests
+from threading import Thread
 
 import wx
 
@@ -81,9 +82,9 @@ class MyFrame(wx.Frame):
 
         buttons_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
-        my_btn = wx.Button(panel, label='Start analysis')
-        my_btn.Bind(wx.EVT_BUTTON, self.on_press)
-        buttons_sizer.Add(my_btn, 0, wx.EXPAND)
+        self.start_analysis = wx.Button(panel, label='Start analysis')
+        self.start_analysis.Bind(wx.EVT_BUTTON, self.on_press)
+        buttons_sizer.Add(self.start_analysis, 0, wx.EXPAND)
 
         self.open_spreadsheet = wx.Button(panel, label="Open")
         self.open_spreadsheet.Disable()
@@ -126,36 +127,40 @@ class MyFrame(wx.Frame):
             download_str = 'Downloaded: %s/%s' % (new, total)
         else:
             download_str = 'Downloaded: %s' % new
-
         self.download_status.SetLabel(download_str)
-        wx.Yield()
 
     def set_analyse_status(self, new, total=None):
         if total is not None:
             analysis_str = 'Analyzed: %s/%s' % (new, total)
         else:
             analysis_str = 'Analyzed: %s' % new
-
         self.analyse_status.SetLabel(analysis_str)
-        wx.Yield()
 
     def update_status(self, message):
         self.status.SetLabel(message)
         wx.Yield()
 
+    def after_successful_run(self):
+        self.update_status("Analysis is complete.")
+        self.open_spreadsheet.Enable()
+        self.start_analysis.Enable()
+
+    def after_unsuccessful_run(self, msg):
+        self.update_status(msg)
+        self.start_analysis.Enable()
+
     def on_press(self, event):
         self.open_spreadsheet.Disable()
+        self.start_analysis.Disable()
         self.download_status.SetLabel('')
         self.analyse_status.SetLabel('')
 
         url = self.url_input.GetValue()
-        success = url_format_correct(url, self.update_status)
-
-        if success:
-            success = run(url, get_url_source(url), self.update_status, self.set_download_status, self.set_analyse_status)
-            if success:
-                self.update_status("Analysis is complete.")
-                self.open_spreadsheet.Enable()
+        if url_format_correct(url, self.update_status):
+            args = (url, get_url_source(url), self.set_download_status, self.set_analyse_status,
+                    self.after_successful_run, self.after_unsuccessful_run)
+            x = Thread(target=run, args=args)
+            x.start()
 
 
 def get_latest_version():
@@ -193,6 +198,12 @@ def run_commandline_program(sys_argv, current_version, latest_version):
             analysis_str = 'Downloaded: %s' % new
         print(analysis_str)
 
+    def on_success():
+        print('Analysis complete')
+
+    def on_failure(msg):
+        print('Error: %s' % msg)
+
     def analysis_handle(new, total=None):
         if total is not None:
             analysis_str = 'Analyzed: %s/%s' % (new, total)
@@ -208,10 +219,14 @@ def run_commandline_program(sys_argv, current_version, latest_version):
             print_help()
         else:
             url = sys_argv[1]
-            correct = url_format_correct(url, status_handle)
-            if correct:
+            if url_format_correct(url, status_handle):
                 source = get_url_source(url)
-                run(url, source, status_handle, download_handle, analysis_handle)
+                run(url,
+                    source,
+                    download_progress=download_handle,
+                    analysis_progress=analysis_handle,
+                    on_success=on_success,
+                    on_failure=on_failure)
     else:
         print_help()
 

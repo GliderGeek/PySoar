@@ -1,7 +1,7 @@
 Master
 
 [unreleased]
--
+- use calculation thread to fix 'not-responding' in GUI
 
 v0.59.0
 - check on version during startup
