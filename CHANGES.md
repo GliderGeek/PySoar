@@ -2,6 +2,8 @@ Master
 
 [unreleased]
 - use calculation thread to fix 'not-responding' in GUI
+- update opensoar dependecy
+- remove unused dependencies
 
 v0.59.0
 - check on version during startup
