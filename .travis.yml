@@ -1,4 +1,5 @@
 os: osx
+osx_image: xcode10.2
 
 install:
   # Install dependencies
@@ -8,7 +9,7 @@ install:
 
 script:
   # build executable
-  - PYGEODESY_PATH=$(python -c "import pygeodesy; print(pygeodesy.__path__[0])")
+  - PYGEODESY_PATH=$(python3 -c "import pygeodesy; print(pygeodesy.__path__[0])")
   - cd PySoar
   - pyinstaller --windowed --paths=$PYGEODESY_PATH main_pysoar.py
-  - ls
+  - ls dist
