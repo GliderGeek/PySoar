@@ -41,25 +41,12 @@ Note: it is important to use the system python3.6
 - running inside virtualenv causes wxpython issues
 - running python3.7 causes PyInstaller issues
 
-### Patch pygeodesy
-
-There is currently a problem with the pygeodesy library and pyinstaller for which pygeodesy needs to be cloned locally, patched and installed instead of taking the version from pypi.
-
-To patch `pygeodesy`:
-- clone repo locally
-- change `_ismodule` callable in `pygeodesy/__init__.py`. Replace its content with a single `pass` statement.
-
-For more info: https://github.com/mrJean1/PyGeodesy/issues/31
-
 ### Mac OS
-
-- inside pygeodesy patched repo: `pip3.6 install .`
 - inside PySoar folder: `pip3.6 install -r requirements.txt` 
 - `PYGEODESY_PATH=$(python3.6 -c "import pygeodesy; print(pygeodesy.__path__[0])")`
 - `pyinstaller --windowed --paths=$PYGEODESY_PATH main_pysoar.py`
 
 ### Windows
-- inside pygeodesy patched repo: `pip install .`
 - inside PySoar folder: `pip install -r requirements.txt`
 - `python3.6 -c "import pygeodesy; print(pygeodesy.__path__[0])"`
 - `pyinstaller --windowed --onefile --paths=[INSERT_RESULT_PREVIOUS_LINE_HERE] main_pysoar.py`
