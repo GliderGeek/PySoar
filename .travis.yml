@@ -1,0 +1,14 @@
+os: osx
+
+install:
+  # Install dependencies
+  - pip --version
+  - python --version
+  - pip install -r requirements.txt
+
+script:
+  # build executable
+  - PYGEODESY_PATH=$(python -c "import pygeodesy; print(pygeodesy.__path__[0])")
+  - cd PySoar
+  - pyinstaller --windowed --paths=$PYGEODESY_PATH main_pysoar.py
+  - ls
