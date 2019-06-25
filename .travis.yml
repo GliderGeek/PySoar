@@ -4,7 +4,7 @@ matrix:
       os: osx
       osx_image: xcode9.4
 
-script: build_pysoar
+script: ./build_pysoar
 
 deploy:
   provider: releases
