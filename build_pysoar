@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
-        # ...
+    echo "this is linux-gnu"
 elif [[ "$OSTYPE" == "darwin"* ]]; then
+    echo "this is mac"
     pip3 --version
     python3 --version
     pip3 install -r requirements.txt
@@ -12,13 +13,13 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
     cp -r dist/main_pysoar.app .
     zip -r dist/mac_pysoar.zip main_pysoar.app
 elif [[ "$OSTYPE" == "cygwin" ]]; then
-        # POSIX compatibility layer and Linux environment emulation for Windows
+    echo "this is cygwin"
 elif [[ "$OSTYPE" == "msys" ]]; then
-        # Lightweight shell and GNU utilities compiled for Windows (part of MinGW)
+    echo "this is msys"
 elif [[ "$OSTYPE" == "win32" ]]; then
-        # I'm not sure this can happen.
+    echo "this is windows"
 elif [[ "$OSTYPE" == "freebsd"* ]]; then
-        # ...
+    echo "this is freebsd"
 else
-        # Unknown.
+    echo "this is unknown"
 fi
