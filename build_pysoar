@@ -17,6 +17,7 @@ elif [[ "$OSTYPE" == "cygwin" ]]; then
 elif [[ "$OSTYPE" == "msys" ]]; then
     echo "this is msys"
     choco install python3
+    choco install 7zip.install
     export PATH="/c/Python37:/c/Python37/Scripts:$PATH"
     python --version
     pip --version
@@ -25,6 +26,7 @@ elif [[ "$OSTYPE" == "msys" ]]; then
     echo $PYGEODESY_PATH
     cd PySoar
     pyinstaller --windowed --paths=$PYGEODESY_PATH main_pysoar.py
+    zip dist/windows_pysoar.zip dist/main_pysoar
     ls dist
 elif [[ "$OSTYPE" == "win32" ]]; then
     echo "this is windows"
