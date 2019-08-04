@@ -17,6 +17,7 @@ elif [[ "$OSTYPE" == "cygwin" ]]; then
 elif [[ "$OSTYPE" == "msys" ]]; then
     echo "this is msys"
     choco install python --version 3.6.8
+    export PATH="/c/Python36:/c/Python36/Scripts:$PATH"
     python3 --version
     pip3 --version
 elif [[ "$OSTYPE" == "win32" ]]; then
