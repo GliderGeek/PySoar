@@ -16,8 +16,9 @@ elif [[ "$OSTYPE" == "cygwin" ]]; then
     echo "this is cygwin"
 elif [[ "$OSTYPE" == "msys" ]]; then
     echo "this is msys"
-    pip3 --version
-    python3 --version
+    choco install python --version 3.6.8
+    python --version
+    pip --version
 elif [[ "$OSTYPE" == "win32" ]]; then
     echo "this is windows"
 elif [[ "$OSTYPE" == "freebsd"* ]]; then
