@@ -4,6 +4,7 @@ Master
 - use calculation thread to fix 'not-responding' in GUI
 - update opensoar dependecy
 - remove unused dependencies
+- fix bug in skipped analyses
 
 v0.59.0
 - check on version during startup
