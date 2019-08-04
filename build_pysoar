@@ -26,6 +26,7 @@ elif [[ "$OSTYPE" == "msys" ]]; then
     cd PySoar
     pyinstaller --windowed --paths=$PYGEODESY_PATH main_pysoar.py
     ls dist
+    zip dist/windows_pysoar.zip dist/main_pysoar
 elif [[ "$OSTYPE" == "win32" ]]; then
     echo "this is windows"
 elif [[ "$OSTYPE" == "freebsd"* ]]; then
