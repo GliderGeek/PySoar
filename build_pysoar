@@ -4,7 +4,6 @@ if [[ "$OSTYPE" == "linux-gnu" ]]; then
     echo "this is linux-gnu"
 elif [[ "$OSTYPE" == "darwin"* ]]; then
     echo "this is mac"
-    export PLATFORM="mac"
     pip3 --version
     python3 --version
     pip3 install -r requirements.txt
@@ -17,7 +16,6 @@ elif [[ "$OSTYPE" == "cygwin" ]]; then
     echo "this is cygwin"
 elif [[ "$OSTYPE" == "msys" ]]; then
     echo "this is msys"
-    export PLATFORM="windows"
     choco install python3
     choco install 7zip.install
     export PATH="/c/Python37:/c/Python37/Scripts:$PATH"
