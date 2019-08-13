@@ -3,7 +3,7 @@ matrix:
 #    - name: "macOS Build"
 #      os: osx
 #      osx_image: xcode9.4
-       env: PLATFORM=mac
+#      env: PLATFORM=mac
     - os: windows
       language: bash
       env: PLATFORM=windows
