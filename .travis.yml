@@ -1,9 +1,9 @@
 matrix:
   include:
-    - name: "macOS Build"
-      os: osx
-      osx_image: xcode9.4
-      env: PLATFORM=mac
+#    - name: "macOS Build"
+#      os: osx
+#      osx_image: xcode9.4
+#      env: PLATFORM=mac
     - os: windows
       language: bash
       env: PLATFORM=windows
