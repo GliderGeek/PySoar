@@ -10,11 +10,10 @@ matrix:
 
 script:
   - ./build_pysoar
-  - echo ${PLATFORM} > plaform.txt  # environments not accessible during deploy
-
-before-deploy:
-  - export PLATFORM=$(cat platform.txt)
-  - ls PySoar/dist
+#  - echo ${PLATFORM} > plaform.txt  # environments not accessible during deploy
+#
+#before-deploy:
+#  - export PLATFORM=$(cat platform.txt)
 
 deploy:
   provider: releases
