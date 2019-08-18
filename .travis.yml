@@ -8,7 +8,12 @@ matrix:
       language: bash
       env: PLATFORM=windows
 
-script: ./build_pysoar
+script:
+  - ./build_pysoar
+  - echo ${PLATFORM} > plaform.txt  # environments not accessible during deploy
+
+before-deploy:
+  - export PLATFORM=$(cat platform.txt)
 
 deploy:
   provider: releases
