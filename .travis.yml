@@ -19,4 +19,3 @@ deploy:
   file: PySoar/dist/${PLATFORM}_pysoar.zip
   on:
     tags: true
-  draft: true
