@@ -5,6 +5,7 @@ Master
 - update opensoar dependecy
 - remove unused dependencies
 - fix bug in skipped analyses
+- add CI build and publish
 
 v0.59.0
 - check on version during startup
