@@ -18,5 +18,5 @@ deploy:
   skip_cleanup: true
   file: PySoar/dist/${PLATFORM}_pysoar.zip
   on:
-    branch: add-mac-travis
+    tags: true
   draft: true
