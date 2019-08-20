@@ -2,6 +2,13 @@ Master
 
 [unreleased]
 
+v0.60.0
+- use calculation thread to fix 'not-responding' in GUI
+- update opensoar dependecy
+- remove unused dependencies
+- fix bug in skipped analyses
+- add CI build and publish
+
 v0.60.0-rc1
 - use calculation thread to fix 'not-responding' in GUI
 - update opensoar dependecy
