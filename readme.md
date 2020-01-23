@@ -1,8 +1,8 @@
 # PySoar
 [![Build Status](https://travis-ci.org/GliderGeek/PySoar.svg?branch=master)](https://travis-ci.org/GliderGeek/PySoar)
 
-**23-01-2020: unfortunately soaringspot.com has removed the direct downloads from the daily results page.
-Due to this change pysoar no longer works :(**
+**23-01-2020: soaringspot.com has removed the direct downloads from the daily results page.
+Due to this change pysoar unfortunately no longer works for soaringspot URLs (it should for strepla)**
 
 PySoar automates the analysis of glider competitions. It starts with a Soaring Spot URL and delivers a spreadsheet as output.
 
