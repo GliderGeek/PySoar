@@ -10,34 +10,6 @@ from settingsClass import Settings
 settings = Settings()
 
 
-def get_analysis_progress_function(analysis_progress_label):
-    if analysis_progress_label is None:
-        def analysis_progress(analyzed, total_number_of_flights):
-            print(f'Analyzed: {analyzed}/{total_number_of_flights}')
-
-        return analysis_progress
-    else:  # analysis_progress_label is not None:
-        def analysis_progress(analyzed, total_number_of_flights):
-            analysis_progress_label.configure(text=f'Analyzed: {analyzed}/{total_number_of_flights}')
-            analysis_progress_label.update()
-
-        return analysis_progress
-
-
-def get_download_progress_function(download_progress_label):
-    if download_progress_label is None:
-        def download_progress(downloads, total_number_of_flights):
-            print(f'Downloaded: {downloads}/{total_number_of_flights}')
-
-        return download_progress
-    else:  # download_progress_label is not None
-        def download_progress(downloads, total_number_of_flights):
-            download_progress_label.configure(text=f'Downloaded: {downloads}/{total_number_of_flights}')
-            download_progress_label.update()
-
-        return download_progress
-
-
 def run(url, source, download_progress=None, analysis_progress=None, on_success=None, on_failure=None):
     target_directory = os.path.join(settings.current_dir, 'bin')
     if source == 'cuc':

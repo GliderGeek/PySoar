@@ -127,6 +127,7 @@ class MyFrame(wx.Frame):
             download_str = 'Downloaded: %s/%s' % (new, total)
         else:
             download_str = 'Downloaded: %s' % new
+        print(download_str)
         self.download_status.SetLabel(download_str)
 
     def set_analyse_status(self, new, total=None):
@@ -134,6 +135,7 @@ class MyFrame(wx.Frame):
             analysis_str = 'Analyzed: %s/%s' % (new, total)
         else:
             analysis_str = 'Analyzed: %s' % new
+        print(analysis_str)
         self.analyse_status.SetLabel(analysis_str)
 
     def update_status(self, message):

@@ -1,6 +1,8 @@
 # PySoar
 [![Build Status](https://travis-ci.org/GliderGeek/PySoar.svg?branch=master)](https://travis-ci.org/GliderGeek/PySoar)
 
+**13-02-2020: soaringspot.com has restored direct downloads. the newest version of pysoar (>0.60) supports this**
+
 **23-01-2020: soaringspot.com has removed the direct downloads from the daily results page.
 Due to this change pysoar unfortunately no longer works for soaringspot URLs (it should for strepla)**
 
