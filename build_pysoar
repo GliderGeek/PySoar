@@ -6,7 +6,7 @@ if [[ "$OSTYPE" == "linux-gnu" ]]; then
     apt-get install zip
     pip --version
     python --version
-    pip install -r requirements.txt --user
+    pip install -r requirements.txt
     PYGEODESY_PATH=$(python -c "import pygeodesy; print(pygeodesy.__path__[0])")
     cd PySoar
     pyinstaller --windowed --paths=$PYGEODESY_PATH main_pysoar.py
