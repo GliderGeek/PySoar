@@ -28,11 +28,8 @@ function setExecutables(){
 		document.getElementById("exec_mac").innerHTML = executable_name + " mac";
 		document.getElementById("exec_mac").href = mac_url;
 
-		// //latest windows cannot be built currently
-		latest_windows = "v0.60.0";
-		document.getElementById("exec_windows").innerHTML = latest_windows + " windows";
-		console.log();
-		document.getElementById("exec_windows").href = "https://github.com/GliderGeek/PySoar/releases/download/" + latest_windows + "/windows_" + latest_windows + ".zip";
+		document.getElementById("exec_windows").innerHTML = executable_name + " windows";
+		document.getElementById("exec_windows").href = windows_url;
 
 		// //linux latest cannot be built currently
 		latest_linux = "v0.56.3";
