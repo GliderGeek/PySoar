@@ -42,9 +42,9 @@ pip install -r requirements.txt
 ## Building an executable
 This chapter explains how to create a pysoar executable
 
-Note: it is important to use the system python3.6
+Note: it is important to use the system python3.7
 - running inside virtualenv causes wxpython issues
-- running python3.7 causes PyInstaller issues
+- running python3.8 causes PyInstaller issues
 
 ### Mac OS
 - inside PySoar folder: `pip3.6 install -r requirements.txt` 

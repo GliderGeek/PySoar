@@ -2,16 +2,6 @@
 
 if [[ "$OSTYPE" == "linux-gnu" ]]; then
     echo "this is linux-gnu"
-    apt-get upgrade
-    apt-get install zip
-    pip --version
-    python --version
-    pip install -r requirements.txt
-    PYGEODESY_PATH=$(python -c "import pygeodesy; print(pygeodesy.__path__[0])")
-    cd PySoar
-    pyinstaller --windowed --paths=$PYGEODESY_PATH main_pysoar.py
-    cp -r dist/main_pysoar .
-    zip -r dist/linux_pysoar.zip main_pysoar
 elif [[ "$OSTYPE" == "darwin"* ]]; then
     echo "this is mac"
     pip3 --version
@@ -26,7 +16,7 @@ elif [[ "$OSTYPE" == "cygwin" ]]; then
     echo "this is cygwin"
 elif [[ "$OSTYPE" == "msys" ]]; then
     echo "this is msys"
-    choco install python3 --version 3.6.10 --force
+    choco install python3 --version=3.7.2 --force
     choco install 7zip.install --force
     export PATH="/c/Python37:/c/Python37/Scripts:/c/Python38:/c/Python38/Scripts:$PATH"
     python --version
