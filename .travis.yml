@@ -7,7 +7,9 @@ matrix:
     - os: windows
       language: bash
       env: PLATFORM=windows
-    - os: linux
+    - name: linux
+      language: python
+      python: 3.8
       env: PLATFORM=linux
 
 script:
