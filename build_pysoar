@@ -6,8 +6,6 @@ if [[ "$OSTYPE" == "linux-gnu" ]]; then
     apt-get install zip
     pip --version
     python --version
-    python3 --version
-    pip3 --version
     pip install -r requirements.txt --user
     PYGEODESY_PATH=$(python -c "import pygeodesy; print(pygeodesy.__path__[0])")
     cd PySoar
@@ -28,7 +26,7 @@ elif [[ "$OSTYPE" == "cygwin" ]]; then
     echo "this is cygwin"
 elif [[ "$OSTYPE" == "msys" ]]; then
     echo "this is msys"
-    choco install python3 --force
+    choco install python3 --version 3.6.10 --force
     choco install 7zip.install --force
     export PATH="/c/Python37:/c/Python37/Scripts:/c/Python38:/c/Python38/Scripts:$PATH"
     python --version
