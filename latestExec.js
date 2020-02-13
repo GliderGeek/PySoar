@@ -7,6 +7,7 @@ function setExecutables(){
 	var linux_url;
 	var asset;
 	var executable_name;
+	var latest_windows;
 
 	$.getJSON(latest_url).done(function (release) {
 
@@ -24,16 +25,19 @@ function setExecutables(){
 			}	
 		}
 
-		//mac latest cannot be built currently
 		document.getElementById("exec_mac").innerHTML = executable_name + " mac";
 		document.getElementById("exec_mac").href = mac_url;
 
-		document.getElementById("exec_windows").innerHTML = executable_name + " windows";
-		document.getElementById("exec_windows").href = windows_url;
+		// //latest windows cannot be built currently
+		latest_windows = "v0.60.0";
+		document.getElementById("exec_windows").innerHTML = latest_windows + " windows";
+		console.log();
+		document.getElementById("exec_windows").href = "https://github.com/GliderGeek/PySoar/releases/download/" + latest_windows + "/windows_" + latest_windows + ".zip";
 
-		//linux latest cannot be built currently
+		// //linux latest cannot be built currently
+		latest_linux = "v0.56.3";
 		document.getElementById("exec_linux").innerHTML = "v0.56.3 linux";
-		document.getElementById("exec_linux").href = "https://github.com/GliderGeek/PySoar/releases/download/v0.56.3/linux_v0.56.3.zip";
+		document.getElementById("exec_linux").href = "https://github.com/GliderGeek/PySoar/releases/download/" + latest_linux + "/linux_" + latest_linux + ".zip";
 
 	});
 }
