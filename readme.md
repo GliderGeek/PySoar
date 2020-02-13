@@ -1,6 +1,8 @@
 # PySoar
 [![Build Status](https://travis-ci.org/GliderGeek/PySoar.svg?branch=master)](https://travis-ci.org/GliderGeek/PySoar)
 
+**13-02-2020: soaringspot.com has restored direct downloads. the newest version of pysoar (>0.60) supports this**
+
 **23-01-2020: soaringspot.com has removed the direct downloads from the daily results page.
 Due to this change pysoar unfortunately no longer works for soaringspot URLs (it should for strepla)**
 
@@ -40,9 +42,9 @@ pip install -r requirements.txt
 ## Building an executable
 This chapter explains how to create a pysoar executable
 
-Note: it is important to use the system python3.6
+Note: it is important to use the system python3.7
 - running inside virtualenv causes wxpython issues
-- running python3.7 causes PyInstaller issues
+- running python3.8 causes PyInstaller issues
 
 ### Mac OS
 - inside PySoar folder: `pip3.6 install -r requirements.txt` 

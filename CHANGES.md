@@ -1,6 +1,9 @@
 Master
 
 [unreleased]
+- update dependencies
+- opensoar newest version fixes soaringspot
+- remove unused function
 
 v0.60.0
 - use calculation thread to fix 'not-responding' in GUI
