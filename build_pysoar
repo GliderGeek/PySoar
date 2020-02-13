@@ -16,9 +16,9 @@ elif [[ "$OSTYPE" == "cygwin" ]]; then
     echo "this is cygwin"
 elif [[ "$OSTYPE" == "msys" ]]; then
     echo "this is msys"
-    choco install python3.7 --force
+    choco install python3 --force
     choco install 7zip.install --force
-    export PATH="/c/Python37:/c/Python37/Scripts:$PATH"
+    export PATH="/c/Python37:/c/Python37/Scripts:/c/Python38:/c/Python38/Scripts:$PATH"
     echo "before versions"
     python --version
     pip --version
