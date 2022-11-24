@@ -3,32 +3,33 @@ import os
 import sys
 import json
 import requests
-from threading import Thread
 
 import wx
 
-from analysis import run
+from analysis import AnalysisThread
 from settingsClass import Settings
 
 settings = Settings()
 
 
-def url_format_correct(url_string, status_handle):
+DOWNLOAD_EVENT_ID = wx.NewId()
+ANALYSIS_EVENT_ID = wx.NewId()
+FINISH_EVENT_ID = wx.NewId()
+
+
+def url_format_correct(url_string):
 
     if 'soaringspot.com' in url_string:
         daily_results = _is_daily_soaringspot_url(url_string)
     elif 'strepla.de' in url_string:
         daily_results = _is_daily_strepla_url(url_string)
     else:
-        status_handle('Wrong URL: Use SoaringSpot or Strepla URL')
-        return False
+        return False, 'Wrong URL: Use SoaringSpot or Strepla URL'
 
     if not daily_results:
-        status_handle('Wrong URL: no daily results')
-        return False
+        return False, 'Wrong URL: no daily results'
     else:
-        status_handle('URL correct')
-        return True
+        return True, 'URL correct'
 
 
 def _is_daily_strepla_url(strepla_url):
@@ -80,6 +81,11 @@ class MyFrame(wx.Frame):
         self.analyse_status = wx.StaticText(panel, label="")
         my_sizer.Add(self.analyse_status)
 
+        # Set up event handlers for any worker thread results
+        self.Connect(-1, -1, DOWNLOAD_EVENT_ID, self.on_download_event)
+        self.Connect(-1, -1, ANALYSIS_EVENT_ID, self.on_analysis_event)
+        self.Connect(-1, -1, FINISH_EVENT_ID, self.on_finish_event)
+
         buttons_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
         self.start_analysis = wx.Button(panel, label='Start analysis')
@@ -122,34 +128,26 @@ class MyFrame(wx.Frame):
         elif sys.platform.startswith('win32'):
             os.startfile(settings.file_name)
 
-    def set_download_status(self, new, total=None):
-        if total is not None:
-            download_str = 'Downloaded: %s/%s' % (new, total)
+    def on_download_event(self, event):
+        event_data = event.data
+        print(event_data)
+        self.download_status.SetLabel(event_data)
+
+    def on_analysis_event(self, event):
+        event_data = event.data
+        print(event_data)
+        self.analyse_status.SetLabel(event_data)
+
+    def on_finish_event(self, event):
+        (success, message) = event.data
+        print('finish event:', success)
+        if success:
+            self.status.SetLabel('Success')
+            self.open_spreadsheet.Enable()
+            self.start_analysis.Enable()
         else:
-            download_str = 'Downloaded: %s' % new
-        print(download_str)
-        self.download_status.SetLabel(download_str)
-
-    def set_analyse_status(self, new, total=None):
-        if total is not None:
-            analysis_str = 'Analyzed: %s/%s' % (new, total)
-        else:
-            analysis_str = 'Analyzed: %s' % new
-        print(analysis_str)
-        self.analyse_status.SetLabel(analysis_str)
-
-    def update_status(self, message):
-        self.status.SetLabel(message)
-        wx.Yield()
-
-    def after_successful_run(self):
-        self.update_status("Analysis is complete.")
-        self.open_spreadsheet.Enable()
-        self.start_analysis.Enable()
-
-    def after_unsuccessful_run(self, msg):
-        self.update_status(msg)
-        self.start_analysis.Enable()
+            self.status.SetLabel(message)
+            self.start_analysis.Enable()
 
     def on_press(self, event):
         self.open_spreadsheet.Disable()
@@ -158,11 +156,14 @@ class MyFrame(wx.Frame):
         self.analyse_status.SetLabel('')
 
         url = self.url_input.GetValue()
-        if url_format_correct(url, self.update_status):
-            args = (url, get_url_source(url), self.set_download_status, self.set_analyse_status,
-                    self.after_successful_run, self.after_unsuccessful_run)
-            x = Thread(target=run, args=args)
-            x.start()
+
+        url_correct, failure_reason = url_format_correct(url)
+        if url_correct:
+            source = get_url_source(url)
+            analysis = AnalysisThread(self, DOWNLOAD_EVENT_ID, ANALYSIS_EVENT_ID, FINISH_EVENT_ID, url, source)
+            analysis.start()
+        else:
+            self.status.SetLabel(failure_reason)
 
 
 def get_latest_version():
@@ -183,56 +184,6 @@ def start_gui(current_version, latest_version):
     app.MainLoop()
 
 
-def run_commandline_program(sys_argv, current_version, latest_version):
-
-    def print_help():
-        print('There are two options for running PySoar from the commandline:\n'
-              '1. `python main_python` for GUI\n'
-              '2. `python main_pysoar [url]` - where [url] is the daily competition url')
-
-    def status_handle(message):
-        print(message)
-
-    def download_handle(new, total=None):
-        if total is not None:
-            analysis_str = 'Downloaded: %s/%s' % (new, total)
-        else:
-            analysis_str = 'Downloaded: %s' % new
-        print(analysis_str)
-
-    def on_success():
-        print('Analysis complete')
-
-    def on_failure(msg):
-        print('Error: %s' % msg)
-
-    def analysis_handle(new, total=None):
-        if total is not None:
-            analysis_str = 'Analyzed: %s/%s' % (new, total)
-        else:
-            analysis_str = 'Analyzed: %s' % new
-        print(analysis_str)
-
-    if latest_version and latest_version.lstrip('v') != current_version:
-        print('Latest version is %s! Current: %s' % (latest_version, current_version))
-
-    if len(sys_argv) == 2:
-        if sys_argv[1] == '--help':
-            print_help()
-        else:
-            url = sys_argv[1]
-            if url_format_correct(url, status_handle):
-                source = get_url_source(url)
-                run(url,
-                    source,
-                    download_progress=download_handle,
-                    analysis_progress=analysis_handle,
-                    on_success=on_success,
-                    on_failure=on_failure)
-    else:
-        print_help()
-
-
 if __name__ == '__main__':
 
     current_version = settings.version
@@ -244,7 +195,7 @@ if __name__ == '__main__':
     if len(sys.argv) == 1:
         start_gui(current_version, latest_version)
     else:
-        run_commandline_program(sys.argv, current_version, latest_version)
+        print('not implemented')  # TODO
 
 #############################  LICENSE  #####################################
 
