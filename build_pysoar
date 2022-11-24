@@ -6,6 +6,7 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
     echo "this is mac"
     pip3 --version
     python3 --version
+    pip3 install attrdict3
     pip3 install -r requirements.txt
     PYGEODESY_PATH=$(python3 -c "import pygeodesy; print(pygeodesy.__path__[0])")
     cd PySoar
@@ -21,6 +22,7 @@ elif [[ "$OSTYPE" == "msys" ]]; then
     export PATH="/c/Python37:/c/Python37/Scripts:/c/Python38:/c/Python38/Scripts:$PATH"
     python --version
     pip --version
+    pip install attrdict3
     pip install -r requirements.txt
     PYGEODESY_PATH=$(python -c "import pygeodesy; print(pygeodesy.__path__[0])")
     echo $PYGEODESY_PATH
