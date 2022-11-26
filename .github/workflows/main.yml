@@ -46,3 +46,8 @@ jobs:
         pip install -r requirements.txt
     - name: Build with pyinstaller for ${{matrix.TARGET}}
       run: ${{matrix.CMD_BUILD}}
+    - name: Archive production artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{matrix.OUT_FILE_NAME}}
+        path: ${{matrix.OUT_FILE_NAME}}
