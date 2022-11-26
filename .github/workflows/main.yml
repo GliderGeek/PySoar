@@ -17,7 +17,7 @@ jobs:
       matrix:
         include:
           - os: macos-latest
-            TARGET: macos
+            TARGET: macos-11
             CMD_BUILD: >
                 cd PySoar &&
                 pyinstaller --windowed main_pysoar.py &&
