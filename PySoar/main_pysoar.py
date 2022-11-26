@@ -169,12 +169,20 @@ class MyFrame(wx.Frame):
 def get_latest_version():
     github_user = "GliderGeek"
     github_repo = "PySoar"
-    url_latest_version = "https://api.github.com/repos/%s/%s/releases" % (github_user, github_repo)
+    url_latest_version = f"https://api.github.com/repos/{github_user}/{github_repo}/releases"
 
     r = requests.get(url_latest_version)
-    parsed_json = json.loads(r.text)
+    releases = json.loads(r.text)
 
-    latest_version = parsed_json[0]['tag_name']
+    # get latest using sorting
+    # latest seems to not be serialized in response
+    for release in releases:
+        if release['draft'] or release['prerelease']:
+            continue  # skip drafts and prereleases
+        else:
+            latest_version = release['tag_name']
+            break
+
     return latest_version
 
 
