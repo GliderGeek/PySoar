@@ -49,7 +49,7 @@ jobs:
     - name: list files
       run: |
         ls
-        ls dist
+        ls PySoar
     - name: Archive production artifacts
       uses: actions/upload-artifact@v3
       with:
