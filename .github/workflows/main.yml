@@ -23,7 +23,7 @@ jobs:
                 pyinstaller --windowed main_pysoar.py &&
                 cp -r dist/main_pysoar.app . &&
                 zip -r dist/mac_pysoar.zip main_pysoar.app
-            OUT_FILE_NAME: mac_pysoar.zip
+            OUT_FILE_NAME: mac_pysoar
             OUT_FILE_PATH: PySoar/dist/mac_pysoar.zip
             ASSET_MIME: application/zip
           - os: windows-latest
@@ -31,9 +31,9 @@ jobs:
             CMD_BUILD: >
                 cd PySoar &&
                 pyinstaller --onefile --windowed main_pysoar.py &&
-                cp dist/main_pysoar.exe .
-            OUT_FILE_NAME: main_pysoar.exe
-            OUT_FILE_PATH: PySoar/main_pysoar.exe
+                mv dist/main_pysoar.exe dist/windows_pysoar.exe
+            OUT_FILE_NAME: windows_pysoar
+            OUT_FILE_PATH: PySoar/dist/windows_pysoar.exe
             ASSET_MIME: application/vnd.microsoft.portable-executable
     steps:
     - uses: actions/checkout@v1

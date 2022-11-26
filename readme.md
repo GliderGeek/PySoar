@@ -31,25 +31,12 @@ For development, the following steps need to be taken:
 1. Install python requirements
 
 ```
+pip install attrdict3
 pip install -r requirements.txt
 ```
 
 ## Building an executable
-This chapter explains how to create a pysoar executable
-
-Note: it is important to use the system python3.7
-- running inside virtualenv causes wxpython issues
-- running python3.8 causes PyInstaller issues
-
-### Mac OS
-- inside PySoar folder: `pip3.6 install -r requirements.txt` 
-- `PYGEODESY_PATH=$(python3.6 -c "import pygeodesy; print(pygeodesy.__path__[0])")`
-- `pyinstaller --windowed --paths=$PYGEODESY_PATH main_pysoar.py`
-
-### Windows
-- inside PySoar folder: `pip install -r requirements.txt`
-- `python3.6 -c "import pygeodesy; print(pygeodesy.__path__[0])"`
-- `pyinstaller --windowed --onefile --paths=[INSERT_RESULT_PREVIOUS_LINE_HERE] main_pysoar.py`
+Executables are built using github actions. See `.github/workflows/main.yml` for the steps taken
 
 ## License
 
