@@ -19,17 +19,17 @@ jobs:
           - os: macos-latest
             TARGET: macos
             CMD_BUILD: >
-                cd PySoar
-                pyinstaller --windowed main_pysoar.py
-                cp -r dist/main_pysoar.app .
+                cd PySoar &&
+                pyinstaller --windowed main_pysoar.py &&
+                cp -r dist/main_pysoar.app . &&
                 zip -r dist/mac_pysoar.zip main_pysoar.app
             OUT_FILE_NAME: mac_pysoar.zip
             ASSET_MIME: application/zip
           - os: windows-latest
             TARGET: windows
             CMD_BUILD: >
-                cd PySoar
-                pyinstaller --onefile --windowed main_pysoar.py
+                cd PySoar &&
+                pyinstaller --onefile --windowed main_pysoar.py &&
                 cp dist/main_pysoar.exe .
             OUT_FILE_NAME: main_pysoar.exe
             ASSET_MIME: application/vnd.microsoft.portable-executable
