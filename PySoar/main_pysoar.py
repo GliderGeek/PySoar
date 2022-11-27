@@ -176,6 +176,7 @@ def get_latest_version():
 
     # get latest using sorting
     # latest seems to not be serialized in response
+    latest_version = None
     for release in releases:
         if release['draft'] or release['prerelease']:
             continue  # skip drafts and prereleases
@@ -192,6 +193,29 @@ def start_gui(current_version, latest_version):
     app.MainLoop()
 
 
+def run_commandline_program(sys_argv, current_version, latest_version):
+
+    def print_help():
+        print('There are two options for running PySoar from the commandline:\n'
+              '1. `python main_python` for GUI\n'
+              '2. `python main_pysoar [url]` - where [url] is the daily competition url')
+
+    if latest_version and latest_version.lstrip('v') != current_version:
+        print('Latest version is %s! Current: %s' % (latest_version, current_version))
+
+    if len(sys_argv) == 2:
+        if sys_argv[1] == '--help':
+            print_help()
+        else:
+            url = sys_argv[1]
+            if url_format_correct(url):
+                source = get_url_source(url)
+                analysis = AnalysisThread(None, DOWNLOAD_EVENT_ID, ANALYSIS_EVENT_ID, FINISH_EVENT_ID, url, source)
+                analysis.start()
+    else:
+        print_help()
+
+
 if __name__ == '__main__':
 
     current_version = settings.version
@@ -203,7 +227,7 @@ if __name__ == '__main__':
     if len(sys.argv) == 1:
         start_gui(current_version, latest_version)
     else:
-        print('not implemented')  # TODO
+        run_commandline_program(sys.argv, current_version, latest_version)
 
 #############################  LICENSE  #####################################
 

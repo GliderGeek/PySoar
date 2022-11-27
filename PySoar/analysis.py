@@ -34,15 +34,25 @@ class AnalysisThread(Thread):
 
     def download_progress(self, number=None, total=None):
         if None in (number, total):
-            wx.PostEvent(self._notify_window, ResultEvent(f'Downloaded: -', self._download_event_id))
+            txt = f'Downloaded: -'
         else:
-            wx.PostEvent(self._notify_window, ResultEvent(f'Downloaded: {number}/{total}', self._download_event_id))
+            txt = f'Downloaded: {number}/{total}'
+
+        if self._notify_window is None:
+            print(txt)
+        else:
+            wx.PostEvent(self._notify_window, ResultEvent(txt, self._download_event_id))
 
     def analysis_progress(self, number=None, total=None):
         if None in (number, total):
-            wx.PostEvent(self._notify_window, ResultEvent(f'Analyzed: -', self._analysis_event_id))
+            txt = f'Analyzed: -'
         else:
-            wx.PostEvent(self._notify_window, ResultEvent(f'Analyzed: {number}/{total}', self._analysis_event_id))
+            txt = f'Analyzed: {number}/{total}'
+
+        if self._notify_window is None:
+            print(txt)
+        else:
+            wx.PostEvent(self._notify_window, ResultEvent(txt, self._analysis_event_id))
 
     def run(self):
         target_directory = os.path.join(settings.current_dir, 'bin')
@@ -57,7 +67,11 @@ class AnalysisThread(Thread):
         competition_day = daily_result_page.generate_competition_day(target_directory, self.download_progress)
 
         if competition_day.task.multistart:
-            wx.PostEvent(self._notify_window, ResultEvent((False, 'Multiple starting points not implemented!'), self._finish_event_id))
+            txt = 'Multiple starting points not implemented!'
+            if self._notify_window is None:
+                print(txt)
+            else:
+                wx.PostEvent(self._notify_window, ResultEvent((False, txt), self._finish_event_id))
             return
 
         classification_method = 'pysoar'
@@ -94,4 +108,7 @@ class AnalysisThread(Thread):
         excel_sheet = ExcelExport(settings, competition_day.task.no_legs)
         excel_sheet.write_file(competition_day, settings, daily_result_page.igc_directory)
 
-        wx.PostEvent(self._notify_window, ResultEvent((True, ''), self._finish_event_id))
+        if self._notify_window is None:
+            print('Finished')
+        else:
+            wx.PostEvent(self._notify_window, ResultEvent((True, ''), self._finish_event_id))
