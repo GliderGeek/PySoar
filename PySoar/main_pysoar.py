@@ -71,15 +71,23 @@ class MyFrame(wx.Frame):
         self.url_input = wx.TextCtrl(panel)
         my_sizer.Add(self.url_input, 0, wx.ALL | wx.EXPAND, 5)
 
+        to_elevation_sizer = wx.BoxSizer(wx.HORIZONTAL)
+
+        text = wx.StaticText(panel, label="Field elevation:")
+        to_elevation_sizer.Add(text, 0, wx.ALL, 5)
+        self.to_elevation_input = wx.TextCtrl(panel)
+        to_elevation_sizer.Add(self.to_elevation_input, 0, wx.ALL | wx.EXPAND, 5)
+
+        status_sizer = wx.BoxSizer(wx.VERTICAL)
         self.status = wx.StaticText(panel, label="")
-        my_sizer.Add(self.status)
+        status_sizer.Add(self.status)
 
         self.download_status = wx.StaticText(panel, label="")
-        my_sizer.Add(self.download_status)
+        status_sizer.Add(self.download_status)
 
         self.analyse_status = wx.StaticText(panel, label="")
-        my_sizer.Add(self.analyse_status)
-
+        status_sizer.Add(self.analyse_status)
+        
         buttons_sizer = wx.BoxSizer(wx.HORIZONTAL)
 
         self.start_analysis = wx.Button(panel, label='Start analysis')
@@ -96,6 +104,8 @@ class MyFrame(wx.Frame):
         buttons_sizer.Add(bug_report)
 
         complete_sizer.Add(my_sizer, 0, wx.ALL | wx.EXPAND, 5)
+        complete_sizer.Add(to_elevation_sizer, 0, wx.ALL | wx.LEFT, 5)
+        complete_sizer.Add(status_sizer, 0, wx.ALL | wx.LEFT, 5)
         complete_sizer.Add(buttons_sizer, 0, wx.ALL | wx.CENTER, 5)
 
         panel.SetSizer(complete_sizer)
@@ -159,7 +169,12 @@ class MyFrame(wx.Frame):
 
         url = self.url_input.GetValue()
         if url_format_correct(url, self.update_status):
-            args = (url, get_url_source(url), self.set_download_status, self.set_analyse_status,
+            try:
+                to_elevation = int(self.to_elevation_input.GetValue())
+            except:
+                to_elevation = None
+            
+            args = (url, get_url_source(url), to_elevation, self.set_download_status, self.set_analyse_status,
                     self.after_successful_run, self.after_unsuccessful_run)
             x = Thread(target=run, args=args)
             x.start()
@@ -188,7 +203,9 @@ def run_commandline_program(sys_argv, current_version, latest_version):
     def print_help():
         print('There are two options for running PySoar from the commandline:\n'
               '1. `python main_python` for GUI\n'
-              '2. `python main_pysoar [url]` - where [url] is the daily competition url')
+              '2. `python main_pysoar [url] <takeoff elevation>` - where:\n' \
+              '    - [url] is the daily competition url,\n'\
+              '    - <takeoff elevation> (optional) is the elevation of the takeoff field to be used in altitude corrections')
 
     def status_handle(message):
         print(message)
@@ -216,15 +233,17 @@ def run_commandline_program(sys_argv, current_version, latest_version):
     if latest_version and latest_version.lstrip('v') != current_version:
         print('Latest version is %s! Current: %s' % (latest_version, current_version))
 
-    if len(sys_argv) == 2:
+    if len(sys_argv) >= 2:
         if sys_argv[1] == '--help':
             print_help()
         else:
             url = sys_argv[1]
+            to_elevation = None if len(sys_argv) == 2 else int(sys_argv[2])
             if url_format_correct(url, status_handle):
                 source = get_url_source(url)
                 run(url,
                     source,
+                    to_elevation,
                     download_progress=download_handle,
                     analysis_progress=analysis_handle,
                     on_success=on_success,

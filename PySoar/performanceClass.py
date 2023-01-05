@@ -9,13 +9,16 @@ class Performance(object):
                      'v_turn_avg', 'LD_avg', 'turn_percentage', 'h_loss_turn', 's_glide_avg', 'dh_cruise_avg',
                      's_extra', 'tsk_v']
 
-    def __init__(self, task, trip, phases, gps_altitude):
+    def __init__(self, task, trip, phases, gps_altitude, elevation_correction):
 
         self.all = None
         self.leg = None
 
         self.tsk_distance_all = sum(trip.distances)
         self.tsk_distance_leg = trip.distances
+        self.trip = trip
+        self.gps_altitude = gps_altitude
+        self.elevation_correction = elevation_correction
 
         # why not use phases directly? pass in functions as argument?
         self.no_cruises_leg = [len(phases.cruises(leg)) for leg in range(trip.started_legs())]
@@ -23,23 +26,31 @@ class Performance(object):
         self.no_thermals_leg = [len(phases.thermals(leg)) for leg in range(trip.started_legs())]
         self.no_thermals = len(phases.thermals(leg='all'))
 
-        self.init_all(trip, gps_altitude)
-        self.init_leg(trip, gps_altitude)
+        self.init_all()
+        self.init_leg()
 
         self.determine_performance(task, trip, phases, gps_altitude)
 
-    def init_all(self, trip, gps_altitude):
-        start_h = trip.fixes[0]['gps_alt'] if gps_altitude else trip.fixes[0]['pressure_alt']
-        start_t = trip.refined_start_time
+    def get_height(self, trip_index):
+        if (self.gps_altitude):
+            # return gps altitude corrected for start elevation
+            return self.trip.fixes[trip_index]['gps_alt'] - self.elevation_correction
+        else:
+            # return pressure altitude corrected for start elevation
+            return self.trip.fixes[trip_index]['pressure_alt'] - self.elevation_correction
 
-        if len(trip.fixes) == 1:
+    def init_all(self):
+        start_h = self.get_height(0)
+        start_t = self.trip.refined_start_time
+
+        if len(self.trip.fixes) == 1:
             finish_h = None
             finish_t = None
         else:
-            finish_h = trip.fixes[-1]['gps_alt'] if gps_altitude else trip.fixes[-1]['pressure_alt']
-            finish_t = trip.fixes[-1]['time']
+            finish_h = self.get_height(-1)
+            finish_t = self.trip.fixes[-1]['time']
 
-        s_flown_task_all = sum(trip.distances) / 1000
+        s_flown_task_all = sum(self.trip.distances) / 1000
 
         self.all = {"t_start": start_t,
                     "t_finish": finish_t,
@@ -47,19 +58,19 @@ class Performance(object):
                     "h_finish": finish_h,
                     "s_flown_task": s_flown_task_all}
 
-    def init_leg(self, trip, gps_altitude):
+    def init_leg(self):
         leg_values = []
 
-        for leg in range(len(trip.distances)):
-            if trip.outlanding_fix is not None and leg == trip.outlanding_leg():
-                start_h = trip.fixes[leg]['gps_alt'] if gps_altitude else trip.fixes[leg]['pressure_alt']
-                start_t = trip.refined_start_time if leg == 0 else trip.fixes[leg]['time']
+        for leg in range(len(self.trip.distances)):
+            if self.trip.outlanding_fix is not None and leg == self.trip.outlanding_leg():
+                start_h = self.get_height(leg)
+                start_t = self.trip.refined_start_time if leg == 0 else self.trip.fixes[leg]['time']
 
                 finish_t = 0
                 finish_h = 0
 
-                s_flown_task_leg = trip.distances[-1] / 1000
-            elif trip.outlanding_fix is not None and leg > trip.outlanding_leg():
+                s_flown_task_leg = self.trip.distances[-1] / 1000
+            elif self.trip.outlanding_fix is not None and leg > self.trip.outlanding_leg():
                 start_t = 0
                 start_h = 0
 
@@ -68,13 +79,13 @@ class Performance(object):
 
                 s_flown_task_leg = 0
             else:
-                start_h = trip.fixes[leg]['gps_alt'] if gps_altitude else trip.fixes[leg]['pressure_alt']
-                start_t = trip.refined_start_time if leg == 0 else trip.fixes[leg]['time']
+                start_h = self.get_height(leg)
+                start_t = self.trip.refined_start_time if leg == 0 else self.trip.fixes[leg]['time']
 
-                finish_t = trip.fixes[leg+1]['time']
-                finish_h = trip.fixes[leg+1]['gps_alt'] if gps_altitude else trip.fixes[leg+1]['pressure_alt']
+                finish_t = self.trip.fixes[leg+1]['time']
+                finish_h = self.get_height(leg+1)
 
-                s_flown_task_leg = trip.distances[leg] / 1000
+                s_flown_task_leg = self.trip.distances[leg] / 1000
 
             leg_values.append({"t_start": start_t,
                          "t_finish": finish_t,

@@ -18,7 +18,7 @@ class Settings(object):
         self.set_performance_entry("t_start",           "Start time",                   "text",     "neutral", "[local time]", True, True, True, True)
         self.set_performance_entry("t_finish",          "Finish time",                  "text",     "neutral", "[local time]", True, False, True, True)
         self.set_performance_entry("h_start",           "Start height",                 "number",   "high", "[m]", True, True, True, True)
-        self.set_performance_entry("h_finish",          "Finish height",                "number",   "high", "[m]", True, False, True, False)
+        self.set_performance_entry("h_finish",          "Finish height",                "number",   "low", "[m]", True, False, True, True)
         self.set_performance_entry("vario_gem",         "Average rate of climb",        "number",   "high", "[m/s]", False, False, True, True)
         self.set_performance_entry("v_glide_avg",       "Average cruise speed (GS)",    "number",   "high", "[km/h]", True, False, True, True)
         self.set_performance_entry("v_turn_avg",        "Average thermal speed (GS)",   "number",   "low", "[km/h]", False, False, True, True)

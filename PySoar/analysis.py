@@ -10,7 +10,7 @@ from settingsClass import Settings
 settings = Settings()
 
 
-def run(url, source, download_progress=None, analysis_progress=None, on_success=None, on_failure=None):
+def run(url, source, to_elevation, download_progress=None, analysis_progress=None, on_success=None, on_failure=None):
     target_directory = os.path.join(settings.current_dir, 'bin')
     if source == 'cuc':
         daily_result_page = SoaringSpotDaily(url)
@@ -42,8 +42,13 @@ def run(url, source, download_progress=None, analysis_progress=None, on_success=
                     if fix['pressure_alt'] != 0:
                         gps_altitude = False
 
+                # if field elevation of takeoff is provided then calculate the altitude correction to be used in alitudes
+                elevation_correction = 0
+                if to_elevation != None:
+                    elevation_correction = (competitor.trace[0]['gps_alt'] if gps_altitude else competitor.trace[0]['pressure_alt']) - to_elevation
+
                 competitor.performance = Performance(competition_day.task, competitor.trip, competitor.phases,
-                                                     gps_altitude)
+                                                     gps_altitude, elevation_correction)
             except Exception:
                 failed_comp_ids.append(competitor.competition_id)
 
