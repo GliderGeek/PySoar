@@ -21,21 +21,13 @@ def url_format_correct(url_string):
 
     if 'soaringspot.com' in url_string:
         daily_results = _is_daily_soaringspot_url(url_string)
-    elif 'strepla.de' in url_string:
-        daily_results = _is_daily_strepla_url(url_string)
     else:
-        return False, 'Wrong URL: Use SoaringSpot or Strepla URL'
+        return False, 'Wrong URL: Use SoaringSpot URL'
 
     if not daily_results:
         return False, 'Wrong URL: no daily results'
     else:
         return True, 'URL correct'
-
-
-def _is_daily_strepla_url(strepla_url):
-    """e.g. https://www.strepla.de/scs/public/scoreDay.aspx?cID=472&className=Std&dateScoring=20180427"""
-    score_day = strepla_url.split('/')[5]
-    return score_day.startswith('scoreDay')
 
 
 def _is_daily_soaringspot_url(soaringspot_url):
@@ -47,8 +39,6 @@ def _is_daily_soaringspot_url(soaringspot_url):
 def get_url_source(url):
     if 'soaringspot.com' in url:
         return 'cuc'
-    elif 'strepla.de' in url:
-        return 'scs'
     else:
         raise ValueError('Unknown source')
 

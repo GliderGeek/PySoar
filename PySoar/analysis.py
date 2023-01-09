@@ -2,7 +2,6 @@ import os
 from threading import Thread
 
 import wx
-from opensoar.competition.strepla import StreplaDaily
 from opensoar.competition.soaringspot import SoaringSpotDaily
 
 from exportClass import ExcelExport
@@ -58,8 +57,6 @@ class AnalysisThread(Thread):
         target_directory = os.path.join(settings.current_dir, 'bin')
         if self._source == 'cuc':
             daily_result_page = SoaringSpotDaily(self._url)
-        elif self._source == 'scs':
-            daily_result_page = StreplaDaily(self._url)
         else:
             raise ValueError('This source is not supported: %s' % self._source)
 

@@ -1,5 +1,5 @@
 from opensoar.task.aat import AAT
-from opensoar.utilities.helper_functions import calculate_distance, \
+from opensoar.utilities.helper_functions import calculate_distance_bearing, \
     seconds_time_difference_fixes, total_distance_travelled, height_difference_fixes, altitude_gain_and_loss, \
     seconds_time_difference
 
@@ -243,7 +243,7 @@ class Performance(object):
                     gain, loss = altitude_gain_and_loss(phase.fixes, gps_altitude)
                     thermal_altitude_gain += gain
                     thermal_altitude_loss += loss
-                    thermal_drift += calculate_distance(phase.fixes[0], phase.fixes[-1])
+                    thermal_drift += calculate_distance_bearing(phase.fixes[0], phase.fixes[-1])[0]
 
             # write to total performance values
             thermal_altitude_gain_tot += thermal_altitude_gain
