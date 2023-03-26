@@ -1,6 +1,8 @@
 Master
 
 [unreleased]
+
+v0.62.0 - 2023-03-26
 - update dependencies
 - drop strepla support
 - opensoar brings significant speedup
