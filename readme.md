@@ -24,19 +24,14 @@ The following limitations are (currently) in place:
 - no penalties for missing turnpoints -> outlanding
 - no multiple start points
 
-
-## Development
-For development, the following steps need to be taken:
-
-1. Install python requirements
-
-```
-pip install attrdict3
-pip install -r requirements.txt
-```
-
 ## Building an executable
 Executables are built using github actions. See `.github/workflows/main.yml` for the steps taken
+
+## Publishing a new version
+- everything merged in development
+- add version number in `CHANGES.md` and change version number in `settingsClass.py`
+- commit on developent, merge development in master and tag on master
+- download zips from pipeline and create release from the tag
 
 ## License
 
