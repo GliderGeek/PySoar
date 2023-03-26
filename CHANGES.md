@@ -1,6 +1,10 @@
 Master
 
 [unreleased]
+- update dependencies
+- drop strepla support
+- opensoar brings significant speedup
+- automated ci
 
 v0.61.0
 - update dependencies

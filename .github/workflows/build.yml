@@ -1,0 +1,55 @@
+name: Build
+
+on:
+  push
+
+jobs:
+
+  build:
+    name: Build packages
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: macos-11
+            TARGET: macos
+            CMD_BUILD: >
+                cd PySoar &&
+                pyinstaller --windowed main_pysoar.py &&
+                cp -r dist/main_pysoar.app . &&
+                zip -r dist/mac_pysoar.zip main_pysoar.app
+            OUT_FILE_NAME: mac_pysoar
+            OUT_FILE_PATH: PySoar/dist/mac_pysoar.zip
+            ASSET_MIME: application/zip
+          - os: windows-latest
+            TARGET: windows
+            CMD_BUILD: >
+                cd PySoar &&
+                pyinstaller --onefile --windowed main_pysoar.py &&
+                mv dist/main_pysoar.exe dist/windows_pysoar.exe
+            OUT_FILE_NAME: windows_pysoar
+            OUT_FILE_PATH: PySoar/dist/windows_pysoar.exe
+            ASSET_MIME: application/vnd.microsoft.portable-executable
+    steps:
+    - uses: actions/checkout@v1
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    - name: Build with pyinstaller for ${{matrix.TARGET}}
+      run: ${{matrix.CMD_BUILD}}
+    - name: list files
+      run: |
+        ls
+        ls PySoar
+        ls Pysoar/dist
+    - name: Archive production artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{matrix.OUT_FILE_NAME}}
+        path: ${{matrix.OUT_FILE_PATH}}
+

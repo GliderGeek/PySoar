@@ -1,6 +1,7 @@
 import os
+from threading import Thread
 
-from opensoar.competition.strepla import StreplaDaily
+import wx
 from opensoar.competition.soaringspot import SoaringSpotDaily
 
 from exportClass import ExcelExport
@@ -10,53 +11,101 @@ from settingsClass import Settings
 settings = Settings()
 
 
-def run(url, source, download_progress=None, analysis_progress=None, on_success=None, on_failure=None):
-    target_directory = os.path.join(settings.current_dir, 'bin')
-    if source == 'cuc':
-        daily_result_page = SoaringSpotDaily(url)
-    elif source == 'scs':
-        daily_result_page = StreplaDaily(url)
-    else:
-        raise ValueError('This source is not supported: %s' % source)
+class ResultEvent(wx.PyEvent):
+    """Simple event to carry arbitrary result data."""
+    def __init__(self, data, event_result_id):
+        """Init Result Event."""
+        wx.PyEvent.__init__(self)
+        self.SetEventType(event_result_id)
+        self.data = data
 
-    competition_day = daily_result_page.generate_competition_day(target_directory, download_progress)
 
-    if competition_day.task.multistart:
-        if on_failure is not None:
-            on_failure("Multiple starting points not implemented!")
-        return
+class AnalysisThread(Thread):
 
-    classification_method = 'pysoar'
-    failed_comp_ids = competition_day.analyse_flights(classification_method, analysis_progress,
-                                                      skip_failed_analyses=True)
+    def __init__(self, notify_window, download_event_id, analysis_event_id, finish_event_id, url, source):
+        Thread.__init__(self)
+        self._notify_window = notify_window
+        self._download_event_id = download_event_id
+        self._analysis_event_id = analysis_event_id
+        self._finish_event_id = finish_event_id
+        self._url = url
+        self._source = source
 
-    for competitor in competition_day.competitors:
-
-        if competitor.competition_id in failed_comp_ids:
-            continue
+    def download_progress(self, number=None, total=None):
+        if None in (number, total):
+            txt = f'Downloaded: -'
         else:
-            try:
-                # put gps_altitude to False when nonzero pressure altitude is found
-                gps_altitude = True
-                for fix in competitor.trace:
-                    if fix['pressure_alt'] != 0:
-                        gps_altitude = False
+            txt = f'Downloaded: {number}/{total}'
 
-                competitor.performance = Performance(competition_day.task, competitor.trip, competitor.phases,
-                                                     gps_altitude)
-            except Exception:
-                failed_comp_ids.append(competitor.competition_id)
+        if self._notify_window is None:
+            print(txt)
+        else:
+            wx.PostEvent(self._notify_window, ResultEvent(txt, self._download_event_id))
 
-    failed_competitors = []
-    for competitor in competition_day.competitors:
-        if competitor.competition_id in failed_comp_ids:
-            failed_competitors.append(competitor)
+    def analysis_progress(self, number=None, total=None):
+        if None in (number, total):
+            txt = f'Analyzed: -'
+        else:
+            txt = f'Analyzed: {number}/{total}'
 
-    # remove failed competitors for which the analysis failed
-    for failed_competitor in failed_competitors:
-        competition_day.competitors.remove(failed_competitor)
+        if self._notify_window is None:
+            print(txt)
+        else:
+            wx.PostEvent(self._notify_window, ResultEvent(txt, self._analysis_event_id))
 
-    excel_sheet = ExcelExport(settings, competition_day.task.no_legs)
-    excel_sheet.write_file(competition_day, settings, daily_result_page.igc_directory)
+    def run(self):
+        target_directory = os.path.join(settings.current_dir, 'bin')
+        if self._source == 'cuc':
+            daily_result_page = SoaringSpotDaily(self._url)
+        else:
+            raise ValueError('This source is not supported: %s' % self._source)
 
-    on_success()
+        self.download_progress(None, None)
+        competition_day = daily_result_page.generate_competition_day(target_directory, self.download_progress)
+
+        if competition_day.task.multistart:
+            txt = 'Multiple starting points not implemented!'
+            if self._notify_window is None:
+                print(txt)
+            else:
+                wx.PostEvent(self._notify_window, ResultEvent((False, txt), self._finish_event_id))
+            return
+
+        classification_method = 'pysoar'
+        self.analysis_progress(None, None)
+        failed_comp_ids = competition_day.analyse_flights(classification_method, self.analysis_progress,
+                                                          skip_failed_analyses=True)
+
+        for competitor in competition_day.competitors:
+
+            if competitor.competition_id in failed_comp_ids:
+                continue
+            else:
+                try:
+                    # put gps_altitude to False when nonzero pressure altitude is found
+                    gps_altitude = True
+                    for fix in competitor.trace:
+                        if fix['pressure_alt'] != 0:
+                            gps_altitude = False
+
+                    competitor.performance = Performance(competition_day.task, competitor.trip, competitor.phases,
+                                                         gps_altitude)
+                except Exception:
+                    failed_comp_ids.append(competitor.competition_id)
+
+        failed_competitors = []
+        for competitor in competition_day.competitors:
+            if competitor.competition_id in failed_comp_ids:
+                failed_competitors.append(competitor)
+
+        # remove failed competitors for which the analysis failed
+        for failed_competitor in failed_competitors:
+            competition_day.competitors.remove(failed_competitor)
+
+        excel_sheet = ExcelExport(settings, competition_day.task.no_legs)
+        excel_sheet.write_file(competition_day, settings, daily_result_page.igc_directory)
+
+        if self._notify_window is None:
+            print('Finished')
+        else:
+            wx.PostEvent(self._notify_window, ResultEvent((True, ''), self._finish_event_id))
