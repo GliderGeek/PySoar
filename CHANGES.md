@@ -1,6 +1,7 @@
 Master
 
 [unreleased]
+- updated python, dependencies and actions to latest
 
 v0.62.0 - 2023-03-26
 - update dependencies
