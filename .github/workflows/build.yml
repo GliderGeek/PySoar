@@ -31,13 +31,13 @@ jobs:
             OUT_FILE_PATH: PySoar/dist/windows_pysoar.exe
             ASSET_MIME: application/vnd.microsoft.portable-executable
           - os: ubuntu-22.04
-              TARGET: linux
-              CMD_BUILD: >
-                cd PySoar &&
-                pyinstaller --onefile --windowed main_pysoar.py &&
-                mv dist/main_pysoar dist/linux_pysoar
-              OUT_FILE_NAME: linux_pysoar
-              OUT_FILE_PATH: PySoar/dist/linux_pysoar
+            TARGET: linux
+            CMD_BUILD: >
+              cd PySoar &&
+              pyinstaller --onefile --windowed main_pysoar.py &&
+              mv dist/main_pysoar dist/linux_pysoar
+            OUT_FILE_NAME: linux_pysoar
+            OUT_FILE_PATH: PySoar/dist/linux_pysoar
 
     steps:
     - uses: actions/checkout@v3
