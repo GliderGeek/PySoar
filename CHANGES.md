@@ -1,7 +1,10 @@
 Master
 
 [unreleased]
+
+v0.63.0 - 2023-05-20
 - updated python, dependencies and actions to latest
+- update opensoar: fixes complex aat sectors
 
 v0.62.0 - 2023-03-26
 - update dependencies

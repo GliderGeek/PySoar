@@ -1,5 +1,5 @@
 xlwt==1.3.0
 pyinstaller==5.9.0
-opensoar==1.0.0
+opensoar==1.1.0
 wxpython==4.2.0  # python <= 3.10
 requests==2.28.2
