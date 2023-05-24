@@ -1,6 +1,7 @@
 Master
 
 [unreleased]
+- made export more robust when certain attributes not present
 
 v0.63.0 - 2023-05-20
 - updated python, dependencies and actions to latest

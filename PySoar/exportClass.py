@@ -119,18 +119,18 @@ class ExcelExport(object):
                     self.worst_parameters_all[perf_ind] = filename
 
                 # check for best value
-                if order == "high" and (value > temp_best or (value < 0 and value < temp_best)):
+                if order == "high" and value is not None and (value > temp_best or (value < 0 and value < temp_best)):
                     temp_best = value
                     self.best_parameters_all[perf_ind] = filename
-                elif order == "low" and value < temp_best:
+                elif order == "low" and value is not None and value < temp_best:
                     temp_best = value
                     self.best_parameters_all[perf_ind] = filename
 
                 # check for worst value
-                if order == 'high' and 0 < value < temp_worst:
+                if order == 'high' and value is not None and 0 < value < temp_worst:
                     temp_worst = value
                     self.worst_parameters_all[perf_ind] = filename
-                elif order == "low" and value > temp_worst:
+                elif order == "low" and value is not None and value > temp_worst:
                     temp_worst = value
                     self.worst_parameters_all[perf_ind] = filename
 
