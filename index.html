@@ -9,6 +9,7 @@
     <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
     <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
     <script src="jquery-3.1.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="latestExec.js"></script>
 
   </head>
@@ -24,12 +25,19 @@
 
     <section class="main-content">
 
-<p><strong> 26-03-2023: The new version v0.62.0 might raise an error on mac along the lines of "File/App is damaged and cannot be opened". See <a href="https://iboysoft.com/news/app-is-damaged-and-cannot-be-opened.html">this article</a> how to open and use the application. You might need to re-open the zip after fixing </strong></p>
+<p><strong> 26-03-2023: The application might raise an error on mac along the lines of "File/App is damaged and cannot be opened". See <a href="https://iboysoft.com/news/app-is-damaged-and-cannot-be-opened.html">this article</a> how to open and use the application. You might need to re-open the zip after fixing </strong></p>
 
 <p>PySoar is a desktop application for the analysis of gliding competitions. It uses the IGC files of a competitionday to calculate performance indicators (e.g. average thermal strength, cruise speed). These calculations are performed for each flight and exported to a spreadsheet for easy comparison.</p>
 
 <h3>Getting PySoar</h3>
 <p>Download links for the latest version are provided on top of the page. The only prerequisite is a program to open the spreadsheet (Excel or OpenOffice). Older versions of PySoar can be found on the <a href="https://github.com/GliderGeek/PySoar/releases">GitHub release page</a>.</p>
+
+<h3>Download stats</h3>
+<div>
+  <canvas id="myChart"></canvas>
+</div>
+
+<script type="text/javascript">setGraph()</script>
 
 <h3>Open source</h3>
 <p>PySoar is an Open Source project. This means that the source code is publicly available, enabling easy collaboration and re-use of (parts of) the code for different purposes. Visit the <a href="https://github.com/GliderGeek/PySoar/">project's GitHub page</a> for the code and have a look at the <a href="https://github.com/GliderGeek/PySoar/raw/master/LICENSE">license</a> when you want to re-use parts for your own project.</p>
