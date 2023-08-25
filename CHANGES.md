@@ -1,7 +1,10 @@
 Master
 
 [unreleased]
+
+v0.64.0 - 2023-08-25
 - made export more robust when certain attributes not present
+- update opensoar: fixes normal sectors
 
 v0.63.0 - 2023-05-20
 - updated python, dependencies and actions to latest
