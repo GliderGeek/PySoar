@@ -21,8 +21,8 @@ class ExcelExport(object):
 
     def initiate_style_dict(self):
         self.style_dict['text'] = xlwt.easyxf('font: name Times New Roman')
-        self.style_dict['text_bst'] = xlwt.easyxf('font: name Times New Roman, bold on; pattern: pattern solid, fore_colour light_green')
-        self.style_dict['text_wrst'] = xlwt.easyxf('font: name Times New Roman, bold on; pattern: pattern solid, fore_colour rose')
+        self.style_dict['text_best'] = xlwt.easyxf('font: name Times New Roman, bold on; pattern: pattern solid, fore_colour light_green')
+        self.style_dict['text_worst'] = xlwt.easyxf('font: name Times New Roman, bold on; pattern: pattern solid, fore_colour rose')
 
         self.style_dict['number'] = xlwt.easyxf('font: name Times New Roman, bold off', num_format_str='#,##0.00')
         self.style_dict['number_best'] = xlwt.easyxf('font: name Times New Roman, bold on; pattern: pattern solid, fore_colour light_green', num_format_str='#,##0.00')
