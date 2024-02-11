@@ -1,6 +1,8 @@
 Master
 
 [unreleased]
+- bump opensoar to 1.1.2: now support empty callsign
+- fix internal typo in settingsclass
 
 v0.64.0 - 2023-08-25
 - made export more robust when certain attributes not present
