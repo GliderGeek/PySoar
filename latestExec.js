@@ -17,7 +17,7 @@ function setExecutables(){
 		for (asset_number in release.assets){
 
 			asset = release.assets[asset_number];
-			if (asset.name.substring(0, 3) == "mac") {
+			if (asset.name.substring(0, 3) == "macOS 13") {
 				mac_url = asset.browser_download_url;
 			} else if (asset.name.substring(0, 7) == "windows") {
 				windows_url = asset.browser_download_url;
