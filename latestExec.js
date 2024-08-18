@@ -17,7 +17,7 @@ function setExecutables(){
 		for (asset_number in release.assets){
 
 			asset = release.assets[asset_number];
-			if (asset.name.substring(0, 3) == "macOS 13") {
+			if (asset.name.substring(0, 3) == "mac") {
 				mac_url = asset.browser_download_url;
 			} else if (asset.name.substring(0, 7) == "windows") {
 				windows_url = asset.browser_download_url;
@@ -26,7 +26,7 @@ function setExecutables(){
 			}	
 		}
 
-		document.getElementById("exec_mac").innerHTML = executable_name + " mac";
+		document.getElementById("exec_mac").innerHTML = executable_name + " macOS 13";
 		document.getElementById("exec_mac").href = mac_url;
 
 		document.getElementById("exec_windows").innerHTML = executable_name + " windows";
