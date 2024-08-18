@@ -1,5 +1,4 @@
 # PySoar
-[![Build Status](https://travis-ci.org/GliderGeek/PySoar.svg?branch=master)](https://travis-ci.org/GliderGeek/PySoar)
 
 PySoar automates the analysis of glider competitions. It starts with a Soaring Spot URL and delivers a spreadsheet as output.
 
@@ -28,9 +27,9 @@ The following limitations are (currently) in place:
 Executables are built using github actions. See `.github/workflows/main.yml` for the steps taken
 
 ## Publishing a new version
-- everything merged in development
+- everything merged in main
 - add version number in `CHANGES.md` and change version number in `settingsClass.py`
-- commit on developent, merge development in master and tag on master
+- commit on main and push tag
 - download zips from pipeline and create release from the tag
 
 ## License
