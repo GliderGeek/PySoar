@@ -2,6 +2,9 @@ Master
 
 [unreleased]
 
+v0.68.0 - 2024-08-18
+- use macos-13 on github runner
+
 v0.67.0 - 2024-08-18
 - use latest macos on github runner
 
