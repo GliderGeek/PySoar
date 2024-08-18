@@ -2,6 +2,9 @@ Master
 
 [unreleased]
 
+v0.67.0 - 2024-08-18
+- use latest macos on github runner
+
 v0.66.0 - 2024-08-18
 - bump opensoar to 1.1.3: fix timezone correction
 

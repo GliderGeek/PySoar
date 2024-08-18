@@ -11,7 +11,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: macos-11
+          - os: macos-latest
             TARGET: macos
             CMD_BUILD: >
                 cd PySoar &&
