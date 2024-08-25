@@ -5,6 +5,7 @@ import wx
 from opensoar.competition.soaringspot import SoaringSpotDaily
 
 from exportClass import ExcelExport
+from opensoar.utilities.geojson_serializers import generate_geojson, task_to_geojson_features, trip_to_geojson_features, trace_to_geojson_features
 from performanceClass import Performance
 from settingsClass import Settings
 
@@ -78,20 +79,33 @@ class AnalysisThread(Thread):
 
         for competitor in competition_day.competitors:
 
-            if competitor.competition_id in failed_comp_ids:
-                continue
-            else:
-                try:
-                    # put gps_altitude to False when nonzero pressure altitude is found
-                    gps_altitude = True
-                    for fix in competitor.trace:
-                        if fix['pressure_alt'] != 0:
-                            gps_altitude = False
+            print('comp id:', competitor.competition_id)
 
-                    competitor.performance = Performance(competition_day.task, competitor.trip, competitor.phases,
-                                                         gps_altitude)
-                except Exception:
-                    failed_comp_ids.append(competitor.competition_id)
+            if competitor.competition_id in failed_comp_ids:
+                print('failed_comp_id:', failed_comp_ids)
+            else:
+
+                import json
+                if competitor.competition_id == 'MG':
+                    features = [
+                        *task_to_geojson_features(competition_day.task),
+                        *trip_to_geojson_features(competitor.trip, "#062123"),
+                        *trace_to_geojson_features(competitor.trace),
+
+                    ]
+                    geojson_dct = generate_geojson(features)
+                    with open('debug.json', 'w') as f:
+                        json.dump(geojson_dct, f)
+                    print('successfully dumped json')
+
+                # put gps_altitude to False when nonzero pressure altitude is found
+                gps_altitude = True
+                for fix in competitor.trace:
+                    if fix['pressure_alt'] != 0:
+                        gps_altitude = False
+
+                competitor.performance = Performance(competition_day.task, competitor.trip, competitor.phases,
+                                                     gps_altitude)
 
         failed_competitors = []
         for competitor in competition_day.competitors:

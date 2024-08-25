@@ -263,9 +263,9 @@ class ExcelExport(object):
 
                 if perf_ind in ['t_start', 't_finish']:
 
-                    timezone = competition_day.task.timezone
-                    if timezone is not None:
-                        content = add_times(content, datetime.timedelta(hours=timezone))
+                    # timezone = competition_day.task.timezone
+                    # if timezone is not None:
+                    #     content = add_times(content, datetime.timedelta(hours=timezone))
 
                     content = content.strftime('%H:%M:%S')
 
