@@ -1,6 +1,8 @@
 Master
 
 [unreleased]
+
+v0.69.0 - 2024-08-29
 - convert UTC to local time to prevent timezone issues
 
 v0.68.0 - 2024-08-18
