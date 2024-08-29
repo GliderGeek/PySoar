@@ -1,6 +1,7 @@
 Master
 
 [unreleased]
+- updated github actions
 
 v0.70.0 - 2024-08-29
 - fix error when no start time defined
