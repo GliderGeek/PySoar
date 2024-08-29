@@ -1,8 +1,10 @@
 import os
 from threading import Thread
+import datetime
 
 import wx
 from opensoar.competition.soaringspot import SoaringSpotDaily
+from opensoar.utilities.helper_functions import add_times
 
 from exportClass import ExcelExport
 from performanceClass import Performance
@@ -63,6 +65,15 @@ class AnalysisThread(Thread):
         self.download_progress(None, None)
         competition_day = daily_result_page.generate_competition_day(target_directory, self.download_progress)
 
+        # converting trace from UTC to local time
+        tz = competition_day.task.timezone
+        for competitor in competition_day.competitors:
+            for fix in competitor.trace:
+                fix['time'] = add_times(fix['time'], datetime.timedelta(hours=tz))
+
+        # converting start-time from UTC to local time
+        competition_day.task.start_opening = add_times(competition_day.task.start_opening, datetime.timedelta(hours=tz))
+
         if competition_day.task.multistart:
             txt = 'Multiple starting points not implemented!'
             if self._notify_window is None:
@@ -79,6 +90,7 @@ class AnalysisThread(Thread):
         for competitor in competition_day.competitors:
 
             if competitor.competition_id in failed_comp_ids:
+                print('failed_comp_id:', failed_comp_ids)
                 continue
             else:
                 try:
