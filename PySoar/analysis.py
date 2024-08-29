@@ -1,11 +1,12 @@
 import os
 from threading import Thread
+import datetime
 
 import wx
 from opensoar.competition.soaringspot import SoaringSpotDaily
+from opensoar.utilities.helper_functions import add_times
 
 from exportClass import ExcelExport
-from opensoar.utilities.geojson_serializers import generate_geojson, task_to_geojson_features, trip_to_geojson_features, trace_to_geojson_features
 from performanceClass import Performance
 from settingsClass import Settings
 
@@ -64,6 +65,15 @@ class AnalysisThread(Thread):
         self.download_progress(None, None)
         competition_day = daily_result_page.generate_competition_day(target_directory, self.download_progress)
 
+        # converting trace from UTC to local time
+        tz = competition_day.task.timezone
+        for competitor in competition_day.competitors:
+            for fix in competitor.trace:
+                fix['time'] = add_times(fix['time'], datetime.timedelta(hours=tz))
+
+        # converting start-time from UTC to local time
+        competition_day.task.start_opening = add_times(competition_day.task.start_opening, datetime.timedelta(hours=tz))
+
         if competition_day.task.multistart:
             txt = 'Multiple starting points not implemented!'
             if self._notify_window is None:
@@ -79,33 +89,21 @@ class AnalysisThread(Thread):
 
         for competitor in competition_day.competitors:
 
-            print('comp id:', competitor.competition_id)
-
             if competitor.competition_id in failed_comp_ids:
                 print('failed_comp_id:', failed_comp_ids)
+                continue
             else:
+                try:
+                    # put gps_altitude to False when nonzero pressure altitude is found
+                    gps_altitude = True
+                    for fix in competitor.trace:
+                        if fix['pressure_alt'] != 0:
+                            gps_altitude = False
 
-                import json
-                if competitor.competition_id == 'MG':
-                    features = [
-                        *task_to_geojson_features(competition_day.task),
-                        *trip_to_geojson_features(competitor.trip, "#062123"),
-                        *trace_to_geojson_features(competitor.trace),
-
-                    ]
-                    geojson_dct = generate_geojson(features)
-                    with open('debug.json', 'w') as f:
-                        json.dump(geojson_dct, f)
-                    print('successfully dumped json')
-
-                # put gps_altitude to False when nonzero pressure altitude is found
-                gps_altitude = True
-                for fix in competitor.trace:
-                    if fix['pressure_alt'] != 0:
-                        gps_altitude = False
-
-                competitor.performance = Performance(competition_day.task, competitor.trip, competitor.phases,
-                                                     gps_altitude)
+                    competitor.performance = Performance(competition_day.task, competitor.trip, competitor.phases,
+                                                         gps_altitude)
+                except Exception:
+                    failed_comp_ids.append(competitor.competition_id)
 
         failed_competitors = []
         for competitor in competition_day.competitors:
