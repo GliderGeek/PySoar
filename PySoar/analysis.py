@@ -72,7 +72,8 @@ class AnalysisThread(Thread):
                 fix['time'] = add_times(fix['time'], datetime.timedelta(hours=tz))
 
         # converting start-time from UTC to local time
-        competition_day.task.start_opening = add_times(competition_day.task.start_opening, datetime.timedelta(hours=tz))
+        if competition_day.task.start_opening is not None:
+            competition_day.task.start_opening = add_times(competition_day.task.start_opening, datetime.timedelta(hours=tz))
 
         if competition_day.task.multistart:
             txt = 'Multiple starting points not implemented!'

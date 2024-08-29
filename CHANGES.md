@@ -2,6 +2,9 @@ Master
 
 [unreleased]
 
+v0.70.0 - 2024-08-29
+- fix error when no start time defined
+
 v0.69.0 - 2024-08-29
 - convert UTC to local time to prevent timezone issues
 
