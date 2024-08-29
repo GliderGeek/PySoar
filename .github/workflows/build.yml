@@ -31,9 +31,9 @@ jobs:
             OUT_FILE_PATH: PySoar/dist/windows_pysoar.exe
             ASSET_MIME: application/vnd.microsoft.portable-executable
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: "3.10"
     - name: Install dependencies
@@ -48,7 +48,7 @@ jobs:
         ls PySoar
         ls Pysoar/dist
     - name: Archive production artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{matrix.OUT_FILE_NAME}}
         path: ${{matrix.OUT_FILE_PATH}}
